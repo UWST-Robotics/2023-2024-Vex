@@ -59,20 +59,43 @@ void autonomous() {}
 void opcontrol()
 {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	TankChassis chassis = TankChassis({1, 2}, {3, 4});
-	TankWheelOdometry odom = TankWheelOdometry(2.75, 12.5, 360);
+	Blaze blaze;
 
 	while (true)
 	{
 		// Get Controller Values
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = master.get_analog(ANALOG_RIGHT_Y);
+		bool fire = master.get_digital(DIGITAL_R1);
+		bool extend = master.get_digital(DIGITAL_R2);
+		bool intake = master.get_digital(DIGITAL_L1);
+		bool outtake = master.get_digital(DIGITAL_L2);
 
-		// Run Arcade Drive
-		chassis.move(left + right, left - right);
+		// Catapult
+		if (fire)
+			blaze.catapult.fire();
+		else
+			blaze.catapult.stop();
 
-		// Update Odometry
-		odom.update(&chassis);
+		// Wings
+		if (extend)
+			blaze.wings.extend();
+		else
+			blaze.wings.retract();
+
+		// Intake
+		if (intake)
+			blaze.intake.intake();
+		else if (outtake)
+			blaze.intake.outtake();
+		else
+			blaze.intake.stop();
+
+		// Arcade Drive
+		blaze.chassis.move(left + right, left - right);
+
+		// Odometry
+		blaze.updateOdometry();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);
