@@ -29,10 +29,8 @@ namespace devils
         WingSystem wings;
 
     private:
-        const uint8_t FL_MOTOR_PORT = 1;
-        const uint8_t BL_MOTOR_PORT = 2;
-        const uint8_t FR_MOTOR_PORT = 3;
-        const uint8_t BR_MOTOR_PORT = 4;
+        const std::vector<uint8_t> L_MOTOR_PORTS = {1, 2, 3, 4};
+        const std::vector<uint8_t> R_MOTOR_PORTS = {5, 6, 7, 8};
 
         const uint8_t CATAPULT_MOTOR_PORT = 5;
         const uint8_t INTAKE_MOTOR_PORT = 6;

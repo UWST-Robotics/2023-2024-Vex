@@ -1,9 +1,13 @@
 #pragma once
 #include "devils/robot/catapultSystem.h"
+#include <errno.h>
+#include "devils/utils/logger.h"
 
 devils::CatapultSystem::CatapultSystem(uint8_t motorPort)
     : catapultMotor(motorPort)
 {
+    if (errno != 0)
+        Logger::error("IntakeSystem: motor port is invalid");
 }
 
 void devils::CatapultSystem::fire()

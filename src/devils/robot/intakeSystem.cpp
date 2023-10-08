@@ -1,10 +1,14 @@
 #pragma once
 #include "devils/robot/intakeSystem.h"
+#include <errno.h>
+#include "devils/utils/logger.h"
 
 devils::IntakeSystem::IntakeSystem(uint8_t wheelPort, uint8_t manipPort)
     : wheelMotor(wheelPort),
       manipMotor(manipPort)
 {
+    if (errno != 0)
+        Logger::error("IntakeSystem: motor port is invalid");
 }
 
 void devils::IntakeSystem::extend()

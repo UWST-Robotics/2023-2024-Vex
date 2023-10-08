@@ -1,22 +1,26 @@
 #pragma once
 #include "devils/utils/stringUtils.h"
 
-std::vector<std::string> devils::StringUtils::split(std::string str, char delimiter)
+std::vector<std::string> splitString(std::string inputText, char delimiter)
 {
     std::vector<std::string> result;
-    std::string current = "";
-    for (int i = 0; i < str.length(); i++)
+    std::string buffer = "";
+    // Iterate through characters
+    for (int i = 0; i < inputText.length(); i++)
     {
-        if (str[i] == delimiter)
+        // Flush current string if matches delimiter
+        if (inputText[i] == delimiter)
         {
-            result.push_back(current);
-            current = "";
+            result.push_back(buffer);
+            buffer = "";
         }
+        // Otherwise, add to buffer
         else
         {
-            current += str[i];
+            buffer += inputText[i];
         }
     }
-    result.push_back(current);
+    // Flush last string
+    result.push_back(buffer);
     return result;
 }

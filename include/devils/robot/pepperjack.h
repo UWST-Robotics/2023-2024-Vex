@@ -4,6 +4,7 @@
 #include "devils/odom/tankWheelOdometry.h"
 #include "intakeSystem.h"
 #include "wingSystem.h"
+#include "climbSystem.h"
 
 namespace devils
 {
@@ -25,17 +26,17 @@ namespace devils
         TankWheelOdometry odometry;
         IntakeSystem intake;
         WingSystem wings;
+        ClimbSystem climber;
 
     private:
-        const uint8_t FL_MOTOR_PORT = 1;
-        const uint8_t BL_MOTOR_PORT = 2;
-        const uint8_t FR_MOTOR_PORT = 3;
-        const uint8_t BR_MOTOR_PORT = 4;
+        const std::vector<uint8_t> L_MOTOR_PORTS = {1, 2, 3, 4};
+        const std::vector<uint8_t> R_MOTOR_PORTS = {5, 6, 7, 8};
 
-        const uint8_t INTAKE_MOTOR_PORT = 6;
-        const uint8_t MANIP_MOTOR_PORT = 7;
-        const uint8_t LEFT_WING_PORT = 1;
-        const uint8_t RIGHT_WING_PORT = 2;
+        const uint8_t LEFT_WING_PORT = 1;  // ADI
+        const uint8_t RIGHT_WING_PORT = 2; // ADI
+        const uint8_t INTAKE_MOTOR_PORT = 9;
+        const uint8_t MANIP_MOTOR_PORT = 10;
+        const uint8_t CLIMB_MOTOR_PORT = 11;
 
         const double WHEEL_RADIUS = 2.0;
         const double WHEEL_BASE = 12.0;
