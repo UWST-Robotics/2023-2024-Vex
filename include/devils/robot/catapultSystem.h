@@ -10,7 +10,7 @@ namespace devils
          * Controls the catapult system to launch balls.
          * @param motorPort The port of the catapult motor
          */
-        CatapultSystem(uint8_t motorPort);
+        CatapultSystem(int8_t motorPort);
 
         /**
          * Runs the catapult motor

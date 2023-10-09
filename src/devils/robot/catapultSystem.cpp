@@ -3,7 +3,7 @@
 #include <errno.h>
 #include "devils/utils/logger.h"
 
-devils::CatapultSystem::CatapultSystem(uint8_t motorPort)
+devils::CatapultSystem::CatapultSystem(int8_t motorPort)
     : catapultMotor(motorPort)
 {
     if (errno != 0)

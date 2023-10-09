@@ -1,29 +1,45 @@
 #pragma once
 #include "devils/path/motionProfile.h"
-#include "okapi/impl/control/async/asyncMotionProfileControllerBuilder.hpp"
-#include "okapi/api/units/RQuantity.hpp"
-#include "okapi/api/units/QLength.hpp"
 
-void devils::MotionProfile::GenerateMotionProfile()
+devils::MotionProfile::MotionProfile(
+    float maxVelocity,
+    float maxAcceleration,
+    float maxJerk,
+    float robotTrackWidth)
+    : constraints(squiggles::Constraints(maxVelocity, maxAcceleration, maxJerk)),
+      model(std::make_shared<squiggles::TankModel>(robotTrackWidth, constraints)),
+      generator(squiggles::SplineGenerator(constraints, model, DT))
 {
-    auto profileController = okapi::AsyncMotionProfileControllerBuilder()
-                                 .withLimits({PATH_MAX_VEL, PATH_MAX_ACCEL, PATH_MAX_JERK})
-                                 .buildMotionProfileController();
-
-    auto pathFile = devils::PathFileReader::ReadFromSD();
-    // profileController->generatePath(getPoints(pathFile).data());
-    // TODO: Generate Path
 }
 
-std::vector<okapi::PathfinderPoint> devils::MotionProfile::getPoints(devils::PathFile path)
+std::vector<squiggles::Pose> devils::MotionProfile::getPointsFromSD()
 {
-    std::vector<okapi::PathfinderPoint> points;
+    // Read from SD
+    auto path = devils::PathFileReader::ReadFromSD();
+
+    // Convert to squiggles::Pose
+    bool isReversed = false;
+    std::vector<squiggles::Pose> points;
     for (int i = 0; i < path.points.size(); i++)
     {
         auto point = path.points[i];
-        points.push_back({okapi::QLength(point.x),
-                          okapi::QLength(point.y),
-                          okapi::QAngle(point.rotation)});
+        points.push_back({point.x,
+                          point.y,
+                          point.rotation + (isReversed ? 180 : 0)});
+
+        // Flip the robot if the point is reversed
+        if (point.isReversed)
+            isReversed = !isReversed;
     }
     return points;
+}
+
+void devils::MotionProfile::generate()
+{
+    motionPath = generator.generate(getPointsFromSD());
+}
+
+squiggles::ProfilePoint devils::MotionProfile::getPoint(float t)
+{
+    return motionPath[t / DT];
 }

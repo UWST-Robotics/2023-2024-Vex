@@ -1,7 +1,7 @@
 #pragma once
 #include "pathFileReader.h"
 #include "pathFile.h"
-#include "okapi/api/control/util/pathfinderUtil.hpp"
+#include "okapi/squiggles/squiggles.hpp"
 #include <vector>
 
 namespace devils
@@ -9,13 +9,36 @@ namespace devils
     class MotionProfile
     {
     public:
-        void GenerateMotionProfile();
+        /**
+         * Represents a spline path that can sample velocities and positions at any time t.
+         */
+        MotionProfile(
+            float maxVelocity,
+            float maxAcceleration,
+            float maxJerk,
+            float robotTrackWidth);
+
+        /**
+         * Generates the motion profile from the path file.
+         * This is computationally expensive, so it should only be done once before the match.
+         */
+        void generate();
+
+        /**
+         * Returns the position, velocity, and heading at time t.
+         * @param t The time to sample at.
+         * @return squiggles::ProfilePoint at time t.
+         */
+        squiggles::ProfilePoint getPoint(float t);
 
     private:
-        const float PATH_MAX_VEL = 0.0f;
-        const float PATH_MAX_ACCEL = 0.0f;
-        const float PATH_MAX_JERK = 0.0f;
+        const float DT = 0.01; // seconds
 
-        std::vector<okapi::PathfinderPoint> getPoints(PathFile path);
+        squiggles::Constraints constraints;
+        std::shared_ptr<squiggles::TankModel> model;
+        squiggles::SplineGenerator generator;
+        std::vector<squiggles::ProfilePoint> motionPath = {};
+
+        std::vector<squiggles::Pose> getPointsFromSD();
     };
 }

@@ -10,7 +10,7 @@ namespace devils
          * Controls the climbing system to pull the robot up.
          * @param motorPort The port of the climbing motor
          */
-        ClimbSystem(uint8_t motorPort);
+        ClimbSystem(int8_t motorPort);
 
         /**
          * Runs the catapult motor

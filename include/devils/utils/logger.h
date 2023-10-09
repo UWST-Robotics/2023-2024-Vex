@@ -8,6 +8,11 @@ namespace devils
     {
     public:
         /**
+         * Initializes the logger.
+         */
+        static void init();
+
+        /**
          * Logs an info message.
          * @param message The message to log.
          */
@@ -30,5 +35,15 @@ namespace devils
          * @param message The message to log.
          */
         static void debug(std::string);
+
+        /**
+         * Gets the Okapi logger.
+         * @return The Okapi logger.
+         */
+        static std::shared_ptr<okapi::Logger> getLogger();
+
+    private:
+        inline static const std::string LOG_TERMINAL = "/ser/sout";
+        inline static const std::string LOG_FILE_PATH = "/usd/log.txt";
     };
 }

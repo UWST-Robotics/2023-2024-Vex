@@ -2,6 +2,8 @@
 #include "devils/odom/tankWheelOdometry.h"
 #include "pros/rtos.hpp"
 #include <cmath>
+#include "devils/utils/logger.h"
+#include <errno.h>
 
 #define M_PI 3.14159265358979323846
 
@@ -34,13 +36,13 @@ void devils::TankWheelOdometry::update(int leftEncoder, int rightEncoder)
     double deltaRotation = (deltaRight - deltaLeft) / wheelBase;
 
     // Calculate Delta X and Y
-    double deltaX = deltaDistance * std::cos(rotation + deltaRotation / 2);
-    double deltaY = deltaDistance * std::sin(rotation + deltaRotation / 2);
+    double deltaX = deltaDistance * std::cos(currentPose.rotation + deltaRotation / 2);
+    double deltaY = deltaDistance * std::sin(currentPose.rotation + deltaRotation / 2);
 
     // Update X, Y, and Rotation
-    x += deltaX;
-    y += deltaY;
-    rotation += deltaRotation;
+    currentPose.x += deltaX;
+    currentPose.y += deltaY;
+    currentPose.rotation += deltaRotation;
 }
 
 void devils::TankWheelOdometry::update(devils::TankChassis *chassis)
@@ -48,34 +50,16 @@ void devils::TankWheelOdometry::update(devils::TankChassis *chassis)
     update(
         chassis->getLeftMotors()->get_positions()[0],
         chassis->getRightMotors()->get_positions()[0]);
+    if (errno != 0)
+        Logger::error("TankWheelOdometry: Failed to update from chassis");
 }
 
-double devils::TankWheelOdometry::getX()
+const devils::Pose devils::TankWheelOdometry::getPose()
 {
-    return x;
+    return currentPose;
 }
 
-double devils::TankWheelOdometry::getY()
+void devils::TankWheelOdometry::setPose(Pose pose)
 {
-    return y;
-}
-
-double devils::TankWheelOdometry::getRotation()
-{
-    return rotation;
-}
-
-void devils::TankWheelOdometry::setX(double x)
-{
-    this->x = x;
-}
-
-void devils::TankWheelOdometry::setY(double y)
-{
-    this->y = y;
-}
-
-void devils::TankWheelOdometry::setRotation(double rotation)
-{
-    this->rotation = rotation;
+    currentPose = pose;
 }

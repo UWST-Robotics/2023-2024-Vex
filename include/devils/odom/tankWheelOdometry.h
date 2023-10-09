@@ -1,5 +1,6 @@
 #pragma once
 #include "devils/chassis/tankChassis.h"
+#include "pose.h"
 
 namespace devils
 {
@@ -30,49 +31,22 @@ namespace devils
         void update(TankChassis *chassis);
 
         /**
-         * Gets the x position of the robot.
-         * @return The x position of the robot in inches.
+         * Gets the current pose of the robot.
          */
-        double getX();
+        const Pose getPose();
 
         /**
-         * Gets the y position of the robot.
-         * @return The y position of the robot in inches.
+         * Sets the current pose of the robot.
+         * @param pose The pose to set the robot to.
          */
-        double getY();
-
-        /**
-         * Gets the rotation of the robot.
-         * @return The rotation of the robot in radians.
-         */
-        double getRotation();
-
-        /**
-         * Sets the x position of the robot.
-         * @param x The x position of the robot in inches.
-         */
-        void setX(double x);
-
-        /**
-         * Sets the y position of the robot.
-         * @param y The y position of the robot in inches.
-         */
-        void setY(double y);
-
-        /**
-         * Sets the rotation of the robot.
-         * @param rotation The rotation of the robot in radians.
-         */
-        void setRotation(double rotation);
+        void setPose(Pose pose);
 
     private:
         double wheelRadius;
         double wheelBase;
         double ticksPerRevolution;
 
-        double x = 0;
-        double y = 0;
-        double rotation = 0;
+        Pose currentPose;
 
         uint32_t lastUpdateTimestamp = 0;
         double lastLeft = 0;

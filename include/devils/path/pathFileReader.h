@@ -13,6 +13,8 @@ namespace devils
         static PathFile ReadFromSD();
 
     private:
+        inline static const std::string PATH_FILE_PATH = "/usd/path.txt";
+
         /**
          * Parses a point from a line in the path file.
          * @param line The line to parse.

@@ -69,7 +69,7 @@ devils::PathFile devils::PathFileReader::ReadFromSD()
     pathFile.version = 1;
 
     // Read from SD card
-    std::ifstream file("/usd/paths.txt");
+    std::ifstream file(PATH_FILE_PATH);
     std::string line;
 
     // Iterate through each line
@@ -90,6 +90,10 @@ devils::PathFile devils::PathFileReader::ReadFromSD()
         {
             PathEvent event = ParseEvent(line);
             pathFile.points.back().events.push_back(event);
+        }
+        if (line.rfind("REVERSE") == 0)
+        {
+            pathFile.points.back().isReversed = true;
         }
     }
     file.close();

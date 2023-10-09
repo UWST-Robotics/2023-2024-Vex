@@ -11,7 +11,7 @@ namespace devils
          * @param wheelPort The port of the flywheel motor.
          * @param manipPort The port of the articulation motor.
          */
-        IntakeSystem(uint8_t wheelPort, uint8_t manipPort);
+        IntakeSystem(int8_t wheelPort, int8_t manipPort);
 
         /**
          * Pops out the intake

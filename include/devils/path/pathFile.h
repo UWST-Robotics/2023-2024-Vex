@@ -19,12 +19,13 @@ namespace devils
      */
     struct PathPoint
     {
-        double x;
-        double y;
-        double rotation;
-        double enterDelta;
-        double exitDelta;
-        std::vector<PathEvent> events;
+        double x = 0;
+        double y = 0;
+        double rotation = 0;
+        double enterDelta = 0;
+        double exitDelta = 0;
+        bool isReversed = false;
+        std::vector<PathEvent> events = {};
     };
 
     /**
@@ -32,7 +33,7 @@ namespace devils
      */
     struct PathFile
     {
-        int version;
+        int version = 0;
         std::vector<PathPoint> points;
     };
 }

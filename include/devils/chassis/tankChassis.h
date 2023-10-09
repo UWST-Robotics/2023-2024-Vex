@@ -9,8 +9,8 @@ namespace devils
     {
     public:
         TankChassis(
-            const std::vector<uint8_t> leftMotorPorts,
-            const std::vector<uint8_t> rightMotorPorts);
+            const std::vector<int8_t> leftMotorPorts,
+            const std::vector<int8_t> rightMotorPorts);
 
         void move(double forward, double turn, double strafe = 0) override;
         bool isHolonomic() override;

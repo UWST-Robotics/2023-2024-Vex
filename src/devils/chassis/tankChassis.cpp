@@ -2,9 +2,9 @@
 #include "tankChassis.h"
 
 devils::TankChassis::TankChassis(
-    const std::vector<uint8_t> leftMotorPorts,
-    const std::vector<uint8_t> rightMotorPorts) : leftMotors(leftMotorPorts),
-                                                  rightMotors(rightMotorPorts)
+    const std::vector<int8_t> leftMotorPorts,
+    const std::vector<int8_t> rightMotorPorts) : leftMotors(leftMotorPorts),
+                                                 rightMotors(rightMotorPorts)
 {
 }
 
