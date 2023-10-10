@@ -26,19 +26,12 @@ using namespace devils;
  * that they can be called from user code (i.e. calling autonomous from a
  * button press in opcontrol() for testing purposes).
  */
-#ifdef __cplusplus
 extern "C"
 {
-#endif
+    std::shared_ptr<Blaze> robot;
     void autonomous(void);
     void initialize(void);
     void disabled(void);
     void competition_initialize(void);
     void opcontrol(void);
-#ifdef __cplusplus
 }
-#endif
-
-#ifdef __cplusplus
-// (C++ Headers Here)
-#endif

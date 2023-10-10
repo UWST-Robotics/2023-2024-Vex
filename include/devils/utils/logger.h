@@ -13,6 +13,12 @@ namespace devils
         static void init();
 
         /**
+         * Logs a message to the LCD.
+         * @param message The message to send.
+         */
+        static void sendToLCD(std::string message);
+
+        /**
          * Logs an info message.
          * @param message The message to log.
          */
@@ -45,5 +51,7 @@ namespace devils
     private:
         inline static const std::string LOG_TERMINAL = "/ser/sout";
         inline static const std::string LOG_FILE_PATH = "/usd/log.txt";
+        inline static const bool LOG_TO_DISPLAY = true;
+        inline static const bool LOG_TO_FILE = true;
     };
 }

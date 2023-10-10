@@ -9,7 +9,6 @@
 void initialize()
 {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Blaze - DevilBots");
 }
 
 /**
@@ -59,7 +58,6 @@ void autonomous() {}
 void opcontrol()
 {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	Blaze blaze;
 
 	while (true)
 	{
@@ -70,32 +68,37 @@ void opcontrol()
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
 		bool outtake = master.get_digital(DIGITAL_L2);
+		bool autoTest = master.get_digital(DIGITAL_A);
 
 		// Catapult
 		if (fire)
-			blaze.catapult.fire();
+			robot->catapult.fire();
 		else
-			blaze.catapult.stop();
+			robot->catapult.stop();
 
 		// Wings
 		if (extend)
-			blaze.wings.extend();
+			robot->wings.extend();
 		else
-			blaze.wings.retract();
+			robot->wings.retract();
 
 		// Intake
 		if (intake)
-			blaze.intake.intake();
+			robot->intake.intake();
 		else if (outtake)
-			blaze.intake.outtake();
+			robot->intake.outtake();
 		else
-			blaze.intake.stop();
+			robot->intake.stop();
+
+		// Autonomous Test
+		if (autoTest)
+			autonomous();
 
 		// Arcade Drive
-		blaze.chassis.move(left + right, left - right);
+		robot->chassis.move(left + right, left - right);
 
 		// Odometry
-		blaze.updateOdometry();
+		robot->updateOdometry();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);

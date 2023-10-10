@@ -41,5 +41,12 @@ void devils::MotionProfile::generate()
 
 squiggles::ProfilePoint devils::MotionProfile::getPoint(float t)
 {
+    if (motionPath.size() == 0)
+        return squiggles::ProfilePoint();
+    if (t < 0)
+        return motionPath[0];
+    if (t > motionPath.size() * DT)
+        return motionPath[motionPath.size() - 1];
+
     return motionPath[t / DT];
 }

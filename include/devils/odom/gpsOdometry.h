@@ -27,6 +27,12 @@ namespace devils
          */
         void setPose(Pose pose);
 
+        /**
+         * Returns true if the robot is out of bounds
+         * @return True if the robot is out of bounds
+         */
+        const bool isOutOfBounds();
+
     private:
         pros::Gps gps;
         Pose currentPose;
