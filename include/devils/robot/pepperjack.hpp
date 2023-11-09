@@ -1,10 +1,10 @@
 #pragma once
-#include "devils/utils/logger.h"
-#include "devils/chassis/tankChassis.h"
-#include "devils/odom/tankWheelOdometry.h"
-#include "intakeSystem.h"
-#include "wingSystem.h"
-#include "climbSystem.h"
+#include "devils/utils/logger.hpp"
+#include "devils/chassis/tankChassis.hpp"
+#include "devils/odom/tankWheelOdometry.hpp"
+#include "intakeSystem.hpp"
+#include "wingSystem.hpp"
+#include "climbSystem.hpp"
 
 namespace devils
 {
@@ -14,12 +14,22 @@ namespace devils
         /**
          * Represents PepperJack the robot and all of its subsystems.
          */
-        PepperJack();
+        PepperJack()
+            : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
+              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
+              intake(INTAKE_MOTOR_PORT, MANIP_MOTOR_PORT),
+              wings(LEFT_WING_PORT, RIGHT_WING_PORT),
+              climber(CLIMB_MOTOR_PORT)
+        {
+        }
 
         /**
          * Updates the odometry of the robot.
          */
-        void updateOdometry();
+        void updateOdometry()
+        {
+            odometry.update(&chassis);
+        }
 
         // Subsystems
         TankChassis chassis;

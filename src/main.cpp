@@ -8,7 +8,7 @@
  */
 void initialize()
 {
-	pros::lcd::initialize();
+	robot = std::make_shared<Blaze>();
 }
 
 /**
@@ -71,6 +71,7 @@ void opcontrol()
 		bool autoTest = master.get_digital(DIGITAL_A);
 
 		// Catapult
+		/*
 		if (fire)
 			robot->catapult.fire();
 		else
@@ -89,6 +90,7 @@ void opcontrol()
 			robot->intake.outtake();
 		else
 			robot->intake.stop();
+			*/
 
 		// Autonomous Test
 		if (autoTest)

@@ -1,10 +1,10 @@
 #pragma once
-#include "devils/utils/logger.h"
-#include "devils/chassis/tankChassis.h"
-#include "devils/odom/tankWheelOdometry.h"
-#include "catapultSystem.h"
-#include "intakeSystem.h"
-#include "wingSystem.h"
+#include "devils/utils/logger.hpp"
+#include "devils/chassis/tankChassis.hpp"
+#include "devils/odom/tankWheelOdometry.hpp"
+#include "catapultSystem.hpp"
+#include "intakeSystem.hpp"
+#include "wingSystem.hpp"
 
 namespace devils
 {
@@ -14,12 +14,22 @@ namespace devils
         /**
          * Represents Blaze the robot and all of its subsystems.
          */
-        Blaze();
+        Blaze()
+            : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
+              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
+              catapult(CATAPULT_MOTOR_PORT),
+              intake(INTAKE_MOTOR_PORT, MANIP_MOTOR_PORT),
+              wings(LEFT_WING_PORT, RIGHT_WING_PORT)
+        {
+        }
 
         /**
          * Updates the odometry of the robot.
          */
-        void updateOdometry();
+        void updateOdometry()
+        {
+            odometry.update(&chassis);
+        }
 
         // Subsystems
         TankChassis chassis;
@@ -29,8 +39,8 @@ namespace devils
         WingSystem wings;
 
     private:
-        const std::vector<int8_t> L_MOTOR_PORTS = {1, 2, 3, 4};
-        const std::vector<int8_t> R_MOTOR_PORTS = {5, 6, 7, 8};
+        const std::vector<int8_t> L_MOTOR_PORTS = {1};
+        const std::vector<int8_t> R_MOTOR_PORTS = {2};
 
         const uint8_t LEFT_WING_PORT = 1;  // ADI
         const uint8_t RIGHT_WING_PORT = 2; // ADI
