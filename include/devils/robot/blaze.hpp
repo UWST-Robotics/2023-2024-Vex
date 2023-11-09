@@ -39,8 +39,8 @@ namespace devils
         WingSystem wings;
 
     private:
-        const std::vector<int8_t> L_MOTOR_PORTS = {1};
-        const std::vector<int8_t> R_MOTOR_PORTS = {2};
+        const std::initializer_list<std::int8_t> L_MOTOR_PORTS = {1};
+        const std::initializer_list<std::int8_t> R_MOTOR_PORTS = {2};
 
         const uint8_t LEFT_WING_PORT = 1;  // ADI
         const uint8_t RIGHT_WING_PORT = 2; // ADI

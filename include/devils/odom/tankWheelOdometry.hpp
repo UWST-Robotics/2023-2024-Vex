@@ -70,9 +70,19 @@ namespace devils
          */
         void update(TankChassis *chassis)
         {
-            update(
-                chassis->getLeftMotors()->get_positions()[0],
-                chassis->getRightMotors()->get_positions()[0]);
+            auto leftPositions = chassis->getLeftMotors()->get_positions();
+            auto rightPositions = chassis->getRightMotors()->get_positions();
+
+            // Check Position State
+            if (leftPositions.size() < 1 || rightPositions.size() < 1)
+            {
+                Logger::error("TankWheelOdometry: Failed to update from chassis");
+                return;
+            }
+            // Update
+            update(leftPositions[0], rightPositions[0]);
+
+            // Check Error
             if (errno != 0)
                 Logger::error("TankWheelOdometry: Failed to update from chassis");
         }

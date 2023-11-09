@@ -8,7 +8,7 @@
  */
 void initialize()
 {
-	robot = std::make_shared<Blaze>();
+	Logger::init();
 }
 
 /**
@@ -57,13 +57,14 @@ void autonomous() {}
  */
 void opcontrol()
 {
+	Blaze robot = Blaze();
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 	while (true)
 	{
 		// Get Controller Values
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
+		double left = master.get_analog(ANALOG_LEFT_Y) / 127.0;
+		double right = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
 		bool fire = master.get_digital(DIGITAL_R1);
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
@@ -71,36 +72,34 @@ void opcontrol()
 		bool autoTest = master.get_digital(DIGITAL_A);
 
 		// Catapult
-		/*
 		if (fire)
-			robot->catapult.fire();
+			robot.catapult.fire();
 		else
-			robot->catapult.stop();
+			robot.catapult.stop();
 
 		// Wings
 		if (extend)
-			robot->wings.extend();
+			robot.wings.extend();
 		else
-			robot->wings.retract();
+			robot.wings.retract();
 
 		// Intake
 		if (intake)
-			robot->intake.intake();
+			robot.intake.intake();
 		else if (outtake)
-			robot->intake.outtake();
+			robot.intake.outtake();
 		else
-			robot->intake.stop();
-			*/
+			robot.intake.stop();
 
 		// Autonomous Test
 		if (autoTest)
 			autonomous();
 
 		// Arcade Drive
-		robot->chassis.move(left + right, left - right);
+		robot.chassis.move(left + right, left - right);
 
 		// Odometry
-		robot->updateOdometry();
+		robot.updateOdometry();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);

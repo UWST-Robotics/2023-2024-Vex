@@ -15,10 +15,14 @@ namespace devils
          * @param rightMotorPorts The ports of the right motors. Negative ports are reversed.
          */
         TankChassis(
-            const std::vector<int8_t> leftMotorPorts,
-            const std::vector<int8_t> rightMotorPorts) : leftMotors(leftMotorPorts),
-                                                         rightMotors(rightMotorPorts)
+            const std::initializer_list<std::int8_t> leftMotorPorts,
+            const std::initializer_list<std::int8_t> rightMotorPorts) : leftMotors({pros::Motor(1)}),
+                                                                        rightMotors({pros::Motor(2)})
         {
+            leftMotors.set_gearing(pros::E_MOTOR_GEARSET_18);
+            rightMotors.set_gearing(pros::E_MOTOR_GEARSET_18);
+            leftMotors.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
+            rightMotors.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
         }
 
         void move(double forward, double turn, double strafe = 0) override

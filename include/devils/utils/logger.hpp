@@ -13,6 +13,7 @@ namespace devils
          */
         static void init()
         {
+            pros::lcd::initialize();
             okapi::Logger::setDefaultLogger(
                 std::make_shared<okapi::Logger>(
                     okapi::TimeUtilFactory::createDefault().getTimer(),

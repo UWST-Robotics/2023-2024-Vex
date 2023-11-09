@@ -39,8 +39,8 @@ namespace devils
         ClimbSystem climber;
 
     private:
-        const std::vector<int8_t> L_MOTOR_PORTS = {1, 2, 3, 4};
-        const std::vector<int8_t> R_MOTOR_PORTS = {5, 6, 7, 8};
+        const std::initializer_list<std::int8_t> L_MOTOR_PORTS = {1};
+        const std::initializer_list<std::int8_t> R_MOTOR_PORTS = {2};
 
         const uint8_t LEFT_WING_PORT = 1;  // ADI
         const uint8_t RIGHT_WING_PORT = 2; // ADI
