@@ -1,11 +1,12 @@
 #pragma once
 #include "pros/gps.hpp"
 #include "pose.hpp"
-#include "devils/utils/logger.hpp"
+#include "../utils/logger.hpp"
+#include "odomSource.hpp"
 
 namespace devils
 {
-    class GPSOdometry
+    class GPSOdometry : public OdomSource
     {
     public:
         GPSOdometry(uint8_t gpsPort) : gps(gpsPort)
@@ -31,7 +32,7 @@ namespace devils
          * Gets the current pose of the robot
          * @return The current pose of the robot
          */
-        const Pose getPose()
+        const Pose getPose() override
         {
             return currentPose;
         }
@@ -41,7 +42,7 @@ namespace devils
          * @param pose The pose to set the robot to
          * @return The current pose of the robot
          */
-        void setPose(Pose pose)
+        void setPose(Pose pose) override
         {
             gps.set_position(pose.x, pose.y, pose.rotation);
             if (errno != 0)

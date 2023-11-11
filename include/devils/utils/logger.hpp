@@ -14,11 +14,10 @@ namespace devils
         static void init()
         {
             pros::lcd::initialize();
-            okapi::Logger::setDefaultLogger(
-                std::make_shared<okapi::Logger>(
-                    okapi::TimeUtilFactory::createDefault().getTimer(),
-                    LOG_TO_FILE ? LOG_FILE_PATH : LOG_TERMINAL,
-                    okapi::Logger::LogLevel::warn));
+            okapi::Logger::setDefaultLogger(std::make_shared<okapi::Logger>(
+                okapi::TimeUtilFactory::createDefault().getTimer(),
+                LOG_TO_FILE ? LOG_FILE_PATH : LOG_TERMINAL,
+                okapi::Logger::LogLevel::warn));
         }
 
         /**
@@ -38,7 +37,8 @@ namespace devils
          */
         static void info(std::string message)
         {
-            // okapi::Logger::getDefaultLogger()->info(message);
+            okapi::Logger::getDefaultLogger()->info([=]()
+                                                    { return std::string(message); });
             if (LOG_TO_DISPLAY)
                 sendToLCD(message);
         }
@@ -49,7 +49,8 @@ namespace devils
          */
         static void warn(std::string message)
         {
-            // okapi::Logger::getDefaultLogger()->warn(message);
+            okapi::Logger::getDefaultLogger()->warn([=]()
+                                                    { return std::string(message); });
             if (LOG_TO_DISPLAY)
                 sendToLCD(message);
         }
@@ -60,7 +61,8 @@ namespace devils
          */
         static void error(std::string message)
         {
-            // okapi::Logger::getDefaultLogger()->error(message);
+            okapi::Logger::getDefaultLogger()->error([=]()
+                                                     { return std::string(message); });
             if (LOG_TO_DISPLAY)
                 sendToLCD(message);
         }
@@ -71,7 +73,8 @@ namespace devils
          */
         static void debug(std::string message)
         {
-            // okapi::Logger::getDefaultLogger()->debug(message);
+            okapi::Logger::getDefaultLogger()->debug([=]()
+                                                     { return std::string(message); });
             if (LOG_TO_DISPLAY)
                 sendToLCD(message);
         }
@@ -89,6 +92,6 @@ namespace devils
         inline static const std::string LOG_TERMINAL = "/ser/sout";
         inline static const std::string LOG_FILE_PATH = "/usd/log.txt";
         inline static const bool LOG_TO_DISPLAY = true;
-        inline static const bool LOG_TO_FILE = true;
+        inline static const bool LOG_TO_FILE = false;
     };
 }

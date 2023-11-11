@@ -39,17 +39,17 @@ namespace devils
         WingSystem wings;
 
     private:
-        const std::initializer_list<std::int8_t> L_MOTOR_PORTS = {1};
-        const std::initializer_list<std::int8_t> R_MOTOR_PORTS = {2};
+        static constexpr std::initializer_list<std::int8_t> L_MOTOR_PORTS = {1};
+        static constexpr std::initializer_list<std::int8_t> R_MOTOR_PORTS = {2};
 
-        const uint8_t LEFT_WING_PORT = 1;  // ADI
-        const uint8_t RIGHT_WING_PORT = 2; // ADI
-        const int8_t CATAPULT_MOTOR_PORT = 5;
-        const int8_t INTAKE_MOTOR_PORT = 6;
-        const int8_t MANIP_MOTOR_PORT = 7;
+        static constexpr uint8_t LEFT_WING_PORT = 1;  // ADI
+        static constexpr uint8_t RIGHT_WING_PORT = 2; // ADI
+        static constexpr int8_t CATAPULT_MOTOR_PORT = 5;
+        static constexpr int8_t INTAKE_MOTOR_PORT = 6;
+        static constexpr int8_t MANIP_MOTOR_PORT = 7;
 
-        const double WHEEL_RADIUS = 2.0;
-        const double WHEEL_BASE = 12.0;
-        const double TICKS_PER_REVOLUTION = 360.0;
+        static constexpr double WHEEL_RADIUS = 10.0; // 2.0
+        static constexpr double WHEEL_BASE = 12.0;
+        static constexpr double TICKS_PER_REVOLUTION = 360.0;
     };
 }

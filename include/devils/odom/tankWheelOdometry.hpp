@@ -3,6 +3,7 @@
 #include "pose.hpp"
 #include "pros/rtos.hpp"
 #include "devils/utils/logger.hpp"
+#include "odomSource.hpp"
 #include <cmath>
 #include <errno.h>
 
@@ -10,7 +11,7 @@
 
 namespace devils
 {
-    class TankWheelOdometry
+    class TankWheelOdometry : public OdomSource
     {
     public:
         /**
@@ -20,11 +21,14 @@ namespace devils
          * @param wheelBase The distance between the wheels in inches.
          * @param ticksPerRevolution The number of ticks per revolution of the encoders.
          */
-        TankWheelOdometry(double wheelRadius, double wheelBase, double ticksPerRevolution)
+        TankWheelOdometry(const double wheelRadius, const double wheelBase, const double ticksPerRevolution)
+            : wheelRadius(wheelRadius),
+              wheelBase(wheelBase),
+              ticksPerRevolution(ticksPerRevolution)
         {
-            this->wheelRadius = wheelRadius;
-            this->wheelBase = wheelBase;
-            this->ticksPerRevolution = ticksPerRevolution;
+            this->currentPose.x = 0;
+            this->currentPose.y = 0;
+            this->currentPose.rotation = 0;
             lastUpdateTimestamp = pros::millis();
         }
 
@@ -41,8 +45,8 @@ namespace devils
             lastUpdateTimestamp = pros::millis();
 
             // Get Distance
-            double left = leftEncoder / ticksPerRevolution * 2 * M_PI * wheelRadius;
-            double right = rightEncoder / ticksPerRevolution * 2 * M_PI * wheelRadius;
+            double left = (leftEncoder / ticksPerRevolution) * 2 * M_PI * wheelRadius;
+            double right = (rightEncoder / ticksPerRevolution) * 2 * M_PI * wheelRadius;
 
             // Get Delta Distance
             double deltaLeft = left - lastLeft;
@@ -52,7 +56,7 @@ namespace devils
 
             // Calculate Delta Distance
             double deltaDistance = (deltaLeft + deltaRight) / 2;
-            double deltaRotation = (deltaRight - deltaLeft) / wheelBase;
+            double deltaRotation = (deltaLeft - deltaRight) / wheelBase;
 
             // Calculate Delta X and Y
             double deltaX = deltaDistance * std::cos(currentPose.rotation + deltaRotation / 2);
@@ -74,23 +78,25 @@ namespace devils
             auto rightPositions = chassis->getRightMotors()->get_positions();
 
             // Check Position State
-            if (leftPositions.size() < 1 || rightPositions.size() < 1)
+            if (leftPositions.size() < 1)
             {
-                Logger::error("TankWheelOdometry: Failed to update from chassis");
+                Logger::warn("TankWheelOdometry: Failed to update from left positions");
                 return;
             }
+            if (rightPositions.size() < 1)
+            {
+                Logger::warn("TankWheelOdometry: Failed to update from right positions");
+                return;
+            }
+
             // Update
             update(leftPositions[0], rightPositions[0]);
-
-            // Check Error
-            if (errno != 0)
-                Logger::error("TankWheelOdometry: Failed to update from chassis");
         }
 
         /**
          * Gets the current pose of the robot.
          */
-        const Pose getPose()
+        const Pose getPose() override
         {
             return currentPose;
         }
@@ -99,15 +105,15 @@ namespace devils
          * Sets the current pose of the robot.
          * @param pose The pose to set the robot to.
          */
-        void setPose(Pose pose)
+        void setPose(Pose pose) override
         {
             currentPose = pose;
         }
 
     private:
-        double wheelRadius;
-        double wheelBase;
-        double ticksPerRevolution;
+        const double wheelRadius;
+        const double wheelBase;
+        const double ticksPerRevolution;
 
         Pose currentPose;
 

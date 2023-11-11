@@ -2,7 +2,13 @@
 
 /*
  *      Headers defined in this file are accessible from anywhere in the project.
- *      Ususally, just defining the robot classes are enough.
  */
+
+// Robots
 #include "robot/blaze.hpp"
 #include "robot/pepperJack.hpp"
+
+// Emulation
+#include "display/display.hpp"
+#include "display/odomRenderer.hpp"
+#include "display/renderer.hpp"

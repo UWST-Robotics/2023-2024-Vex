@@ -60,11 +60,17 @@ void opcontrol()
 	Blaze robot = Blaze();
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
+	// Display
+	std::vector<Renderer *> renderers = {
+		new OdomRenderer(&robot.odometry),
+	};
+	Display currentDisplay = Display(renderers);
+
 	while (true)
 	{
 		// Get Controller Values
-		double left = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double right = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
+		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
+		double rightX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
 		bool fire = master.get_digital(DIGITAL_R1);
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
@@ -91,15 +97,26 @@ void opcontrol()
 		else
 			robot.intake.stop();
 
+		// Controller Vibration
+		if (robot.intake.getOuttaking())
+		{
+			master.rumble(".");
+			Logger::warn("Rumbling");
+		}
+
 		// Autonomous Test
 		if (autoTest)
 			autonomous();
 
 		// Arcade Drive
-		robot.chassis.move(left + right, left - right);
+		robot.chassis.move(leftY * 0.1, rightX * 0.1);
 
 		// Odometry
 		robot.updateOdometry();
+
+		// Simulation
+		auto pose = robot.odometry.getPose();
+		currentDisplay.update();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);
