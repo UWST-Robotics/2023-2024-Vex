@@ -11,4 +11,5 @@
 // Emulation
 #include "display/display.hpp"
 #include "display/odomRenderer.hpp"
+#include "display/motionRenderer.hpp"
 #include "display/renderer.hpp"

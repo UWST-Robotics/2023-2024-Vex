@@ -63,6 +63,7 @@ void opcontrol()
 	// Display
 	std::vector<Renderer *> renderers = {
 		new OdomRenderer(&robot.odometry),
+		new MotionRenderer(&robot.motionProfile),
 	};
 	Display currentDisplay = Display(renderers);
 
@@ -97,19 +98,15 @@ void opcontrol()
 		else
 			robot.intake.stop();
 
-		// Controller Vibration
-		if (robot.intake.getOuttaking())
-		{
-			master.rumble(".");
-			Logger::warn("Rumbling");
-		}
+		// LEDs
+		robot.leds.scale(1 - abs(leftY));
 
 		// Autonomous Test
 		if (autoTest)
 			autonomous();
 
 		// Arcade Drive
-		robot.chassis.move(leftY * 0.1, rightX * 0.1);
+		robot.chassis.move(leftY * 0.3, rightX * 0.3);
 
 		// Odometry
 		robot.updateOdometry();

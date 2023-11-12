@@ -16,8 +16,8 @@ namespace devils
          */
         TankChassis(
             const std::initializer_list<std::int8_t> leftMotorPorts,
-            const std::initializer_list<std::int8_t> rightMotorPorts) : leftMotors({pros::Motor(1)}),
-                                                                        rightMotors({pros::Motor(2)})
+            const std::initializer_list<std::int8_t> rightMotorPorts) : leftMotors({pros::Motor(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES)}),
+                                                                        rightMotors({pros::Motor(2, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_DEGREES)})
         {
             leftMotors.set_gearing(pros::E_MOTOR_GEARSET_18);
             rightMotors.set_gearing(pros::E_MOTOR_GEARSET_18);

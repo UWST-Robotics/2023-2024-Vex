@@ -36,7 +36,7 @@ namespace devils
             // Background
             static lv_obj_t *robotBGObject = lv_obj_create(robotObject, NULL);
             {
-                lv_obj_set_size(robotBGObject, 30, 30);
+                lv_obj_set_size(robotBGObject, ROBOT_SIZE, ROBOT_SIZE);
                 lv_obj_align(robotBGObject, robotObject, LV_ALIGN_CENTER, 0, 0);
 
                 static lv_style_t backgroundStyle;
@@ -49,7 +49,7 @@ namespace devils
             // Arrow
             robotPointer = lv_line_create(robotObject, NULL);
             {
-                static lv_point_t linePoints[] = {{50, 50}, {50, 50}};
+                static lv_point_t linePoints[] = {{0, 0}, {0, 0}};
                 lv_line_set_points(robotPointer, linePoints, 2);
                 lv_line_set_auto_size(robotPointer, true);
 
@@ -65,7 +65,12 @@ namespace devils
             {
                 lv_label_set_text(robotLabel, "(0,0)");
                 lv_label_set_long_mode(robotLabel, LV_LABEL_LONG_EXPAND);
-                lv_obj_align(robotLabel, robotObject, LV_ALIGN_CENTER, 0, 0);
+                lv_obj_align(robotLabel, robotObject, LV_ALIGN_IN_TOP_MID, 0, 0);
+
+                static lv_style_t labelStyle;
+                lv_style_copy(&labelStyle, &lv_style_plain);
+                labelStyle.text.color = LV_COLOR_MAKE(0xff, 0xff, 0xff);
+                lv_obj_set_style(robotLabel, &labelStyle);
             }
         }
 
@@ -80,11 +85,10 @@ namespace devils
             // Arrow
             static lv_point_t linePoints[] = {
                 {50, 50},
-                {50, 50}};
-            linePoints[1].x = 50 + 20 * cos(pose.rotation);
-            linePoints[1].y = 50 + 20 * sin(pose.rotation);
+                {0, 0}};
+            linePoints[1].x = 50 + ROBOT_SIZE * cos(pose.rotation);
+            linePoints[1].y = 50 + ROBOT_SIZE * sin(pose.rotation);
             lv_line_set_points(robotPointer, linePoints, 2);
-            Logger::warn(std::to_string(linePoints[1].x));
 
             // Label
             std::string text = "(" + std::to_string((int)pose.x) + "," + std::to_string((int)pose.y) + ")";
@@ -93,6 +97,8 @@ namespace devils
         }
 
     private:
+        static constexpr int ROBOT_SIZE = 12;
+
         OdomSource *odomSource;
 
         lv_obj_t *robotObject;

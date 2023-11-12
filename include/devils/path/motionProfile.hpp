@@ -2,6 +2,7 @@
 #include "pathFileReader.hpp"
 #include "pathFile.hpp"
 #include "okapi/squiggles/squiggles.hpp"
+#include "../utils/units.hpp"
 #include <vector>
 
 namespace devils
@@ -11,15 +12,19 @@ namespace devils
     public:
         /**
          * Represents a spline path that can sample velocities and positions at any time t.
+         * @param maxVelocity The maximum velocity of the robot in inches per second.
+         * @param maxAcceleration The maximum acceleration of the robot in inches per second squared.
+         * @param maxJerk The maximum jerk of the robot in inches per second cubed.
+         * @param robotTrackWidth The width of the robot in inches.
          */
         MotionProfile(
             float maxVelocity,
             float maxAcceleration,
             float maxJerk,
             float robotTrackWidth)
-            : constraints(squiggles::Constraints(maxVelocity, maxAcceleration, maxJerk)),
-              model(std::make_shared<squiggles::TankModel>(robotTrackWidth, constraints)),
-              generator(squiggles::SplineGenerator(constraints, model, DT))
+            : constraints(Units::inToMeters(maxVelocity), Units::inToMeters(maxAcceleration), Units::inToMeters(maxJerk)),
+              model(std::make_shared<squiggles::TankModel>(Units::inToMeters(robotTrackWidth), constraints)),
+              generator(constraints, model, DT)
         {
         }
 
@@ -29,7 +34,35 @@ namespace devils
          */
         void generate()
         {
-            motionPath = generator.generate(getPointsFromSD());
+            pathPoints = getTestPoints();
+            motionPath = generator.generate(pathPoints);
+        }
+
+        /**
+         * Returns the duration of the motion profile.
+         * @return The duration of the motion profile in seconds.
+         */
+        double getDuration()
+        {
+            return motionPath.size() * DT;
+        }
+
+        /**
+         * Returns the path of the motion profile.
+         * @return The path of the motion profile.
+         */
+        std::vector<squiggles::ProfilePoint> &getPath()
+        {
+            return motionPath;
+        }
+
+        /**
+         * Returns the control points of the motion profile.
+         * @return The control points of the motion profile.
+         */
+        std::vector<squiggles::Pose> &getPathPoints()
+        {
+            return pathPoints;
         }
 
         /**
@@ -50,11 +83,12 @@ namespace devils
         }
 
     private:
-        const float DT = 0.01; // seconds
+        static constexpr float DT = 0.1; // seconds
 
         squiggles::Constraints constraints;
         std::shared_ptr<squiggles::TankModel> model;
         squiggles::SplineGenerator generator;
+        std::vector<squiggles::Pose> pathPoints = {};
         std::vector<squiggles::ProfilePoint> motionPath = {};
 
         std::vector<squiggles::Pose> getPointsFromSD()
@@ -76,6 +110,17 @@ namespace devils
                 if (point.isReversed)
                     isReversed = !isReversed;
             }
+            return points;
+        }
+
+        std::vector<squiggles::Pose> getTestPoints()
+        {
+            std::vector<squiggles::Pose> points;
+            points.push_back({0, 0, 0});
+            points.push_back({2, 1, M_PI / 2.0});
+            points.push_back({3, 3, 0});
+            points.push_back({4, 1, -M_PI / 2.0});
+            points.push_back({0, 0, M_PI});
             return points;
         }
     };
