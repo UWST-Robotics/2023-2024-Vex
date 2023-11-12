@@ -14,7 +14,7 @@ namespace devils
          * Creates a new display with the given renderers.
          * @param renderers The renderers to manage.
          */
-        Display(const std::vector<Renderer *> renderers)
+        Display(std::initializer_list<Renderer *> renderers)
             : renderers(renderers)
         {
             // Create Root Object
@@ -36,6 +36,6 @@ namespace devils
         }
 
     private:
-        const std::vector<Renderer *> renderers;
+        std::vector<Renderer *> renderers;
     };
 }

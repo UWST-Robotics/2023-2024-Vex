@@ -29,26 +29,27 @@ namespace devils
             static lv_obj_t *robotPath = lv_line_create(root, NULL);
             {
                 // Convert path to vector of points
-                std::vector<lv_point_t> linePointVector;
+                static std::vector<lv_point_t> linePointVector;
+                linePointVector.clear();
                 for (int i = 0; i < path.size(); i++)
                 {
                     linePointVector.push_back({(short)(Units::metersToIn(path[i].vector.pose.x) + 50),
                                                (short)(Units::metersToIn(path[i].vector.pose.y) + 50)});
-                    Logger::warn("Point: " + std::to_string(path[i].vector.pose.x) + ", " + std::to_string(path[i].vector.pose.y) + ", " + std::to_string(path[i].vector.pose.yaw * (180 / M_PI)) + ", t=" + std::to_string(path[i].time));
                 }
 
-                lv_point_t *linePoints = linePointVector.data();
+                static lv_point_t *linePoints;
+                linePoints = linePointVector.data();
 
                 // Create line
-                lv_line_set_auto_size(robotPath, true);
                 lv_line_set_points(robotPath, linePoints, linePointVector.size());
+                lv_line_set_auto_size(robotPath, true);
 
                 // Style
-                static lv_style_t pointerStyle;
-                lv_style_copy(&pointerStyle, &lv_style_plain);
-                pointerStyle.line.color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
-                pointerStyle.line.width = 1;
-                lv_obj_set_style(robotPath, &pointerStyle);
+                static lv_style_t pathStyle;
+                lv_style_copy(&pathStyle, &lv_style_plain);
+                pathStyle.line.color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
+                pathStyle.line.width = 1;
+                lv_obj_set_style(robotPath, &pathStyle);
             }
 
             // Points

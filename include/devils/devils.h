@@ -8,8 +8,12 @@
 #include "robot/blaze.hpp"
 #include "robot/pepperJack.hpp"
 
-// Emulation
+// Autonomous
+#include "control/openLoopController.hpp"
+#include "control/pursuitController.hpp"
+
+// Display
 #include "display/display.hpp"
 #include "display/odomRenderer.hpp"
 #include "display/motionRenderer.hpp"
-#include "display/renderer.hpp"
+#include "display/controlRenderer.hpp"

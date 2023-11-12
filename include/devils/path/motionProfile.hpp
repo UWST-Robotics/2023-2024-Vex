@@ -5,6 +5,8 @@
 #include "../utils/units.hpp"
 #include <vector>
 
+#define M_PI 3.14159265358979323846
+
 namespace devils
 {
     class MotionProfile
@@ -34,8 +36,11 @@ namespace devils
          */
         void generate()
         {
-            pathPoints = getTestPoints();
+            if (_isGenerated)
+                return;
+            pathPoints = getPathTestPoints();
             motionPath = generator.generate(pathPoints);
+            _isGenerated = true;
         }
 
         /**
@@ -70,7 +75,7 @@ namespace devils
          * @param t The time to sample at.
          * @return squiggles::ProfilePoint at time t.
          */
-        squiggles::ProfilePoint getPoint(float t)
+        squiggles::ProfilePoint getPointAtTime(double t)
         {
             if (motionPath.size() == 0)
                 return squiggles::ProfilePoint();
@@ -79,19 +84,13 @@ namespace devils
             if (t > motionPath.size() * DT)
                 return motionPath[motionPath.size() - 1];
 
-            return motionPath[t / DT];
+            return motionPath[(int)(t / DT)];
         }
 
-    private:
-        static constexpr float DT = 0.1; // seconds
-
-        squiggles::Constraints constraints;
-        std::shared_ptr<squiggles::TankModel> model;
-        squiggles::SplineGenerator generator;
-        std::vector<squiggles::Pose> pathPoints = {};
-        std::vector<squiggles::ProfilePoint> motionPath = {};
-
-        std::vector<squiggles::Pose> getPointsFromSD()
+        /**
+         * Gets control points from the SD card.
+         */
+        std::vector<squiggles::Pose> getPathPointsFromSD()
         {
             // Read from SD
             auto path = devils::PathFileReader::ReadFromSD();
@@ -113,7 +112,7 @@ namespace devils
             return points;
         }
 
-        std::vector<squiggles::Pose> getTestPoints()
+        std::vector<squiggles::Pose> getPathTestPoints()
         {
             std::vector<squiggles::Pose> points;
             points.push_back({0, 0, 0});
@@ -123,5 +122,23 @@ namespace devils
             points.push_back({0, 0, M_PI});
             return points;
         }
+
+        bool isGenerated()
+        {
+            return _isGenerated;
+        }
+
+    private:
+        static constexpr float DT = 0.1; // seconds
+
+        // Squiggles
+        squiggles::Constraints constraints;
+        std::shared_ptr<squiggles::TankModel> model;
+        squiggles::SplineGenerator generator;
+
+        // Output
+        bool _isGenerated = false;
+        std::vector<squiggles::Pose> pathPoints = {};
+        std::vector<squiggles::ProfilePoint> motionPath = {};
     };
 }

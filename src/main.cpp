@@ -40,7 +40,34 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous()
+{
+	Logger::warn("Starting autocontrol");
+	Blaze robot = Blaze();
+
+	// Auto Controller
+	PursuitController controller(robot.chassis, robot.motionProfile, robot.odometry);
+	// OpenLoopController controller(robot.chassis, robot.motionProfile);
+	controller.restart();
+
+	// Display
+	OdomRenderer odomRenderer(&robot.odometry);
+	MotionRenderer motionRenderer(&robot.motionProfile);
+	ControlRenderer controlRenderer(&controller);
+	Display autoDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+
+	// Loop
+	while (true)
+	{
+		robot.updateOdometry();
+
+		controller.update();
+		autoDisplay.update();
+
+		// Delay to prevent the CPU from being overloaded
+		pros::delay(20);
+	}
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -57,16 +84,18 @@ void autonomous() {}
  */
 void opcontrol()
 {
+	Logger::warn("Starting opcontrol");
 	Blaze robot = Blaze();
+
+	// Teleop Controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 	// Display
-	std::vector<Renderer *> renderers = {
-		new OdomRenderer(&robot.odometry),
-		new MotionRenderer(&robot.motionProfile),
-	};
-	Display currentDisplay = Display(renderers);
+	OdomRenderer odomRenderer(&robot.odometry);
+	MotionRenderer motionRenderer(&robot.motionProfile);
+	Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
+	// Loop
 	while (true)
 	{
 		// Get Controller Values
@@ -76,7 +105,6 @@ void opcontrol()
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
 		bool outtake = master.get_digital(DIGITAL_L2);
-		bool autoTest = master.get_digital(DIGITAL_A);
 
 		// Catapult
 		if (fire)
@@ -101,10 +129,6 @@ void opcontrol()
 		// LEDs
 		robot.leds.scale(1 - abs(leftY));
 
-		// Autonomous Test
-		if (autoTest)
-			autonomous();
-
 		// Arcade Drive
 		robot.chassis.move(leftY * 0.3, rightX * 0.3);
 
@@ -112,8 +136,7 @@ void opcontrol()
 		robot.updateOdometry();
 
 		// Simulation
-		auto pose = robot.odometry.getPose();
-		currentDisplay.update();
+		teleopDisplay.update();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);
