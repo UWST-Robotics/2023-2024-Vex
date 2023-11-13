@@ -13,15 +13,15 @@ namespace devils
     public:
         /**
          * Creates a new smart motor group.
-         * @param name The name of the motor group.
-         * @param ports The ports of the motors in the group.
+         * @param name The name of the motor group (for logging purposes)
+         * @param ports The ports of the motors in the group (from 1 to 21)
          */
         SmartMotorGroup(const std::string name, const std::initializer_list<int8_t> ports)
             : name(name), motors()
         {
             motors.reserve(ports.size());
             for (int8_t port : ports)
-                motors.push_back(SmartMotor(_getMotorName(port), port));
+                motors.push_back(std::make_shared<SmartMotor>(_getMotorName(port), port));
         }
 
         /**
@@ -30,8 +30,18 @@ namespace devils
          */
         void moveVoltage(const double voltage) override
         {
-            for (SmartMotor motor : motors)
-                motor.moveVoltage(voltage);
+            for (auto motor : motors)
+                motor->moveVoltage(voltage);
+        }
+
+        /**
+         * Sets the ramp rate of the motor group.
+         * @param rampRate The max change in motor value per second.
+         */
+        void setRampRate(const double rampRate)
+        {
+            for (auto motor : motors)
+                motor->setRampRate(rampRate);
         }
 
         /**
@@ -39,8 +49,8 @@ namespace devils
          */
         void stop() override
         {
-            for (SmartMotor motor : motors)
-                motor.stop();
+            for (auto motor : motors)
+                motor->stop();
         }
 
         /**
@@ -50,8 +60,8 @@ namespace devils
         const double getPosition() override
         {
             double position = 0;
-            for (SmartMotor motor : motors)
-                position += motor.getPosition();
+            for (auto motor : motors)
+                position += motor->getPosition();
             return position / motors.size();
         }
 
@@ -62,8 +72,8 @@ namespace devils
         const double getSpeed() override
         {
             double speed = 0;
-            for (SmartMotor motor : motors)
-                speed += motor.getSpeed();
+            for (auto motor : motors)
+                speed += motor->getSpeed();
             return speed / motors.size();
         }
 
@@ -77,6 +87,6 @@ namespace devils
 
     private:
         const std::string name;
-        std::vector<SmartMotor> motors;
+        std::vector<std::shared_ptr<SmartMotor>> motors;
     };
 }

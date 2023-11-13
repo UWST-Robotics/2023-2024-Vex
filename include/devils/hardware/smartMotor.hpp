@@ -2,6 +2,7 @@
 #include "pros/motors.hpp"
 #include "motor.hpp"
 #include "../utils/logger.hpp"
+#include "../utils/ramp.hpp"
 #include <string>
 
 namespace devils
@@ -15,11 +16,12 @@ namespace devils
         /**
          * Creates a motor object.
          * @param name The name of the motor (for logging purposes)
-         * @param port The port of the motor
+         * @param port The port of the motor (from 1 to 21)
          */
         SmartMotor(std::string name, const int8_t port)
             : name(name),
-              motor(port)
+              motor(port),
+              voltageRamp(100000)
         {
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": motor port is invalid");
@@ -31,10 +33,20 @@ namespace devils
          */
         void moveVoltage(const double voltage) override
         {
-            int32_t status = motor.move(voltage * 127);
+            // Move Motor
+            int32_t status = motor.move(voltageRamp.update(voltage) * 127);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": motor move failed");
             _checkHealth();
+        }
+
+        /**
+         * Sets the ramp rate of the motor.
+         * @param rampRate The ramp rate of the motor from 0 to 2.
+         */
+        void setRampRate(const double rampRate)
+        {
+            voltageRamp.setRampRate(rampRate);
         }
 
         /**
@@ -79,19 +91,23 @@ namespace devils
          */
         void _checkHealth()
         {
-            bool isOverTemp = motor.is_over_temp();
-            bool isOverCurrent = motor.is_over_current();
+            int32_t isOverTemp = motor.is_over_temp();
+            int32_t isOverCurrent = motor.is_over_current();
 
-            if (isOverTemp && LOGGING_ENABLED)
+            if ((isOverTemp == PROS_ERR || isOverCurrent == PROS_ERR) && LOGGING_ENABLED)
+                Logger::warn(name + ": motor health check failed");
+            else if (isOverTemp == 1 && LOGGING_ENABLED)
                 Logger::warn(name + ": motor is over temperature");
-            if (isOverCurrent && LOGGING_ENABLED)
+            else if (isOverCurrent == 1 && LOGGING_ENABLED)
                 Logger::warn(name + ": motor is over current");
         }
 
     private:
         static constexpr bool LOGGING_ENABLED = true;
 
+        double currentVoltage = 0;
         std::string name;
         pros::Motor motor;
+        Ramp voltageRamp;
     };
 }

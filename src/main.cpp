@@ -105,6 +105,7 @@ void opcontrol()
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
 		bool outtake = master.get_digital(DIGITAL_L2);
+		bool climb = master.get_digital(DIGITAL_UP);
 
 		/*
 		// Catapult

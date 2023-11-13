@@ -1,10 +1,10 @@
 #pragma once
 #include "../chassis/tankChassis.hpp"
+#include "../hardware/imu.hpp"
+#include "../utils/logger.hpp"
 #include "pose.hpp"
-#include "pros/rtos.hpp"
-#include "devils/utils/logger.hpp"
 #include "odomSource.hpp"
-#include "pros/imu.hpp"
+#include "pros/rtos.hpp"
 #include "pros/error.h"
 #include <cmath>
 #include <errno.h>
@@ -75,7 +75,7 @@ namespace devils
             // Update IMU
             if (enableIMU)
             {
-                double imuHeading = imu->get_rotation();
+                double imuHeading = imu->getHeading();
                 if (imuHeading == PROS_ERR_F)
                     Logger::error("TankWheelOdometry: Failed to update from IMU");
                 else
@@ -99,7 +99,7 @@ namespace devils
          * Enables the IMU for the odometry.
          * @param imu The IMU to use.
          */
-        void useIMU(pros::IMU *imu)
+        void useIMU(IMU *imu)
         {
             enableIMU = true;
             this->imu = imu;
@@ -134,6 +134,6 @@ namespace devils
 
         // IMU
         bool enableIMU = false;
-        pros::IMU *imu;
+        IMU *imu;
     };
 }
