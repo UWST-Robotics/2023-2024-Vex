@@ -1,20 +1,22 @@
 #pragma once
-#include "pros/motors.hpp"
+#include "../hardware/smartMotor.hpp"
+#include "../utils/logger.hpp"
 
 namespace devils
 {
+    /**
+     * Controls the climbing system to pull the robot up.
+     */
     class ClimbSystem
     {
     public:
         /**
-         * Controls the climbing system to pull the robot up.
+         * Creates a new climbing system.
          * @param motorPort The port of the climbing motor
          */
-        ClimbSystem(int8_t motorPort)
-            : climbMotor(motorPort)
+        ClimbSystem(const int8_t motorPort)
+            : climbMotor("ClimbMotor", motorPort)
         {
-            if (errno != 0)
-                Logger::error("ClimbSystem: motor port is invalid");
         }
 
         /**
@@ -22,7 +24,7 @@ namespace devils
          */
         void climb()
         {
-            climbMotor.move(MOTOR_SPEED);
+            climbMotor.moveVoltage(MOTOR_SPEED);
             isClimbing = true;
             isDropping = false;
         }
@@ -32,7 +34,7 @@ namespace devils
          */
         void stop()
         {
-            climbMotor.move(0);
+            climbMotor.moveVoltage(0);
             isClimbing = false;
             isDropping = false;
         }
@@ -42,7 +44,7 @@ namespace devils
          */
         void drop()
         {
-            climbMotor.move(-MOTOR_SPEED);
+            climbMotor.moveVoltage(-MOTOR_SPEED);
             isClimbing = false;
             isDropping = true;
         }
@@ -64,10 +66,10 @@ namespace devils
         }
 
     private:
-        const int8_t MOTOR_SPEED = 127;
+        static constexpr double MOTOR_SPEED = 1.0;
 
         bool isClimbing = false;
         bool isDropping = false;
-        pros::Motor climbMotor;
+        SmartMotor climbMotor;
     };
 }

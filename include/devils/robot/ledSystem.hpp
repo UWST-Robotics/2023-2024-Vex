@@ -1,7 +1,6 @@
 #pragma once
-#include "pros/motors.hpp"
-#include <errno.h>
-#include "devils/utils/logger.hpp"
+#include "../hardware/led.hpp"
+#include "../utils/logger.hpp"
 
 namespace devils
 {
@@ -11,15 +10,15 @@ namespace devils
         /**
          * Controls the LED lights on the robot.
          */
-        LEDSystem() : leds{
-                          pros::ADIDigitalOut(1),
-                          pros::ADIDigitalOut(2),
-                          pros::ADIDigitalOut(3),
-                          pros::ADIDigitalOut(4),
-                          pros::ADIDigitalOut(5),
-                          pros::ADIDigitalOut(6),
-                          pros::ADIDigitalOut(7),
-                          pros::ADIDigitalOut(8)}
+        LEDSystem()
+            : leds{LED("LEDSystem_1", 1),
+                   LED("LEDSystem_2", 2),
+                   LED("LEDSystem_3", 3),
+                   LED("LEDSystem_4", 4),
+                   LED("LEDSystem_5", 5),
+                   LED("LEDSystem_6", 6),
+                   LED("LEDSystem_7", 7),
+                   LED("LEDSystem_8", 8)}
         {
             if (errno != 0)
                 Logger::error("LEDSystem: led ports are invalid");
@@ -31,7 +30,7 @@ namespace devils
         void turnOn()
         {
             for (auto led : leds)
-                led.set_value(true);
+                led.enable();
         }
 
         /**
@@ -40,7 +39,7 @@ namespace devils
         void turnOff()
         {
             for (auto led : leds)
-                led.set_value(false);
+                led.disable();
         }
 
         /**
@@ -51,12 +50,12 @@ namespace devils
         {
             int count = (int)round(8 * value);
             for (int i = 0; i < count; i++)
-                leds[i].set_value(!invert);
+                leds[i].setEnabled(!invert);
             for (int i = count; i < 8; i++)
-                leds[i].set_value(invert);
+                leds[i].setEnabled(invert);
         }
 
     private:
-        pros::ADIDigitalOut leds[8];
+        LED leds[8];
     };
 }

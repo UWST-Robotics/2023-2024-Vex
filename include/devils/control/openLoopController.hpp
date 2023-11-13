@@ -6,26 +6,45 @@
 
 namespace devils
 {
+    /**
+     * Controller for follwing a motion profile without sensor feedback.
+     */
     class OpenLoopController : public AutoController
     {
     public:
+        /**
+         * Constructs a new OpenLoopController.
+         * @param chassis The chassis to control.
+         * @param motionProfile The motion profile to follow.
+         */
         OpenLoopController(BaseChassis &chassis, MotionProfile &motionProfile)
             : chassis(chassis), motionProfile(motionProfile)
         {
             motionProfile.generate();
         }
 
-        squiggles::ProfilePoint getCurrentPoint() override
+        /**
+         * Returns the current point of the motion profile.
+         * @return The current point of the motion profile.
+         */
+        const squiggles::ProfilePoint getCurrentPoint() override
         {
             double time = (pros::millis() - startTime) / 1000.0;
             return motionProfile.getPointAtTime(time);
         }
 
+        /**
+         * Restarts the motion profile from the beginning.
+         */
         void restart() override
         {
             startTime = pros::millis();
         }
 
+        /**
+         * Updates the chassis based on the current point of the motion profile.
+         * Also updates the chassis input.
+         */
         void update() override
         {
             auto currentPoint = getCurrentPoint();

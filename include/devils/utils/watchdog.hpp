@@ -4,6 +4,9 @@
 
 namespace devils
 {
+    /**
+     * Supervises the robot to make sure it is not doing anything crazy.
+     */
     class Watchdog
     {
     public:

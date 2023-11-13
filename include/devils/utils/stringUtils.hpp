@@ -4,6 +4,9 @@
 
 namespace devils
 {
+    /**
+     * A class containing a varitet of string utilities.
+     */
     class StringUtils
     {
     public:

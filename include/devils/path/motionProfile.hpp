@@ -9,21 +9,24 @@
 
 namespace devils
 {
+    /**
+     * Represents a spline path that can sample velocities and positions at any time t.
+     */
     class MotionProfile
     {
     public:
         /**
-         * Represents a spline path that can sample velocities and positions at any time t.
+         * Creates a new motion profile.
          * @param maxVelocity The maximum velocity of the robot in inches per second.
          * @param maxAcceleration The maximum acceleration of the robot in inches per second squared.
          * @param maxJerk The maximum jerk of the robot in inches per second cubed.
          * @param robotTrackWidth The width of the robot in inches.
          */
         MotionProfile(
-            float maxVelocity,
-            float maxAcceleration,
-            float maxJerk,
-            float robotTrackWidth)
+            const float maxVelocity,
+            const float maxAcceleration,
+            const float maxJerk,
+            const float robotTrackWidth)
             : constraints(Units::inToMeters(maxVelocity), Units::inToMeters(maxAcceleration), Units::inToMeters(maxJerk)),
               model(std::make_shared<squiggles::TankModel>(Units::inToMeters(robotTrackWidth), constraints)),
               generator(constraints, model, DT)
@@ -38,7 +41,7 @@ namespace devils
         {
             if (_isGenerated)
                 return;
-            pathPoints = getPathTestPoints();
+            pathPoints = _getPathTestPoints();
             motionPath = generator.generate(pathPoints);
             _isGenerated = true;
         }
@@ -47,7 +50,7 @@ namespace devils
          * Returns the duration of the motion profile.
          * @return The duration of the motion profile in seconds.
          */
-        double getDuration()
+        const double getDuration()
         {
             return motionPath.size() * DT;
         }
@@ -56,7 +59,7 @@ namespace devils
          * Returns the path of the motion profile.
          * @return The path of the motion profile.
          */
-        std::vector<squiggles::ProfilePoint> &getPath()
+        const std::vector<squiggles::ProfilePoint> &getPath()
         {
             return motionPath;
         }
@@ -65,7 +68,7 @@ namespace devils
          * Returns the control points of the motion profile.
          * @return The control points of the motion profile.
          */
-        std::vector<squiggles::Pose> &getPathPoints()
+        const std::vector<squiggles::Pose> &getPathPoints()
         {
             return pathPoints;
         }
@@ -75,7 +78,7 @@ namespace devils
          * @param t The time to sample at.
          * @return squiggles::ProfilePoint at time t.
          */
-        squiggles::ProfilePoint getPointAtTime(double t)
+        const squiggles::ProfilePoint getPointAtTime(double t)
         {
             if (motionPath.size() == 0)
                 return squiggles::ProfilePoint();
@@ -90,10 +93,10 @@ namespace devils
         /**
          * Gets control points from the SD card.
          */
-        std::vector<squiggles::Pose> getPathPointsFromSD()
+        const std::vector<squiggles::Pose> _getPathPointsFromSD()
         {
             // Read from SD
-            auto path = devils::PathFileReader::ReadFromSD();
+            auto path = devils::PathFileReader::readFromSD();
 
             // Convert to squiggles::Pose
             bool isReversed = false;
@@ -112,7 +115,11 @@ namespace devils
             return points;
         }
 
-        std::vector<squiggles::Pose> getPathTestPoints()
+        /**
+         * Gets test control points.
+         * @return Test control points.
+         */
+        const std::vector<squiggles::Pose> _getPathTestPoints()
         {
             std::vector<squiggles::Pose> points;
             points.push_back({0, 0, 0});
@@ -123,6 +130,10 @@ namespace devils
             return points;
         }
 
+        /**
+         * Returns true if the motion profile has been generated.
+         * @return True if the motion profile has been generated.
+         */
         bool isGenerated()
         {
             return _isGenerated;

@@ -4,6 +4,8 @@
 #include "pros/rtos.hpp"
 #include "devils/utils/logger.hpp"
 #include "odomSource.hpp"
+#include "pros/imu.hpp"
+#include "pros/error.h"
 #include <cmath>
 #include <errno.h>
 
@@ -11,11 +13,14 @@
 
 namespace devils
 {
+    /**
+     * Represents a tank wheel odometry system.
+     */
     class TankWheelOdometry : public OdomSource
     {
     public:
         /**
-         * Represents a tank wheel odometry system.
+         * Creates a new tank wheel odometry system.
          * Position is calculated using the left and right encoder values.
          * @param wheelRadius The radius of the wheels in inches.
          * @param wheelBase The distance between the wheels in inches.
@@ -38,7 +43,7 @@ namespace devils
          * @param rightEncoder The right encoder ticks.
          * @param delta The time since the last update.
          */
-        void update(int leftEncoder, int rightEncoder)
+        void update(const int leftEncoder, const int rightEncoder)
         {
             // Get Delta Time
             uint32_t deltaT = lastUpdateTimestamp - pros::millis();
@@ -66,6 +71,16 @@ namespace devils
             currentPose.x += deltaX;
             currentPose.y += deltaY;
             currentPose.rotation += deltaRotation;
+
+            // Update IMU
+            if (enableIMU)
+            {
+                double imuHeading = imu->get_rotation();
+                if (imuHeading == PROS_ERR_F)
+                    Logger::error("TankWheelOdometry: Failed to update from IMU");
+                else
+                    currentPose.rotation = imuHeading;
+            }
         }
 
         /**
@@ -74,23 +89,20 @@ namespace devils
          */
         void update(TankChassis *chassis)
         {
-            auto leftPositions = chassis->getLeftMotors()->get_positions();
-            auto rightPositions = chassis->getRightMotors()->get_positions();
+            auto leftPosition = chassis->getLeftMotors()->getPosition();
+            auto rightPosition = chassis->getRightMotors()->getPosition();
 
-            // Check Position State
-            if (leftPositions.size() < 1)
-            {
-                Logger::warn("TankWheelOdometry: Failed to update from left positions");
-                return;
-            }
-            if (rightPositions.size() < 1)
-            {
-                Logger::warn("TankWheelOdometry: Failed to update from right positions");
-                return;
-            }
+            update(leftPosition, rightPosition);
+        }
 
-            // Update
-            update(leftPositions[0], rightPositions[0]);
+        /**
+         * Enables the IMU for the odometry.
+         * @param imu The IMU to use.
+         */
+        void useIMU(pros::IMU *imu)
+        {
+            enableIMU = true;
+            this->imu = imu;
         }
 
         /**
@@ -116,9 +128,12 @@ namespace devils
         const double ticksPerRevolution;
 
         Pose currentPose;
-
         uint32_t lastUpdateTimestamp = 0;
         double lastLeft = 0;
         double lastRight = 0;
+
+        // IMU
+        bool enableIMU = false;
+        pros::IMU *imu;
     };
 }

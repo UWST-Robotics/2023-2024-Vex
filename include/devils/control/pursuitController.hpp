@@ -9,16 +9,29 @@
 
 namespace devils
 {
+    /**
+     * Controller for follwing a motion profile with sensor feedback using Basic Pure Pursuit.
+     */
     class PursuitController : public AutoController
     {
     public:
+        /**
+         * Constructs a new PursuitController.
+         * @param chassis The chassis to control.
+         * @param motionProfile The motion profile to follow.
+         */
         PursuitController(BaseChassis &chassis, MotionProfile &motionProfile, OdomSource &odometry)
             : chassis(chassis), motionProfile(motionProfile), odometry(odometry)
         {
             motionProfile.generate();
         }
 
-        squiggles::ProfilePoint getCurrentPoint() override
+        /**
+         * Returns the current target point of the motion profile.
+         * Controller tries to choose LOOKAHEAD_DISTANCE inches ahead of the robot.
+         * @return The current target point of the motion profile.
+         */
+        const squiggles::ProfilePoint getCurrentPoint() override
         {
             if (!motionProfile.isGenerated())
                 return squiggles::ProfilePoint();
@@ -27,11 +40,18 @@ namespace devils
             return allPoints[minimumIndex];
         }
 
+        /**
+         * Restarts the motion profile from the beginning.
+         */
         void restart() override
         {
             minimumIndex = 0;
         }
 
+        /**
+         * Updates the chassis based on the current point of the motion profile.
+         * Also updates the chassis input.
+         */
         void update() override
         {
             // Update Closest Point

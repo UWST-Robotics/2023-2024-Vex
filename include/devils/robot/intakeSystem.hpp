@@ -1,24 +1,24 @@
 #pragma once
-#include "pros/motors.hpp"
-#include <errno.h>
+#include "../hardware/smartMotor.hpp"
 #include "devils/utils/logger.hpp"
 
 namespace devils
 {
+    /**
+     * Controls the intake system to intake triballs.
+     */
     class IntakeSystem
     {
     public:
         /**
-         * Controls the pneumatic wings that pop out to the sides of the robot.
+         * Controls the intake system to intake triballs.
          * @param wheelPort The port of the flywheel motor.
          * @param manipPort The port of the articulation motor.
          */
-        IntakeSystem(int8_t wheelPort, int8_t manipPort)
-            : wheelMotor(wheelPort),
-              manipMotor(manipPort)
+        IntakeSystem(const int8_t wheelPort, const int8_t manipPort)
+            : intakeMotor("IntakeMotor", wheelPort),
+              manipMotor("ManipMotor", manipPort)
         {
-            if (errno != 0)
-                Logger::error("IntakeSystem: motor port is invalid");
         }
 
         /**
@@ -26,7 +26,7 @@ namespace devils
          */
         void extend()
         {
-            manipMotor.move(MANIP_SPEED);
+            manipMotor.moveVoltage(MANIP_SPEED);
             isExtended = true;
         }
 
@@ -35,7 +35,7 @@ namespace devils
          */
         void retract()
         {
-            manipMotor.move(-MANIP_SPEED);
+            manipMotor.moveVoltage(-MANIP_SPEED);
             isExtended = false;
         }
 
@@ -44,7 +44,7 @@ namespace devils
          */
         void intake()
         {
-            wheelMotor.move(WHEEL_SPEED);
+            intakeMotor.moveVoltage(WHEEL_SPEED);
             isIntaking = true;
             isOuttaking = false;
         }
@@ -54,7 +54,7 @@ namespace devils
          */
         void outtake()
         {
-            wheelMotor.move(-WHEEL_SPEED);
+            intakeMotor.moveVoltage(-WHEEL_SPEED);
             isIntaking = false;
             isOuttaking = true;
         }
@@ -64,7 +64,7 @@ namespace devils
          */
         void stop()
         {
-            wheelMotor.move(0);
+            intakeMotor.stop();
             isIntaking = false;
             isOuttaking = false;
         }
@@ -94,13 +94,13 @@ namespace devils
         }
 
     private:
-        const int8_t WHEEL_SPEED = 127;
-        const int8_t MANIP_SPEED = 127;
+        static constexpr double WHEEL_SPEED = 1.0;
+        static constexpr double MANIP_SPEED = 1.0;
 
         bool isExtended = false;
         bool isIntaking = false;
         bool isOuttaking = false;
-        pros::Motor wheelMotor;
-        pros::Motor manipMotor;
+        SmartMotor intakeMotor;
+        SmartMotor manipMotor;
     };
 }

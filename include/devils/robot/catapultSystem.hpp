@@ -1,20 +1,21 @@
 #pragma once
-#include "pros/motors.hpp"
+#include "../hardware/smartMotor.hpp"
 
 namespace devils
 {
+    /**
+     * Controls the catapult system to launch triballs.
+     */
     class CatapultSystem
     {
     public:
         /**
-         * Controls the catapult system to launch balls.
+         * Creates a new catapult system.
          * @param motorPort The port of the catapult motor
          */
-        CatapultSystem(int8_t motorPort)
-            : catapultMotor(motorPort)
+        CatapultSystem(const int8_t motorPort)
+            : catapultMotor("CatapultMotor", motorPort)
         {
-            if (errno != 0)
-                Logger::error("IntakeSystem: motor port is invalid");
         }
 
         /**
@@ -22,7 +23,7 @@ namespace devils
          */
         void fire()
         {
-            catapultMotor.move(MOTOR_SPEED);
+            catapultMotor.moveVoltage(MOTOR_SPEED);
             isFiring = true;
         }
 
@@ -31,7 +32,7 @@ namespace devils
          */
         void stop()
         {
-            catapultMotor.move(0);
+            catapultMotor.moveVoltage(0);
             isFiring = false;
         }
 
@@ -44,9 +45,9 @@ namespace devils
         }
 
     private:
-        const int8_t MOTOR_SPEED = 127;
+        static constexpr double MOTOR_SPEED = 1.0;
 
         bool isFiring = false;
-        pros::Motor catapultMotor;
+        SmartMotor catapultMotor;
     };
 }

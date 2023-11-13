@@ -15,7 +15,11 @@ namespace devils
         /// @brief The rotation of the robot in radians
         double rotation;
 
-        std::string toString()
+        /**
+         * Prints the pose to a string
+         * @return The pose as a string
+         */
+        const std::string toString()
         {
             return "Pose(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(rotation) + ")";
         }

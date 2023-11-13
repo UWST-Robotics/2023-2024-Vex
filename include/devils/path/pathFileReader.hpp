@@ -6,6 +6,9 @@
 
 namespace devils
 {
+    /**
+     * Reads a path file from the SD card.
+     */
     class PathFileReader
     {
     public:
@@ -13,7 +16,7 @@ namespace devils
          * Reads a path file from the SD card.
          * @return The path file.
          */
-        static PathFile ReadFromSD()
+        static PathFile readFromSD()
         {
             // Create a new path file
             PathFile pathFile;
@@ -34,12 +37,12 @@ namespace devils
                     continue;
                 if (line.rfind("POINT") == 0)
                 {
-                    PathPoint point = ParsePoint(line);
+                    PathPoint point = _parsePoint(line);
                     pathFile.points.push_back(point);
                 }
                 if (line.rfind("EVENT") == 0)
                 {
-                    PathEvent event = ParseEvent(line);
+                    PathEvent event = _parseEvent(line);
                     pathFile.points.back().events.push_back(event);
                 }
                 if (line.rfind("REVERSE") == 0)
@@ -50,15 +53,12 @@ namespace devils
             file.close();
         }
 
-    private:
-        inline static const std::string PATH_FILE_PATH = "/usd/path.txt";
-
         /**
          * Parses a point from a line in the path file.
          * @param line The line to parse.
          * @return The parsed point.
          */
-        static PathPoint ParsePoint(std::string line)
+        static PathPoint _parsePoint(std::string line)
         {
             // Split the line into properties
             auto split = StringUtils::split(line, ' ');
@@ -95,7 +95,7 @@ namespace devils
          * @param line The line to parse.
          * @return The parsed event.
          */
-        static PathEvent ParseEvent(std::string line)
+        static PathEvent _parseEvent(std::string line)
         {
             // Split the line into properties
             auto split = StringUtils::split(line, ' ');
@@ -120,5 +120,8 @@ namespace devils
             // Return the event
             return event;
         }
+
+    private:
+        inline static const std::string PATH_FILE_PATH = "/usd/path.txt";
     };
 }

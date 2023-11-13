@@ -5,6 +5,10 @@
 namespace devils
 {
     // TODO: Check to see if this logs to the SD card or if it only logs to the terminal
+    
+    /**
+     * Represents a global logging utility.
+     */
     class Logger
     {
     public:

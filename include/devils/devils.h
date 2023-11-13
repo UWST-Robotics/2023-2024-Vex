@@ -6,7 +6,7 @@
 
 // Robots
 #include "robot/blaze.hpp"
-#include "robot/pepperJack.hpp"
+#include "robot/testBot.hpp"
 
 // Autonomous
 #include "control/openLoopController.hpp"

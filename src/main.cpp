@@ -43,7 +43,7 @@ void competition_initialize() {}
 void autonomous()
 {
 	Logger::warn("Starting autocontrol");
-	Blaze robot = Blaze();
+	TestBot robot = TestBot();
 
 	// Auto Controller
 	PursuitController controller(robot.chassis, robot.motionProfile, robot.odometry);
@@ -85,7 +85,7 @@ void autonomous()
 void opcontrol()
 {
 	Logger::warn("Starting opcontrol");
-	Blaze robot = Blaze();
+	TestBot robot = TestBot();
 
 	// Teleop Controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -106,6 +106,7 @@ void opcontrol()
 		bool intake = master.get_digital(DIGITAL_L1);
 		bool outtake = master.get_digital(DIGITAL_L2);
 
+		/*
 		// Catapult
 		if (fire)
 			robot.catapult.fire();
@@ -125,6 +126,7 @@ void opcontrol()
 			robot.intake.outtake();
 		else
 			robot.intake.stop();
+		*/
 
 		// LEDs
 		robot.leds.scale(1 - abs(leftY));

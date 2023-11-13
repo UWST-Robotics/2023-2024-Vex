@@ -3,10 +3,22 @@
 
 namespace devils
 {
+    /**
+     * Represents a source of odometry data.
+     */
     struct OdomSource
     {
     public:
-        virtual const Pose getPose() { return Pose(); }
-        virtual void setPose(const Pose pose) {}
+        /**
+         * Gets the current pose of the robot
+         * @return The current pose of the robot
+         */
+        virtual const Pose getPose() = 0;
+
+        /**
+         * Sets the current pose of the robot
+         * @param pose The pose to set the robot to
+         */
+        virtual void setPose(const Pose pose) = 0;
     };
 }

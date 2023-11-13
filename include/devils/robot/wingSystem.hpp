@@ -1,20 +1,21 @@
 #pragma once
-#include "pros/adi.hpp"
+#include "../hardware/scuffPneumatic.hpp"
 
 namespace devils
 {
+    /**
+     * Controls the pneumatic wings that pop out to the sides of the robot.
+     */
     class WingSystem
     {
     public:
         /**
-         * Controls the pneumatic wings that pop out to the sides of the robot.
+         * Creates a new wing system.
+         * @param wingsPort The ADI port of the wings
          */
-        WingSystem(uint8_t leftWingPort, uint8_t rightWingPort)
-            : leftWing(leftWingPort),
-              rightWing(rightWingPort)
+        WingSystem(const uint8_t wingsPort)
+            : pneumatics("WingsPneumatic", wingsPort)
         {
-            if (errno != 0)
-                Logger::error("WingSystem: ADI port is invalid");
         }
 
         /**
@@ -22,8 +23,7 @@ namespace devils
          */
         void extend()
         {
-            leftWing.set_value(true);
-            rightWing.set_value(true);
+            pneumatics.extend();
             isExtended = true;
         }
 
@@ -32,13 +32,13 @@ namespace devils
          */
         void retract()
         {
-            leftWing.set_value(false);
-            rightWing.set_value(false);
+            pneumatics.retract();
             isExtended = false;
         }
 
         /**
-         * Returns true if the wings are extended.
+         * Gets if the wings are extended.
+         * @return True if the wings are extended
          */
         const bool getExtended()
         {
@@ -47,7 +47,6 @@ namespace devils
 
     private:
         bool isExtended = false;
-        pros::ADIDigitalOut leftWing;
-        pros::ADIDigitalOut rightWing;
+        ScuffPneumatic pneumatics;
     };
 }

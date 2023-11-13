@@ -21,11 +21,12 @@ namespace devils
         void update()
         {
             auto status = gps.get_status();
-            if (errno != 0)
-                Logger::error("GPSOdometry: GPS update failed");
             currentPose.x = status.x;
             currentPose.y = status.y;
             currentPose.rotation = status.yaw;
+
+            if (status.yaw == PROS_ERR_F)
+                Logger::error("GPSOdometry: GPS update failed");
         }
 
         /**
@@ -42,10 +43,11 @@ namespace devils
          * @param pose The pose to set the robot to
          * @return The current pose of the robot
          */
-        void setPose(Pose pose) override
+        void setPose(const Pose pose) override
         {
-            gps.set_position(pose.x, pose.y, pose.rotation);
-            if (errno != 0)
+            int32_t status = gps.set_position(pose.x, pose.y, pose.rotation);
+
+            if (status != 1)
                 Logger::error("GPSOdometry: GPS set position failed");
         }
 
