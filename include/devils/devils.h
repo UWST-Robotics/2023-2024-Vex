@@ -17,3 +17,6 @@
 #include "display/odomRenderer.hpp"
 #include "display/motionRenderer.hpp"
 #include "display/controlRenderer.hpp"
+
+// Utils
+#include "utils/curve.hpp"

@@ -51,17 +51,22 @@ namespace devils
         OpticalSensor storageSensor;
 
     private:
+        // V5 Ports
         static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {1};
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {2};
+        static constexpr uint8_t INTAKE_MOTOR_PORT = 3;
         static constexpr uint8_t IMU_PORT = 9;
         static constexpr uint8_t STORAGE_SENSOR_PORT = 19;
-        static constexpr uint8_t INTAKE_MOTOR_PORT = 3;
+
+        // ADI Ports
         static constexpr uint8_t MANIP_PNEUMATIC_PORT = 1;
 
+        // Drivetrain
         static constexpr double WHEEL_RADIUS = 3.25;          // in
         static constexpr double WHEEL_BASE = 12.0;            // in
         static constexpr double TICKS_PER_REVOLUTION = 540.0; // ticks
 
+        // Autonomous
         static constexpr double MAX_VELOCITY = 24.0;     // in per second
         static constexpr double MAX_ACCELERATION = 48.0; // in per second squared
         static constexpr double MAX_JERK = 96.0;         // in per second cubed
