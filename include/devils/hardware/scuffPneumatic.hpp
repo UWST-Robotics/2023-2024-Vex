@@ -29,7 +29,7 @@ namespace devils
          */
         void extend()
         {
-            int32_t status = controller.set_value(EXTEND_SPEED);
+            int32_t status = controller.set_value(true);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": pneumatic extend failed");
         }
@@ -39,17 +39,15 @@ namespace devils
          */
         void retract()
         {
-            int32_t status = controller.set_value(RETRACT_SPEED);
+            int32_t status = controller.set_value(false);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": pneumatic retract failed");
         }
 
     private:
-        static constexpr uint8_t EXTEND_SPEED = 127;
-        static constexpr uint8_t RETRACT_SPEED = 0;
         static constexpr bool LOGGING_ENABLED = true;
 
         std::string name;
-        pros::ADIMotor controller;
+        pros::ADIDigitalOut controller;
     };
 }

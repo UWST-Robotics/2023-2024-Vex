@@ -1,6 +1,8 @@
 #pragma once
-#include "../hardware/smartMotor.hpp"
 #include "devils/utils/logger.hpp"
+#include "../hardware/smartMotor.hpp"
+#include "../hardware/opticalSensor.hpp"
+#include "../hardware/scuffPneumatic.hpp"
 
 namespace devils
 {
@@ -13,11 +15,11 @@ namespace devils
         /**
          * Controls the intake system to intake triballs.
          * @param wheelPort The port of the flywheel motor.
-         * @param manipPort The port of the articulation motor.
+         * @param manipPort The ADI port of the articulation pneumatic.
          */
         IntakeSystem(const int8_t wheelPort, const int8_t manipPort)
             : intakeMotor("IntakeMotor", wheelPort),
-              manipMotor("ManipMotor", manipPort)
+              manipPneumatic("ManipPneumatic", manipPort)
         {
         }
 
@@ -26,7 +28,7 @@ namespace devils
          */
         void extend()
         {
-            manipMotor.moveVoltage(MANIP_SPEED);
+            manipPneumatic.extend();
             isExtended = true;
         }
 
@@ -35,38 +37,67 @@ namespace devils
          */
         void retract()
         {
-            manipMotor.moveVoltage(-MANIP_SPEED);
+            manipPneumatic.retract();
             isExtended = false;
         }
 
         /**
-         * Runs the intake
+         * Extends (if AUTO_EXTEND) and runs the intake wheels.
+         * Stops if the Optical Sensor detects a triball.
          */
         void intake()
         {
+            if (enableSensor && sensor->getProximity() > SENSOR_THRESHOLD)
+                stop();
+            else
+                forceIntake();
+        }
+
+        /**
+         * Extends (if AUTO_EXTEND) and runs the intake, regardless of the Optical Sensor.
+         */
+        void forceIntake()
+        {
+            if (AUTO_EXTEND)
+                extend();
             intakeMotor.moveVoltage(WHEEL_SPEED);
             isIntaking = true;
             isOuttaking = false;
         }
 
         /**
-         * Runs the intake in reverse
+         * Extends (if AUTO_EXTEND) and runs the intake in reverse.
          */
         void outtake()
         {
+            if (AUTO_EXTEND)
+                extend();
             intakeMotor.moveVoltage(-WHEEL_SPEED);
             isIntaking = false;
             isOuttaking = true;
         }
 
         /**
-         * Stops the intake
+         * Retracts (if AUTO_RETRACT) and stops the intake.
          */
         void stop()
         {
+            if (AUTO_RETRACT)
+                retract();
             intakeMotor.stop();
             isIntaking = false;
             isOuttaking = false;
+        }
+
+        /**
+         * Enables the Optical Sensor for the intake.
+         * Toggles the intake if the Optical Sensor detects a triball.
+         * @param sensor The Optical Sensor to use.
+         */
+        void useSensor(OpticalSensor *sensor)
+        {
+            enableSensor = true;
+            this->sensor = sensor;
         }
 
         /**
@@ -95,12 +126,16 @@ namespace devils
 
     private:
         static constexpr double WHEEL_SPEED = 1.0;
-        static constexpr double MANIP_SPEED = 1.0;
+        static constexpr double SENSOR_THRESHOLD = 0.5;
+        static constexpr bool AUTO_RETRACT = true;
+        static constexpr bool AUTO_EXTEND = true;
 
         bool isExtended = false;
         bool isIntaking = false;
         bool isOuttaking = false;
+        bool enableSensor = false;
         SmartMotor intakeMotor;
-        SmartMotor manipMotor;
+        ScuffPneumatic manipPneumatic;
+        OpticalSensor *sensor;
     };
 }

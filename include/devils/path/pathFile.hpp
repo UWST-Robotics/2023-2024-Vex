@@ -14,6 +14,15 @@ namespace devils
         std::string name;
         /// @brief The parameters of the event
         std::string params;
+
+        /**
+         * Converts the event to a string.
+         * @return The event as a string.
+         */
+        std::string toString() const
+        {
+            return "Event: " + name + " (" + params + ")";
+        }
     };
 
     /**
@@ -35,6 +44,18 @@ namespace devils
         bool isReversed = false;
         /// @brief The events at this point
         std::vector<PathEvent> events = {};
+
+        /**
+         * Converts the point to a string.
+         * @return The point as a string.
+         */
+        std::string toString() const
+        {
+            std::string str = "Point: (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(rotation) + ")[" + std::to_string(enterDelta) + ", " + std::to_string(exitDelta) + "] R=" + std::to_string(isReversed) + "\n";
+            for (auto event : events)
+                str += "    " + event.toString() + "\n";
+            return str;
+        }
     };
 
     /**
@@ -46,5 +67,18 @@ namespace devils
         int version = 0;
         /// @brief The points in the path
         std::vector<PathPoint> points;
+
+        /**
+         * Converts the path to a string.
+         * @return The path as a string.
+         */
+        std::string toString() const
+        {
+            std::string str = "PathFile " + std::to_string(version) + "\n====================\n";
+            for (auto point : points)
+                str += point.toString() + "\n";
+            str += "====================";
+            return str;
+        }
     };
 }

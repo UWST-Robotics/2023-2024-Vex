@@ -9,6 +9,7 @@
 void initialize()
 {
 	Logger::init();
+	robot = std::make_shared<TestBot>();
 }
 
 /**
@@ -43,23 +44,21 @@ void competition_initialize() {}
 void autonomous()
 {
 	Logger::warn("Starting autocontrol");
-	TestBot robot = TestBot();
 
 	// Auto Controller
-	PursuitController controller(robot.chassis, robot.motionProfile, robot.odometry);
-	// OpenLoopController controller(robot.chassis, robot.motionProfile);
+	PursuitController controller(robot->chassis, robot->motionProfile, robot->odometry);
 	controller.restart();
 
 	// Display
-	OdomRenderer odomRenderer(&robot.odometry);
-	MotionRenderer motionRenderer(&robot.motionProfile);
+	OdomRenderer odomRenderer(&robot->odometry);
+	MotionRenderer motionRenderer(&robot->motionProfile);
 	ControlRenderer controlRenderer(&controller);
 	Display autoDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
 
 	// Loop
 	while (true)
 	{
-		robot.updateOdometry();
+		robot->updateOdometry();
 
 		controller.update();
 		autoDisplay.update();
@@ -85,14 +84,16 @@ void autonomous()
 void opcontrol()
 {
 	Logger::warn("Starting opcontrol");
-	TestBot robot = TestBot();
+
+	// auto pathFile = PathFileReader::readFromSD();
+	// Logger::warn(pathFile.toString());
 
 	// Teleop Controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 	// Display
-	OdomRenderer odomRenderer(&robot.odometry);
-	MotionRenderer motionRenderer(&robot.motionProfile);
+	OdomRenderer odomRenderer(&robot->odometry);
+	MotionRenderer motionRenderer(&robot->motionProfile);
 	Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
 	// Loop
@@ -127,16 +128,24 @@ void opcontrol()
 			robot.intake.outtake();
 		else
 			robot.intake.stop();
-		*/
+			*/
 
 		// LEDs
-		robot.leds.scale(1 - abs(leftY));
+		// robot->leds.scale(1 - abs(leftY));
+
+		// Intake
+		if (intake)
+			robot->intake.intake();
+		else if (outtake)
+			robot->intake.outtake();
+		else
+			robot->intake.stop();
 
 		// Arcade Drive
-		robot.chassis.move(leftY * 0.3, rightX * 0.3);
+		robot->chassis.move(leftY * 0.3, rightX * 0.3);
 
 		// Odometry
-		robot.updateOdometry();
+		robot->updateOdometry();
 
 		// Simulation
 		teleopDisplay.update();

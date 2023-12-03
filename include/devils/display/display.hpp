@@ -18,12 +18,20 @@ namespace devils
             : renderers(renderers)
         {
             // Create Root Object
-            static lv_obj_t *rootObject = lv_obj_create(NULL, NULL);
+            rootObject = lv_obj_create(NULL, NULL);
             lv_scr_load(rootObject);
 
             // Init Renderers
             for (Renderer *renderer : renderers)
                 renderer->create(rootObject);
+        }
+
+        /**
+         * Destroys the display.
+         */
+        ~Display()
+        {
+            lv_obj_del(rootObject);
         }
 
         /**
@@ -36,6 +44,7 @@ namespace devils
         }
 
     private:
+        lv_obj_t *rootObject;
         std::vector<Renderer *> renderers;
     };
 }
