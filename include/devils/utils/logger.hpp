@@ -112,7 +112,8 @@ namespace devils
 
     private:
         inline static const std::string LOG_TERMINAL = "/ser/sout";
-        inline static const bool LOG_TO_DISPLAY = false;
-        inline static const bool LOG_TO_FILE = false;
+
+        static constexpr bool LOG_TO_DISPLAY = false;
+        static constexpr bool LOG_TO_FILE = false;
     };
 }

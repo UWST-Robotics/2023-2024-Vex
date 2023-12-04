@@ -101,7 +101,7 @@ void opcontrol()
 	{
 		// Controller
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double rightX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
+		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
 		bool fire = master.get_digital(DIGITAL_R1);
 		bool extend = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
@@ -110,9 +110,9 @@ void opcontrol()
 
 		// Curve
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
-		rightX = Curve::square(rightX);
+		leftX = Curve::square(leftX);
 
-		Logger::info("Left Y: " + std::to_string(leftY));
+		// Logger::info("Left Y: " + std::to_string(leftY));
 
 		/*
 		// Catapult
@@ -126,7 +126,6 @@ void opcontrol()
 			robot.wings.extend();
 		else
 			robot.wings.retract();
-			*/
 
 		// Intake
 		if (intake)
@@ -135,9 +134,15 @@ void opcontrol()
 			robot->intake.outtake();
 		else
 			robot->intake.stop();
+			*/
+
+		if (intake)
+			robot->testPneumatic.extend();
+		else
+			robot->testPneumatic.retract();
 
 		// Arcade Drive
-		robot->chassis.move(leftY, rightX);
+		robot->chassis.move(leftY, leftX);
 
 		// Odometry
 		robot->updateOdometry();

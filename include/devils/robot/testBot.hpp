@@ -24,12 +24,10 @@ namespace devils
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
               motionProfile(MAX_VELOCITY, MAX_ACCELERATION, MAX_JERK, WHEEL_BASE),
-              intake(INTAKE_MOTOR_PORT, MANIP_PNEUMATIC_PORT),
               imu("TestBot.IMU", IMU_PORT),
-              storageSensor("TestBot.StorageSensor", STORAGE_SENSOR_PORT)
+              testPneumatic("TestBot.TestPneumatic", MANIP_PNEUMATIC_PORT)
         {
-            // odometry.useIMU(&imu);
-            intake.useSensor(&storageSensor);
+            odometry.useIMU(&imu);
         }
 
         /**
@@ -44,19 +42,18 @@ namespace devils
         TankChassis chassis;
         TankWheelOdometry odometry;
         MotionProfile motionProfile;
-        IntakeSystem intake;
+        ScuffPneumatic testPneumatic;
 
         // Extra Sensors
         IMU imu;
-        OpticalSensor storageSensor;
 
     private:
         // V5 Ports
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {1};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {2};
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-1, 2, -11, 12};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-9, 10, -19, 20};
         static constexpr uint8_t INTAKE_MOTOR_PORT = 3;
-        static constexpr uint8_t IMU_PORT = 9;
-        static constexpr uint8_t STORAGE_SENSOR_PORT = 19;
+        static constexpr uint8_t IMU_PORT = 18;
+        // static constexpr uint8_t STORAGE_SENSOR_PORT = 18;
 
         // ADI Ports
         static constexpr uint8_t MANIP_PNEUMATIC_PORT = 1;
@@ -64,7 +61,7 @@ namespace devils
         // Drivetrain
         static constexpr double WHEEL_RADIUS = 3.25;          // in
         static constexpr double WHEEL_BASE = 12.0;            // in
-        static constexpr double TICKS_PER_REVOLUTION = 540.0; // ticks
+        static constexpr double TICKS_PER_REVOLUTION = 400.0; // 540.0; // ticks
 
         // Autonomous
         static constexpr double MAX_VELOCITY = 24.0;     // in per second

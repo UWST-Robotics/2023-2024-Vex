@@ -72,7 +72,7 @@ namespace devils
             double position = motor.get_position();
             if (position == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": motor get position failed");
-            return position;
+            return position == PROS_ERR_F ? 0 : position;
         }
 
         /**
@@ -83,7 +83,7 @@ namespace devils
             double velocity = motor.get_actual_velocity();
             if (velocity == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": motor get speed failed");
-            return velocity;
+            return velocity == PROS_ERR_F ? 0 : velocity;
         }
 
         /**

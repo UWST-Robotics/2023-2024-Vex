@@ -2,9 +2,10 @@
 #include "../chassis/chassis.hpp"
 #include "../path/motionProfile.hpp"
 #include "../odom/odomSource.hpp"
+#include "../utils/logger.hpp"
+#include "../utils/curve.hpp"
 #include "autoController.hpp"
 #include "pros/rtos.hpp"
-#include "../utils/logger.hpp"
 #include <cmath>
 
 namespace devils
@@ -87,14 +88,18 @@ namespace devils
             double forward = deltaForward * TRANSLATION_SCALE;
             double turn = deltaRotation * ROTATION_SCALE;
 
+            // Clamp Values
+            forward = Curve::clamp(-1.0, 1.0, forward) * 0.5;
+            turn = Curve::clamp(-1.0, 1.0, turn) * 0.5;
+
             chassis.move(forward, turn);
         }
 
     private:
         static constexpr double LOOKAHEAD_DISTANCE = 24; // in
         static constexpr double LOOKAHEAD_MAX_INDICES = 20;
-        static constexpr double TRANSLATION_SCALE = 0.04;
-        static constexpr double ROTATION_SCALE = 1;
+        static constexpr double TRANSLATION_SCALE = 0.03;
+        static constexpr double ROTATION_SCALE = 0.9;
 
         int minimumIndex = 0;
         BaseChassis &chassis;
