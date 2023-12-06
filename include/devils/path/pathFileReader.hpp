@@ -1,6 +1,7 @@
 #pragma once
 #include "pathFile.hpp"
-#include "devils/utils/stringUtils.hpp"
+#include "../utils/stringUtils.hpp"
+#include "../utils/units.hpp"
 #include <fstream>
 #include <iostream>
 
@@ -18,6 +19,12 @@ namespace devils
          */
         static PathFile readFromSD()
         {
+            if (!pros::usd::is_installed())
+            {
+                Logger::warn("PathFileReader: SD card is not installed!");
+                return PathFile();
+            }
+
             // Create a new path file
             PathFile pathFile;
             pathFile.version = 1;
@@ -79,7 +86,7 @@ namespace devils
                 if (index == 1)
                     point.y = std::stof(split[i]);
                 if (index == 2)
-                    point.rotation = std::stof(split[i]);
+                    point.rotation = Units::radToDeg(std::stof(split[i]));
                 if (index == 3)
                     point.enterDelta = std::stof(split[i]);
                 if (index == 4)

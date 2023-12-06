@@ -27,10 +27,10 @@ namespace devils
          * Returns the current point of the motion profile.
          * @return The current point of the motion profile.
          */
-        const squiggles::ProfilePoint getCurrentPoint() override
+        const squiggles::ProfilePoint getCurrentProfilePoint() override
         {
             double time = (pros::millis() - startTime) / 1000.0;
-            return motionProfile.getPointAtTime(time);
+            return motionProfile.getPoseAtTime(time);
         }
 
         /**
@@ -47,7 +47,7 @@ namespace devils
          */
         void update() override
         {
-            auto currentPoint = getCurrentPoint();
+            auto currentPoint = getCurrentProfilePoint();
 
             double leftVelocity = Units::metersToIn(currentPoint.wheel_velocities[0]);  // inches per second
             double rightVelocity = Units::metersToIn(currentPoint.wheel_velocities[1]); // inches per second

@@ -76,7 +76,7 @@ namespace devils
         {
             std::string str = "PathFile " + std::to_string(version) + "\n====================\n";
             for (auto point : points)
-                str += point.toString() + "\n";
+                str += point.toString();
             str += "====================";
             return str;
         }

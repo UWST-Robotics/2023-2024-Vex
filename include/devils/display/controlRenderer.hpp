@@ -37,7 +37,7 @@ namespace devils
 
         void update()
         {
-            auto point = controller->getCurrentPoint();
+            auto point = controller->getCurrentProfilePoint();
             lv_obj_set_pos(pointObject, Units::metersToIn(point.vector.pose.x) + 50 - 4, Units::metersToIn(point.vector.pose.y) + 50 - 4);
         }
 

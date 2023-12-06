@@ -23,7 +23,7 @@ namespace devils
             // Generate
             motionProfile->generate();
             auto path = motionProfile->getPath();
-            auto pathPoints = motionProfile->getPathPoints();
+            auto pathPoints = motionProfile->getPosePoints();
 
             // Path
             static lv_obj_t *robotPath = lv_line_create(root, NULL);

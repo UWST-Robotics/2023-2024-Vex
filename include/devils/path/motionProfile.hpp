@@ -41,8 +41,8 @@ namespace devils
         {
             if (_isGenerated)
                 return;
-            pathPoints = _getPathTestPoints();
-            motionPath = generator.generate(pathPoints);
+            posePoints = _getPathPointsFromSD(); //_getPathTestPoints();
+            motionPath = generator.generate(posePoints);
             _isGenerated = true;
         }
 
@@ -68,9 +68,18 @@ namespace devils
          * Returns the control points of the motion profile.
          * @return The control points of the motion profile.
          */
-        const std::vector<squiggles::Pose> &getPathPoints()
+        const std::vector<squiggles::Pose> &getPosePoints()
         {
-            return pathPoints;
+            return posePoints;
+        }
+
+        /**
+         * Returns the path file of the motion profile.
+         * @return The path file of the motion profile.
+         */
+        const devils::PathFile &getPathFile()
+        {
+            return pathFile;
         }
 
         /**
@@ -78,7 +87,7 @@ namespace devils
          * @param t The time to sample at.
          * @return squiggles::ProfilePoint at time t.
          */
-        const squiggles::ProfilePoint getPointAtTime(double t)
+        const squiggles::ProfilePoint getPoseAtTime(double t)
         {
             if (motionPath.size() == 0)
                 return squiggles::ProfilePoint();
@@ -149,7 +158,8 @@ namespace devils
 
         // Output
         bool _isGenerated = false;
-        std::vector<squiggles::Pose> pathPoints = {};
+        devils::PathFile pathFile;
+        std::vector<squiggles::Pose> posePoints = {};
         std::vector<squiggles::ProfilePoint> motionPath = {};
     };
 }

@@ -49,6 +49,9 @@ void autonomous()
 	PursuitController controller(robot->chassis, robot->motionProfile, robot->odometry);
 	controller.restart();
 
+	// Timer
+	double pauseTimer = 0; // ms
+
 	// Display
 	OdomRenderer odomRenderer(&robot->odometry);
 	MotionRenderer motionRenderer(&robot->motionProfile);
@@ -58,9 +61,25 @@ void autonomous()
 	// Loop
 	while (true)
 	{
+		// Update Odometry
 		robot->updateOdometry();
 
-		controller.update();
+		// Drive Chassis
+		if (pauseTimer <= 0)
+			controller.update();
+		else
+			pauseTimer -= pros::millis();
+
+		// Perform Actions
+		auto events = controller.getCurrentEvents();
+		for (auto event : events)
+		{
+			if (event.name == "PAUSE")
+				pauseTimer = std::stod(event.params);
+			// TODO: Add more events
+		}
+
+		// Update Display
 		autoDisplay.update();
 
 		// Delay to prevent the CPU from being overloaded
