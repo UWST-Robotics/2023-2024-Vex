@@ -6,7 +6,7 @@ namespace devils
     /**
      * Represents a robot pose in 2D space.
      */
-    struct Pose
+    struct OdomPose
     {
         /// @brief The x position of the robot in inches
         double x;

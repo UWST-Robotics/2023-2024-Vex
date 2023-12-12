@@ -1,5 +1,5 @@
 #pragma once
-#include "../odom/pose.hpp"
+#include "../odom/odomPose.hpp"
 #include "../odom/odomSource.hpp"
 #include "renderer.hpp"
 #include <cmath>
@@ -77,7 +77,7 @@ namespace devils
         void update()
         {
             // Pose
-            Pose pose = odomSource->getPose();
+            OdomPose pose = odomSource->getPose();
 
             // Object
             lv_obj_set_pos(robotObject, pose.x, pose.y);

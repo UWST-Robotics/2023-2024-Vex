@@ -1,5 +1,5 @@
 #pragma once
-#include "pose.hpp"
+#include "odomPose.hpp"
 
 namespace devils
 {
@@ -13,12 +13,12 @@ namespace devils
          * Gets the current pose of the robot
          * @return The current pose of the robot
          */
-        virtual const Pose getPose() = 0;
+        virtual const OdomPose getPose() = 0;
 
         /**
          * Sets the current pose of the robot
          * @param pose The pose to set the robot to
          */
-        virtual void setPose(const Pose pose) = 0;
+        virtual void setPose(const OdomPose pose) = 0;
     };
 }

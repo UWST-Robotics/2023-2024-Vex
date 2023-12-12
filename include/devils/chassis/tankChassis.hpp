@@ -32,8 +32,8 @@ namespace devils
          */
         void move(double forward, double turn, double strafe = 0) override
         {
-            leftMotors.moveVoltage(forward - turn);
-            rightMotors.moveVoltage(forward + turn);
+            leftMotors.moveVoltage(forward + turn);
+            rightMotors.moveVoltage(forward - turn);
         }
 
         /**

@@ -11,7 +11,7 @@ namespace devils
         /**
          * Gets the current target point of the controller.
          */
-        virtual const squiggles::ProfilePoint getCurrentProfilePoint() = 0;
+        virtual const ProfilePose getCurrentProfilePoint() = 0;
 
         /**
          * Restarts the controller from the beginning.

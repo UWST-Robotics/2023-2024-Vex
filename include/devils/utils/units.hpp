@@ -60,5 +60,14 @@ namespace devils
         {
             return radians * (180.0 / M_PI);
         }
+
+        /**
+         * Normalizes an angle in radians to be between 0 and 2 * PI.
+         * @param radians The angle in radians to normalize.
+         */
+        static double normalizeRadians(double radians)
+        {
+            return std::fmod(radians + 2 * M_PI, 2 * M_PI);
+        }
     };
 }

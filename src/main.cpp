@@ -10,6 +10,7 @@ void initialize()
 {
 	Logger::init();
 	robot = std::make_shared<TestBot>();
+	robot->generateMotionProfile();
 }
 
 /**
@@ -74,9 +75,18 @@ void autonomous()
 		auto events = controller.getCurrentEvents();
 		for (auto event : events)
 		{
-			if (event.name == "PAUSE")
+			if (event.name == "pause")
 				pauseTimer = std::stod(event.params);
-			// TODO: Add more events
+			if (event.name == "runIntake")
+				robot->intake.intake();
+			if (event.name == "stopIntake")
+				robot->intake.stop();
+			if (event.name == "runOuttake")
+				robot->intake.outtake();
+			if (event.name == "openWings")
+				robot->wings.extend();
+			if (event.name == "closeWings")
+				robot->wings.retract();
 		}
 
 		// Update Display
@@ -139,12 +149,13 @@ void opcontrol()
 			robot.catapult.fire();
 		else
 			robot.catapult.stop();
+			*/
 
 		// Wings
 		if (extend)
-			robot.wings.extend();
+			robot->wings.extend();
 		else
-			robot.wings.retract();
+			robot->wings.retract();
 
 		// Intake
 		if (intake)
@@ -153,12 +164,6 @@ void opcontrol()
 			robot->intake.outtake();
 		else
 			robot->intake.stop();
-			*/
-
-		if (intake)
-			robot->testPneumatic.extend();
-		else
-			robot->testPneumatic.retract();
 
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);

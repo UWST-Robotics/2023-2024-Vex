@@ -1,7 +1,7 @@
 #pragma once
 #include "../path/motionProfile.hpp"
-#include "renderer.hpp"
 #include "../utils/logger.hpp"
+#include "renderer.hpp"
 #include <cmath>
 #include <string>
 
@@ -20,10 +20,8 @@ namespace devils
 
         void create(lv_obj_t *root)
         {
-            // Generate
-            motionProfile->generate();
-            auto path = motionProfile->getPath();
-            auto pathPoints = motionProfile->getPosePoints();
+            auto profilePoints = motionProfile->getProfilePoints();
+            auto controlPoints = motionProfile->getControlPoints();
 
             // Path
             static lv_obj_t *robotPath = lv_line_create(root, NULL);
@@ -31,10 +29,10 @@ namespace devils
                 // Convert path to vector of points
                 static std::vector<lv_point_t> linePointVector;
                 linePointVector.clear();
-                for (int i = 0; i < path.size(); i++)
+                for (int i = 0; i < profilePoints.size(); i++)
                 {
-                    linePointVector.push_back({(short)(Units::metersToIn(path[i].vector.pose.x) + 50),
-                                               (short)(Units::metersToIn(path[i].vector.pose.y) + 50)});
+                    linePointVector.push_back({(short)(profilePoints[i].x + 50),
+                                               (short)(profilePoints[i].y + 50)});
                 }
 
                 static lv_point_t *linePoints;
@@ -61,7 +59,7 @@ namespace devils
                 pointStyle.body.grad_color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
                 pointStyle.body.radius = LV_RADIUS_CIRCLE;
 
-                for (auto point : pathPoints)
+                for (auto point : controlPoints)
                 {
                     lv_obj_t *pointObject = lv_obj_create(root, NULL);
                     {

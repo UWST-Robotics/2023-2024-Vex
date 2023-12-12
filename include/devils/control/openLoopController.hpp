@@ -20,17 +20,16 @@ namespace devils
         OpenLoopController(BaseChassis &chassis, MotionProfile &motionProfile)
             : chassis(chassis), motionProfile(motionProfile)
         {
-            motionProfile.generate();
         }
 
         /**
          * Returns the current point of the motion profile.
          * @return The current point of the motion profile.
          */
-        const squiggles::ProfilePoint getCurrentProfilePoint() override
+        const ProfilePose getCurrentProfilePoint() override
         {
             double time = (pros::millis() - startTime) / 1000.0;
-            return motionProfile.getPoseAtTime(time);
+            return motionProfile.getPointAtTime(time);
         }
 
         /**
@@ -49,8 +48,8 @@ namespace devils
         {
             auto currentPoint = getCurrentProfilePoint();
 
-            double leftVelocity = Units::metersToIn(currentPoint.wheel_velocities[0]);  // inches per second
-            double rightVelocity = Units::metersToIn(currentPoint.wheel_velocities[1]); // inches per second
+            double leftVelocity = currentPoint.leftWheelVelocity;   // inches per second
+            double rightVelocity = currentPoint.rightWheelVelocity; // inches per second
 
             double forward = ((rightVelocity + leftVelocity) / 2) * TRANSLATION_SCALE;
             double turn = ((rightVelocity - leftVelocity) / 2) * ROTATION_SCALE;

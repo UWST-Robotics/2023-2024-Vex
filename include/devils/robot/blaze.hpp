@@ -24,8 +24,7 @@ namespace devils
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
               catapult(CATAPULT_MOTOR_PORT),
               intake(INTAKE_MOTOR_PORT, MANIP_MOTOR_PORT),
-              wings(WINGS_PORT),
-              motionProfile(MAX_VELOCITY, MAX_ACCELERATION, MAX_JERK, WHEEL_BASE)
+              wings(WINGS_PORT)
         {
         }
 
@@ -57,9 +56,5 @@ namespace devils
         static constexpr double WHEEL_RADIUS = 3.25;          // in
         static constexpr double WHEEL_BASE = 12.0;            // in
         static constexpr double TICKS_PER_REVOLUTION = 540.0; // ticks
-
-        static constexpr double MAX_VELOCITY = 24.0;     // in per second
-        static constexpr double MAX_ACCELERATION = 48.0; // in per second squared
-        static constexpr double MAX_JERK = 96.0;         // in per second cubed
     };
 }
