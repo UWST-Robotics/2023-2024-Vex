@@ -14,6 +14,15 @@ namespace devils
     {
     public:
         /**
+         * Checks if the SD card is inserted.
+         * @return True if the SD card is inserted.
+         */
+        static bool isSDInserted()
+        {
+            return pros::usd::is_installed() == 1;
+        }
+
+        /**
          * Reads a path file from the SD card.
          * @return The path file.
          */

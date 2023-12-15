@@ -42,6 +42,12 @@ namespace devils
          */
         void generate(MotionProfile *motionProfile)
         {
+            if (!PathFileReader::isSDInserted())
+            {
+                Logger::warn("SquigglesGenerator: SD Card not inserted");
+                return;
+            }
+
             auto devilsControl = devils::PathFileReader::readFromSD();
             auto squigglesControl = _devilsToSquigglesPose(devilsControl.points);
             auto squigglesProfile = generator.generate(squigglesControl);

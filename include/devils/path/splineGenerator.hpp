@@ -18,7 +18,13 @@ namespace devils
          */
         void generate(MotionProfile *motionProfile)
         {
-            auto controlPoints = devils::PathFileReader::readFromSD();
+            if (!PathFileReader::isSDInserted())
+            {
+                Logger::warn("SplineGenerator: SD Card not inserted");
+                return;
+            }
+
+            auto controlPoints = PathFileReader::readFromSD();
             std::vector<ProfilePose> profilePoints;
             profilePoints.reserve(controlPoints.points.size() * (1 / DT));
 
