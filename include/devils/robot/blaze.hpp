@@ -48,7 +48,6 @@ namespace devils
          */
         void generateMotionProfile()
         {
-            // auto generator = SquigglesGenerator(MAX_VELOCITY, MAX_ACCELERATION, MAX_JERK, WHEEL_BASE);
             auto generator = SplineGenerator();
             generator.generate(&motionProfile);
         }
@@ -78,7 +77,6 @@ namespace devils
         static constexpr uint8_t STORAGE_SENSOR_PORT = 18;
 
         // ADI Ports
-        static constexpr uint8_t MANIP_PNEUMATIC_PORT = 1;
         static constexpr uint8_t WINGS_PNEUMATIC_PORT = 2;
         static constexpr uint8_t BLOCKER_PNEUMATIC_PORT = 3;
 
