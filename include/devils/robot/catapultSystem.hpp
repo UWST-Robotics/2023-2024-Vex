@@ -12,9 +12,11 @@ namespace devils
         /**
          * Creates a new catapult system.
          * @param motorPort The port of the catapult motor
+         * @param winchPort The port of the winch motor
          */
-        CatapultSystem(const int8_t motorPort)
-            : catapultMotor("CatapultMotor", motorPort)
+        CatapultSystem(const int8_t motorPort, const int8_t winchPort)
+            : catapultMotor("CatapultMotor", motorPort),
+              winchMotor("WinchMotor", winchPort)
         {
         }
 
@@ -23,17 +25,50 @@ namespace devils
          */
         void fire()
         {
-            catapultMotor.moveVoltage(MOTOR_SPEED);
+            catapultMotor.moveVoltage(FIRE_SPEED);
             isFiring = true;
         }
 
         /**
          * Stops the catapult motor
          */
-        void stop()
+        void stopLauncher()
         {
             catapultMotor.moveVoltage(0);
             isFiring = false;
+        }
+
+        /**
+         * Stops the winch motor
+         */
+        void stopWinch()
+        {
+            winchMotor.moveVoltage(0);
+        }
+
+        /**
+         * Stops both the catapult and winch motors
+         */
+        void stop()
+        {
+            stopLauncher();
+            stopWinch();
+        }
+
+        /**
+         * Extends the winch
+         */
+        void extend()
+        {
+            winchMotor.moveVoltage(WINCH_SPEED);
+        }
+
+        /**
+         * Retracts the winch
+         */
+        void retract()
+        {
+            winchMotor.moveVoltage(-WINCH_SPEED);
         }
 
         /**
@@ -45,9 +80,11 @@ namespace devils
         }
 
     private:
-        static constexpr double MOTOR_SPEED = 1.0;
+        static constexpr double FIRE_SPEED = 1.0;
+        static constexpr double WINCH_SPEED = 0.5;
 
         bool isFiring = false;
         SmartMotor catapultMotor;
+        SmartMotor winchMotor;
     };
 }

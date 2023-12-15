@@ -45,6 +45,7 @@ namespace devils
          */
         void update(const int leftEncoder, const int rightEncoder)
         {
+
             // Get Delta Time
             uint32_t deltaT = lastUpdateTimestamp - pros::millis();
             lastUpdateTimestamp = pros::millis();

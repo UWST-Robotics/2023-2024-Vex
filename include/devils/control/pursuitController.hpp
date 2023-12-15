@@ -125,12 +125,12 @@ namespace devils
     private:
         static constexpr double LOOKAHEAD_DISTANCE = 3; // in
         static constexpr int LOOKAHEAD_MAX_INDICES = 10;
-        static constexpr double TRANSLATION_SCALE = 0.4;
-        static constexpr double ROTATION_SCALE = 0.9;
-        static constexpr double SPEED_SCALE = 0.5;
+        static constexpr double TRANSLATION_SCALE = 0.7;
+        static constexpr double ROTATION_SCALE = 0.18;
+        static constexpr double SPEED_SCALE = 0.9;
 
         static constexpr double EVENT_RANGE = 12; // in
-        static constexpr int EVENT_MAX_INDICES = 2;
+        static constexpr int EVENT_MAX_INDICES = 10;
 
         BaseChassis &chassis;
         MotionProfile &motionProfile;

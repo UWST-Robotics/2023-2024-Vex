@@ -28,11 +28,10 @@ namespace devils
               imu("Blaze.IMU", IMU_PORT),
               storageSensor("Blaze.StorageSensor", STORAGE_SENSOR_PORT),
               wings(WINGS_PNEUMATIC_PORT),
-              blocker(BLOCKER_PNEUMATIC_PORT),
-              catapult(CATAPULT_MOTOR_PORT),
+              catapult(CATAPULT_MOTOR_PORT, WINCH_MOTOR_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
-            // odometry.useIMU(&imu);
+            odometry.useIMU(&imu);
         }
 
         /**
@@ -48,6 +47,7 @@ namespace devils
          */
         void generateMotionProfile()
         {
+            Logger::info("Generating Motion Profile...");
             auto generator = SplineGenerator();
             generator.generate(&motionProfile);
         }
@@ -55,7 +55,6 @@ namespace devils
         // Subsystems
         TankChassis chassis;
         WingSystem wings;
-        BlockerSystem blocker;
         CatapultSystem catapult;
 
         // Autonomous
@@ -68,9 +67,10 @@ namespace devils
 
     private:
         // V5 Motors
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-1, 2, -11, 12};  // TODO: Change these
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-9, 10, -19, 20}; // TODO: Change these
-        static constexpr uint8_t CATAPULT_MOTOR_PORT = 3;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {9, -10, 19, -20};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {1, -2, 11, -12};
+        static constexpr uint8_t CATAPULT_MOTOR_PORT = 6;
+        static constexpr uint8_t WINCH_MOTOR_PORT = 16;
 
         // V5 Sensors
         static constexpr uint8_t IMU_PORT = 17;
@@ -81,8 +81,8 @@ namespace devils
         static constexpr uint8_t BLOCKER_PNEUMATIC_PORT = 3;
 
         // Odometry
-        static constexpr double WHEEL_RADIUS = 3.25;          // in
-        static constexpr double WHEEL_BASE = 12.0;            // in
-        static constexpr double TICKS_PER_REVOLUTION = 400.0; // 540.0; // ticks
+        static constexpr double WHEEL_RADIUS = 1.625;                         // Radius of the wheel in inches
+        static constexpr double WHEEL_BASE = 15.0;                            // Width of the robot in inches
+        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // Number of ticks per revolution of the wheel * gear ratio
     };
 }
