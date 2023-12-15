@@ -11,6 +11,7 @@ void initialize()
 	Logger::init();
 	robot = std::make_shared<Blaze>();
 	robot->generateMotionProfile();
+	Logger::info("Initialized");
 }
 
 /**
@@ -44,7 +45,7 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-	Logger::warn("Starting autocontrol");
+	Logger::info("Starting autocontrol");
 
 	// Auto Controller
 	PursuitController controller(robot->chassis, robot->motionProfile, robot->odometry);
@@ -106,7 +107,7 @@ void autonomous()
  */
 void opcontrol()
 {
-	Logger::warn("Starting opcontrol");
+	Logger::info("Starting opcontrol");
 
 	// Teleop Controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -121,10 +122,12 @@ void opcontrol()
 	{
 		// Controller
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
-		bool wings = master.get_digital(DIGITAL_R2);
-		bool catapult = master.get_digital(DIGITAL_L1);
+		double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
+		bool extendCatapult = master.get_digital(DIGITAL_R1);
+		bool retractCatapult = master.get_digital(DIGITAL_R2);
+		bool fireCatapult = master.get_digital(DIGITAL_L1);
 		bool block = master.get_digital(DIGITAL_A);
+		bool wings = master.get_digital(DIGITAL_B);
 
 		// Curve Inputs
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
@@ -137,10 +140,17 @@ void opcontrol()
 			robot->wings.retract();
 
 		// Catapult
-		if (catapult)
+		if (fireCatapult)
 			robot->catapult.fire();
 		else
-			robot->catapult.stop();
+			robot->catapult.stopLauncher();
+
+		if (extendCatapult)
+			robot->catapult.extend();
+		else if (retractCatapult)
+			robot->catapult.retract();
+		else
+			robot->catapult.stopWinch();
 
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);
