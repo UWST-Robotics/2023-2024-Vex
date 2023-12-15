@@ -9,7 +9,7 @@
 void initialize()
 {
 	Logger::init();
-	robot = std::make_shared<PepperJack>();
+	robot = std::make_shared<Blaze>();
 	robot->generateMotionProfile();
 }
 
@@ -77,12 +77,6 @@ void autonomous()
 		{
 			if (event.name == "pause")
 				pauseTimer = std::stod(event.params);
-			if (event.name == "runIntake")
-				robot->intake.intake();
-			if (event.name == "stopIntake")
-				robot->intake.stop();
-			if (event.name == "runOuttake")
-				robot->intake.outtake();
 			if (event.name == "openWings")
 				robot->wings.extend();
 			if (event.name == "closeWings")
@@ -129,8 +123,7 @@ void opcontrol()
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
 		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
 		bool wings = master.get_digital(DIGITAL_R2);
-		bool intake = master.get_digital(DIGITAL_L1);
-		bool outtake = master.get_digital(DIGITAL_L2);
+		bool catapult = master.get_digital(DIGITAL_L1);
 		bool block = master.get_digital(DIGITAL_A);
 
 		// Curve Inputs
@@ -143,13 +136,11 @@ void opcontrol()
 		else
 			robot->wings.retract();
 
-		// Intake
-		if (intake)
-			robot->intake.intake();
-		else if (outtake)
-			robot->intake.outtake();
+		// Catapult
+		if (catapult)
+			robot->catapult.fire();
 		else
-			robot->intake.stop();
+			robot->catapult.stop();
 
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);
