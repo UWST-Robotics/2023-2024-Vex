@@ -9,7 +9,7 @@
 void initialize()
 {
 	Logger::init();
-	robot = std::make_shared<TestBot>();
+	robot = std::make_shared<PepperJack>();
 	robot->generateMotionProfile();
 }
 
@@ -114,9 +114,6 @@ void opcontrol()
 {
 	Logger::warn("Starting opcontrol");
 
-	// auto pathFile = PathFileReader::readFromSD();
-	// Logger::warn(pathFile.toString());
-
 	// Teleop Controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -131,28 +128,17 @@ void opcontrol()
 		// Controller
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
 		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
-		bool fire = master.get_digital(DIGITAL_R1);
-		bool extend = master.get_digital(DIGITAL_R2);
+		bool wings = master.get_digital(DIGITAL_R2);
 		bool intake = master.get_digital(DIGITAL_L1);
 		bool outtake = master.get_digital(DIGITAL_L2);
-		bool climb = master.get_digital(DIGITAL_UP);
+		bool block = master.get_digital(DIGITAL_A);
 
-		// Curve
+		// Curve Inputs
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
 		leftX = Curve::square(leftX);
 
-		// Logger::info("Left Y: " + std::to_string(leftY));
-
-		/*
-		// Catapult
-		if (fire)
-			robot.catapult.fire();
-		else
-			robot.catapult.stop();
-			*/
-
 		// Wings
-		if (extend)
+		if (wings)
 			robot->wings.extend();
 		else
 			robot->wings.retract();

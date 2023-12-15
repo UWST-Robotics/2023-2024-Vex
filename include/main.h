@@ -28,7 +28,7 @@ using namespace devils;
  */
 extern "C"
 {
-    std::shared_ptr<TestBot> robot;
+    std::shared_ptr<PepperJack> robot;
     void autonomous(void);
     void initialize(void);
     void disabled(void);

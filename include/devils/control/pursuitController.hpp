@@ -110,8 +110,9 @@ namespace devils
             double deltaY = currentProfilePoint.y - currentPose.y;
             double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
             double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
+            double normalForward = deltaForward / LOOKAHEAD_DISTANCE;
 
-            double forward = deltaForward * TRANSLATION_SCALE;
+            double forward = normalForward * TRANSLATION_SCALE;
             double turn = deltaRotation * ROTATION_SCALE;
 
             // Clamp Values
@@ -122,11 +123,11 @@ namespace devils
         }
 
     private:
-        static constexpr double LOOKAHEAD_DISTANCE = 12; // in
-        static constexpr int LOOKAHEAD_MAX_INDICES = 20;
-        static constexpr double TRANSLATION_SCALE = 0.03;
+        static constexpr double LOOKAHEAD_DISTANCE = 3; // in
+        static constexpr int LOOKAHEAD_MAX_INDICES = 10;
+        static constexpr double TRANSLATION_SCALE = 0.4;
         static constexpr double ROTATION_SCALE = 0.9;
-        static constexpr double SPEED_SCALE = 0.3;
+        static constexpr double SPEED_SCALE = 0.5;
 
         static constexpr double EVENT_RANGE = 12; // in
         static constexpr int EVENT_MAX_INDICES = 2;
