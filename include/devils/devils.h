@@ -5,7 +5,6 @@
  */
 
 // Robots
-#include "robot/blaze.hpp"
 #include "robot/pepperJack.hpp"
 
 // Autonomous
