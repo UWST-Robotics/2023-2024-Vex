@@ -79,8 +79,8 @@ namespace devils
         static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
 
         // ADI Ports
-        static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 1;
-        static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 2;
+        static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 1;
+        static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 2;
         static constexpr uint8_t BLOCKER_PNEUMATIC_DOWN_PORT = 3;
         static constexpr uint8_t BLOCKER_PNEUMATIC_UP_PORT = 4;
 
