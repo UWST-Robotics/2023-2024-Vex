@@ -67,7 +67,7 @@ namespace devils
     private:
         // V5 Motors
         static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {12, 4, -3, -11}; //{9, -10, 19, -20};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {8, 16, -17, -7}; //{1, -2, 11, -12};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-8, -16, 17, 7}; //{1, -2, 11, -12};
         static constexpr uint8_t CATAPULT_MOTOR_PORT = 6;
         static constexpr uint8_t WINCH_MOTOR_PORT = 15;
 

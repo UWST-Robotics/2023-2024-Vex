@@ -1,5 +1,6 @@
 #pragma once
 #include "../hardware/smartMotor.hpp"
+#include "../hardware/opticalSensor.hpp"
 
 namespace devils
 {
@@ -28,7 +29,7 @@ namespace devils
             // Handle sensor
             if (enableSensor)
             {
-                if (sensor->getProximity() < SENSOR_THRESHOLD)
+                if (sensor->getProximity() > SENSOR_THRESHOLD)
                 {
                     ballTimer -= pros::millis();
                     if (ballTimer <= 0)
@@ -119,8 +120,8 @@ namespace devils
         }
 
     private:
-        static constexpr double FIRE_SPEED = 1.0;       // -1 - 1 voltage
-        static constexpr double WINCH_SPEED = 0.5;      // -1 - 1 volrage
+        static constexpr double FIRE_SPEED = -1.0;      // -1 - 1 voltage
+        static constexpr double WINCH_SPEED = 0.5;      // -1 - 1 voltage
         static constexpr double SENSOR_THRESHOLD = 0.5; // 0 - 1 proximity
         static constexpr double TIME_TO_LAUNCH = 500;   // ms
 
