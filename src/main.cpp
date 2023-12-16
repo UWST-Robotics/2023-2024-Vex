@@ -133,7 +133,7 @@ void opcontrol()
 		if (fireCatapult)
 			robot->catapult.forceFire();
 		else
-			robot->catapult.fire();
+			robot->catapult.stopLauncher();
 
 		if (extendCatapult)
 			robot->catapult.extend();
