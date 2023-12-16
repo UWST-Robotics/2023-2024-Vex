@@ -11,10 +11,12 @@ namespace devils
     public:
         /**
          * Creates a new wing system.
-         * @param wingsPort The ADI port of the wings
+         * @param leftPort The ADI port of the left wing pneumatic.
+         * @param rightPort The ADI port of the right wing pneumatic.
          */
-        WingSystem(const uint8_t wingsPort)
-            : pneumatics("WingsPneumatic", wingsPort)
+        WingSystem(const uint8_t leftPort, const uint8_t rightPort)
+            : leftPneumatic("WingsLeftPneumatic", leftPort),
+              rightPneumatic("WingsRightPneumatic", rightPort)
         {
         }
 
@@ -23,7 +25,8 @@ namespace devils
          */
         void extend()
         {
-            pneumatics.extend();
+            leftPneumatic.extend();
+            rightPneumatic.extend();
             isExtended = true;
         }
 
@@ -32,7 +35,8 @@ namespace devils
          */
         void retract()
         {
-            pneumatics.retract();
+            leftPneumatic.retract();
+            rightPneumatic.retract();
             isExtended = false;
         }
 
@@ -47,6 +51,7 @@ namespace devils
 
     private:
         bool isExtended = false;
-        ScuffPneumatic pneumatics;
+        ScuffPneumatic leftPneumatic;
+        ScuffPneumatic rightPneumatic;
     };
 }

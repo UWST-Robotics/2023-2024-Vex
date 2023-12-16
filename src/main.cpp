@@ -151,6 +151,12 @@ void opcontrol()
 		else
 			robot->intake.stop();
 
+		// Blocker
+		if (block)
+			robot->blocker.extend();
+		else
+			robot->blocker.retract();
+
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);
 

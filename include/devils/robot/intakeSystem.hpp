@@ -18,27 +18,8 @@ namespace devils
          * @param manipPort The ADI port of the articulation pneumatic.
          */
         IntakeSystem(const int8_t wheelPort, const int8_t manipPort)
-            : intakeMotor("IntakeMotor", wheelPort),
-              manipPneumatic("ManipPneumatic", manipPort)
+            : intakeMotor("IntakeMotor", wheelPort)
         {
-        }
-
-        /**
-         * Pops out the intake
-         */
-        void extend()
-        {
-            manipPneumatic.extend();
-            isExtended = true;
-        }
-
-        /**
-         * Retracts the intake
-         */
-        void retract()
-        {
-            manipPneumatic.retract();
-            isExtended = false;
         }
 
         /**
@@ -58,8 +39,6 @@ namespace devils
          */
         void forceIntake()
         {
-            if (AUTO_EXTEND)
-                extend();
             intakeMotor.moveVoltage(WHEEL_SPEED);
             isIntaking = true;
             isOuttaking = false;
@@ -70,8 +49,6 @@ namespace devils
          */
         void outtake()
         {
-            if (AUTO_EXTEND)
-                extend();
             intakeMotor.moveVoltage(-WHEEL_SPEED);
             isIntaking = false;
             isOuttaking = true;
@@ -82,8 +59,6 @@ namespace devils
          */
         void stop()
         {
-            if (AUTO_RETRACT)
-                retract();
             intakeMotor.stop();
             isIntaking = false;
             isOuttaking = false;
@@ -127,8 +102,6 @@ namespace devils
     private:
         static constexpr double WHEEL_SPEED = 1.0;
         static constexpr double SENSOR_THRESHOLD = 0.5;
-        static constexpr bool AUTO_RETRACT = true;
-        static constexpr bool AUTO_EXTEND = true;
 
         bool isExtended = false;
         bool isIntaking = false;

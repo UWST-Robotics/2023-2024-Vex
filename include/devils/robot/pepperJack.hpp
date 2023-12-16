@@ -26,9 +26,9 @@ namespace devils
         PepperJack()
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               imu("PepperJack.IMU", IMU_PORT),
-              intake(INTAKE_MOTOR_PORT, MANIP_PNEUMATIC_PORT),
+              intake(INTAKE_MOTOR_PORT),
               storageSensor("PepperJack.StorageSensor", STORAGE_SENSOR_PORT),
-              wings(WINGS_PNEUMATIC_PORT),
+              wings(LEFT_WINGS_PNEUMATIC_PORT, RIGHT_WINGS_PNEUMATIC_PORT),
               blocker(BLOCKER_PNEUMATIC_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
@@ -79,8 +79,8 @@ namespace devils
         static constexpr uint8_t STORAGE_SENSOR_PORT = 18;
 
         // ADI Ports
-        static constexpr uint8_t MANIP_PNEUMATIC_PORT = 1;
-        static constexpr uint8_t WINGS_PNEUMATIC_PORT = 2;
+        static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 1;
+        static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 2;
         static constexpr uint8_t BLOCKER_PNEUMATIC_PORT = 3;
 
         // Odometry
