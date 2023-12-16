@@ -52,45 +52,42 @@ void autonomous()
 
 	// Timer
 	double pauseTimer = 0; // ms
+	double lastTime = pros::millis();
 
-	// Display
-	OdomRenderer odomRenderer(&robot->odometry);
-	MotionRenderer motionRenderer(&robot->motionProfile);
-	ControlRenderer controlRenderer(&controller);
-	Display autoDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+	// State
+	int state = 0;
 
 	// Loop
 	while (true)
 	{
-		// Update Odometry
-		robot->updateOdometry();
+		double deltaTime = pros::millis() - lastTime;
+		lastTime = pros::millis();
+		pauseTimer -= deltaTime;
 
-		// Drive Chassis
-		if (pauseTimer <= 0)
-			controller.update();
-		else
-			pauseTimer -= pros::millis();
-
-		// Perform Actions
-		auto events = controller.getCurrentEvents();
-		for (auto event : events)
+		switch (state)
 		{
-			if (event.name == "pause")
-				pauseTimer = std::stod(event.params);
-			if (event.name == "runIntake")
-				robot->intake.intake();
-			if (event.name == "stopIntake")
-				robot->intake.stop();
-			if (event.name == "runOuttake")
-				robot->intake.outtake();
-			if (event.name == "openWings")
-				robot->wings.extend();
-			if (event.name == "closeWings")
-				robot->wings.retract();
+		case 0:
+			robot->blocker.extend();
+			pauseTimer = 1000;
+			state++;
+			break;
+		case 1:
+			if (pauseTimer > 0)
+				break;
+			robot->chassis.move(0.3, 0.0);
+			pauseTimer = 3000;
+			state++;
+			break;
+		case 2:
+			if (pauseTimer > 0)
+				break;
+			robot->chassis.move(0.0, 0.0);
+			robot->blocker.retract(true);
+			state++;
+			break;
+		case 3:
+			robot->blocker.retract(true);
 		}
-
-		// Update Display
-		autoDisplay.update();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);
@@ -122,42 +119,47 @@ void opcontrol()
 	MotionRenderer motionRenderer(&robot->motionProfile);
 	Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
+	bool wasBlockerUp = false;
+	bool isBlockerUp = false;
+
 	// Loop
 	while (true)
 	{
 		// Controller
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
-		bool extendWings = master.get_digital(DIGITAL_A);
-		bool retractWings = master.get_digital(DIGITAL_B);
-		bool intake = master.get_digital(DIGITAL_R1);
-		bool outtake = master.get_digital(DIGITAL_R2);
-		bool block = master.get_digital(DIGITAL_L1);
-		bool climb = master.get_digital(DIGITAL_L2);
+		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
+		bool leftWing = master.get_digital(DIGITAL_L2);
+		bool rightWing = master.get_digital(DIGITAL_R2);
+		bool blockerUp = master.get_digital(DIGITAL_X);
+		bool isBlockerDown = master.get_digital(DIGITAL_B);
+		double intakeValue = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
 
 		// Curve Inputs
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
 		leftX = Curve::square(leftX);
 
 		// Wings
-		if (extendWings)
-			robot->wings.extend();
-		else if (retractWings)
-			robot->wings.retract();
+		if (leftWing)
+			robot->wings.extendLeft();
+		else
+			robot->wings.retractLeft();
+		if (rightWing)
+			robot->wings.extendRight();
+		else
+			robot->wings.retractRight();
 
 		// Intake
-		if (intake)
-			robot->intake.intake();
-		else if (outtake)
-			robot->intake.outtake();
-		else
-			robot->intake.stop();
+		robot->intake.intake(intakeValue);
 
 		// Blocker
-		if (block)
-			robot->blocker.extend();
+		if (blockerUp && !wasBlockerUp)
+			isBlockerUp = !isBlockerUp;
+		wasBlockerUp = blockerUp;
+
+		if (!isBlockerUp || isBlockerDown)
+			robot->blocker.retract(isBlockerDown);
 		else
-			robot->blocker.retract(climb);
+			robot->blocker.extend();
 
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);

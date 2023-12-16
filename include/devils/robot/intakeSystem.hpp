@@ -25,20 +25,20 @@ namespace devils
          * Extends (if AUTO_EXTEND) and runs the intake wheels.
          * Stops if the Optical Sensor detects a triball.
          */
-        void intake()
+        void intake(double value = WHEEL_SPEED)
         {
             if (enableSensor && sensor->getProximity() > SENSOR_THRESHOLD)
                 stop();
             else
-                forceIntake();
+                forceIntake(value);
         }
 
         /**
          * Extends (if AUTO_EXTEND) and runs the intake, regardless of the Optical Sensor.
          */
-        void forceIntake()
+        void forceIntake(double value = WHEEL_SPEED)
         {
-            intakeMotor.moveVoltage(WHEEL_SPEED);
+            intakeMotor.moveVoltage(value);
             isIntaking = true;
             isOuttaking = false;
         }

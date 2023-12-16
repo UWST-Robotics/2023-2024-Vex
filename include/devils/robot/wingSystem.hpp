@@ -21,36 +21,38 @@ namespace devils
         }
 
         /**
-         * Pops out the wings.
+         * Pops out the left wing.
          */
-        void extend()
+        void extendLeft()
         {
             leftPneumatic.extend();
-            rightPneumatic.extend();
-            isExtended = true;
         }
 
         /**
-         * Retracts the wings.
+         * Pops out the right wing
          */
-        void retract()
+        void extendRight()
+        {
+            rightPneumatic.extend();
+        }
+
+        /**
+         * Retracts the left wing
+         */
+        void retractLeft()
         {
             leftPneumatic.retract();
-            rightPneumatic.retract();
-            isExtended = false;
         }
 
         /**
-         * Gets if the wings are extended.
-         * @return True if the wings are extended
+         * Retracts the right wing
          */
-        const bool getExtended()
+        void retractRight()
         {
-            return isExtended;
+            rightPneumatic.retract();
         }
 
     private:
-        bool isExtended = false;
         ScuffPneumatic leftPneumatic;
         ScuffPneumatic rightPneumatic;
     };
