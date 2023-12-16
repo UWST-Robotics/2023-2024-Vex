@@ -84,8 +84,8 @@ namespace devils
         static constexpr uint8_t BLOCKER_PNEUMATIC_PORT = 3;
 
         // Odometry
-        static constexpr double WHEEL_RADIUS = 3.25;          // in
-        static constexpr double WHEEL_BASE = 12.0;            // in
-        static constexpr double TICKS_PER_REVOLUTION = 400.0; // 540.0; // ticks
+        static constexpr double WHEEL_RADIUS = 3.25;                          // in
+        static constexpr double WHEEL_BASE = 12.0;                            // in
+        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
     };
 }
