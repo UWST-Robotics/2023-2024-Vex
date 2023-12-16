@@ -78,10 +78,6 @@ void autonomous()
 		{
 			if (event.name == "pause")
 				pauseTimer = std::stod(event.params);
-			if (event.name == "openWings")
-				robot->wings.extend();
-			if (event.name == "closeWings")
-				robot->wings.retract();
 		}
 
 		// Update Display
@@ -133,17 +129,11 @@ void opcontrol()
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
 		leftX = Curve::square(leftX);
 
-		// Wings
-		if (wings)
-			robot->wings.extend();
-		else
-			robot->wings.retract();
-
 		// Catapult
 		if (fireCatapult)
-			robot->catapult.fire();
+			robot->catapult.forceFire();
 		else
-			robot->catapult.stopLauncher();
+			robot->catapult.fire();
 
 		if (extendCatapult)
 			robot->catapult.extend();

@@ -21,9 +21,37 @@ namespace devils
         }
 
         /**
-         * Runs the catapult motor
+         * Runs the catapult motor (depends on the Optical Sensor if enabled)
          */
         void fire()
+        {
+            // Handle sensor
+            if (enableSensor)
+            {
+                if (sensor->getProximity() < SENSOR_THRESHOLD)
+                {
+                    ballTimer -= pros::millis();
+                    if (ballTimer <= 0)
+                        forceFire();
+                    else
+                        stopLauncher();
+                }
+                else
+                {
+                    ballTimer = TIME_TO_LAUNCH;
+                    stopLauncher();
+                }
+            }
+            else
+            {
+                forceFire();
+            }
+        }
+
+        /**
+         * Runs the catapult motor regardless of the Optical Sensor
+         */
+        void forceFire()
         {
             catapultMotor.moveVoltage(FIRE_SPEED);
             isFiring = true;
@@ -79,12 +107,29 @@ namespace devils
             return isFiring;
         }
 
+        /**
+         * Enables the Optical Sensor for the catapult.
+         * Toggles the catapult if the Optical Sensor detects a triball.
+         * @param sensor The Optical Sensor to use.
+         */
+        void useSensor(OpticalSensor *sensor)
+        {
+            enableSensor = true;
+            this->sensor = sensor;
+        }
+
     private:
-        static constexpr double FIRE_SPEED = 1.0;
-        static constexpr double WINCH_SPEED = 0.5;
+        static constexpr double FIRE_SPEED = 1.0;       // -1 - 1 voltage
+        static constexpr double WINCH_SPEED = 0.5;      // -1 - 1 volrage
+        static constexpr double SENSOR_THRESHOLD = 0.5; // 0 - 1 proximity
+        static constexpr double TIME_TO_LAUNCH = 500;   // ms
+
+        double ballTimer = -1;
 
         bool isFiring = false;
+        bool enableSensor = false;
         SmartMotor catapultMotor;
         SmartMotor winchMotor;
+        OpticalSensor *sensor;
     };
 }
