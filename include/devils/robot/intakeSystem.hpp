@@ -15,9 +15,8 @@ namespace devils
         /**
          * Controls the intake system to intake triballs.
          * @param wheelPort The port of the flywheel motor.
-         * @param manipPort The ADI port of the articulation pneumatic.
          */
-        IntakeSystem(const int8_t wheelPort, const int8_t manipPort)
+        IntakeSystem(const int8_t wheelPort)
             : intakeMotor("IntakeMotor", wheelPort)
         {
         }
@@ -108,7 +107,6 @@ namespace devils
         bool isOuttaking = false;
         bool enableSensor = false;
         SmartMotor intakeMotor;
-        ScuffPneumatic manipPneumatic;
         OpticalSensor *sensor;
     };
 }

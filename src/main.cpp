@@ -127,20 +127,22 @@ void opcontrol()
 	{
 		// Controller
 		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
-		bool wings = master.get_digital(DIGITAL_R2);
-		bool intake = master.get_digital(DIGITAL_L1);
-		bool outtake = master.get_digital(DIGITAL_L2);
-		bool block = master.get_digital(DIGITAL_A);
+		double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
+		bool extendWings = master.get_digital(DIGITAL_A);
+		bool retractWings = master.get_digital(DIGITAL_B);
+		bool intake = master.get_digital(DIGITAL_R1);
+		bool outtake = master.get_digital(DIGITAL_R2);
+		bool block = master.get_digital(DIGITAL_L1);
+		bool climb = master.get_digital(DIGITAL_L2);
 
 		// Curve Inputs
 		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
 		leftX = Curve::square(leftX);
 
 		// Wings
-		if (wings)
+		if (extendWings)
 			robot->wings.extend();
-		else
+		else if (retractWings)
 			robot->wings.retract();
 
 		// Intake
@@ -155,7 +157,7 @@ void opcontrol()
 		if (block)
 			robot->blocker.extend();
 		else
-			robot->blocker.retract();
+			robot->blocker.retract(climb);
 
 		// Arcade Drive
 		robot->chassis.move(leftY, leftX);

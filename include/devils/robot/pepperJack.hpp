@@ -29,7 +29,7 @@ namespace devils
               intake(INTAKE_MOTOR_PORT),
               storageSensor("PepperJack.StorageSensor", STORAGE_SENSOR_PORT),
               wings(LEFT_WINGS_PNEUMATIC_PORT, RIGHT_WINGS_PNEUMATIC_PORT),
-              blocker(BLOCKER_PNEUMATIC_PORT),
+              blocker(BLOCKER_PNEUMATIC_DOWN_PORT, BLOCKER_PNEUMATIC_UP_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
@@ -70,18 +70,19 @@ namespace devils
 
     private:
         // V5 Motors
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {1}; //{-1, 2, -11, 12};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {2}; //{-9, 10, -19, 20};
-        static constexpr uint8_t INTAKE_MOTOR_PORT = 3;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {1, 11, -2, -12};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-10, -20, 9, 19};
+        static constexpr uint8_t INTAKE_MOTOR_PORT = -21;
 
         // V5 Sensors
-        static constexpr uint8_t IMU_PORT = 17;
-        static constexpr uint8_t STORAGE_SENSOR_PORT = 18;
+        static constexpr uint8_t IMU_PORT = 6;
+        static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
 
         // ADI Ports
         static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 1;
         static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 2;
-        static constexpr uint8_t BLOCKER_PNEUMATIC_PORT = 3;
+        static constexpr uint8_t BLOCKER_PNEUMATIC_DOWN_PORT = 3;
+        static constexpr uint8_t BLOCKER_PNEUMATIC_UP_PORT = 4;
 
         // Odometry
         static constexpr double WHEEL_RADIUS = 3.25;                          // in

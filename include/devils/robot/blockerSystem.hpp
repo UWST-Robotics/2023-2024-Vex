@@ -11,10 +11,12 @@ namespace devils
     public:
         /**
          * Creates a new blocker system.
-         * @param blockerPort The ADI port of the pneumatics
+         * @param downPneumaticPort The ADI port of the down blocker pneumatic.
+         * @param upPneumaticPort The ADI port of the up blocker pneumatic.
          */
-        BlockerSystem(const uint8_t blockerPort)
-            : pneumatics("BlockerPneumatic", blockerPort)
+        BlockerSystem(const uint8_t downPneumaticPort, const uint8_t upPneumaticPort)
+            : downPneumatics("BlockerDownPneumatic", downPneumaticPort),
+              upPneumatics("BlockerUpPneumatic", upPneumaticPort)
         {
         }
 
@@ -23,16 +25,21 @@ namespace devils
          */
         void extend()
         {
-            pneumatics.extend();
+            upPneumatics.extend();
+            downPneumatics.retract();
             isExtended = true;
         }
 
         /**
          * Retracts the blocker.
          */
-        void retract()
+        void retract(bool climb = false)
         {
-            pneumatics.retract();
+            upPneumatics.retract();
+            if (climb)
+                downPneumatics.extend();
+            else
+                downPneumatics.retract();
             isExtended = false;
         }
 
@@ -47,6 +54,7 @@ namespace devils
 
     private:
         bool isExtended = false;
-        ScuffPneumatic pneumatics;
+        ScuffPneumatic downPneumatics;
+        ScuffPneumatic upPneumatics;
     };
 }
