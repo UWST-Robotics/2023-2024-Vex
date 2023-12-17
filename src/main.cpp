@@ -46,42 +46,22 @@ void competition_initialize() {}
 void autonomous()
 {
 	Logger::info("Starting autocontrol");
-
-	// Auto Controller
-	PursuitController controller(robot->chassis, robot->motionProfile, robot->odometry);
-	controller.restart();
-
-	// Timer
-	double pauseTimer = 0; // ms
-
-	// Display
-	OdomRenderer odomRenderer(&robot->odometry);
-	MotionRenderer motionRenderer(&robot->motionProfile);
-	ControlRenderer controlRenderer(&controller);
-	Display autoDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+	double lastTime = pros::millis();
+	double timer = 1500;
 
 	// Loop
 	while (true)
 	{
-		// Update Odometry
-		robot->updateOdometry();
+		double deltaTime = pros::millis() - lastTime;
+		lastTime = pros::millis();
+		timer -= deltaTime;
 
-		// Drive Chassis
-		if (pauseTimer <= 0)
-			controller.update();
+		if (timer > 0)
+			robot->catapult.extend();
 		else
-			pauseTimer -= pros::millis();
+			robot->catapult.stopWinch();
 
-		// Perform Actions
-		auto events = controller.getCurrentEvents();
-		for (auto event : events)
-		{
-			if (event.name == "pause")
-				pauseTimer = std::stod(event.params);
-		}
-
-		// Update Display
-		autoDisplay.update();
+		robot->catapult.fire();
 
 		// Delay to prevent the CPU from being overloaded
 		pros::delay(20);

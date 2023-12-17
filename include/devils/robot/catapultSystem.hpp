@@ -15,10 +15,12 @@ namespace devils
          * @param motorPort The port of the catapult motor
          * @param winchPort The port of the winch motor
          */
-        CatapultSystem(const int8_t motorPort, const int8_t winchPort)
+        CatapultSystem(const int8_t motorPort, const int8_t winchPort, const int8_t conveyorPort)
             : catapultMotor("CatapultMotor", motorPort),
-              winchMotor("WinchMotor", winchPort)
+              winchMotor("WinchMotor", winchPort),
+              conveyorMotor("ConveyorMotor", conveyorPort)
         {
+            lastTime = pros::millis();
         }
 
         /**
@@ -31,7 +33,10 @@ namespace devils
             {
                 if (sensor->getProximity() > SENSOR_THRESHOLD)
                 {
-                    ballTimer -= pros::millis();
+                    double deltaTime = pros::millis() - lastTime;
+                    lastTime = pros::millis();
+                    ballTimer -= lastTime;
+
                     if (ballTimer <= 0)
                         forceFire();
                     else
@@ -55,6 +60,7 @@ namespace devils
         void forceFire()
         {
             catapultMotor.moveVoltage(FIRE_SPEED);
+            conveyorMotor.moveVoltage(CONVEYOR_SPEED);
             isFiring = true;
         }
 
@@ -64,6 +70,7 @@ namespace devils
         void stopLauncher()
         {
             catapultMotor.moveVoltage(0);
+            conveyorMotor.moveVoltage(0);
             isFiring = false;
         }
 
@@ -121,16 +128,19 @@ namespace devils
 
     private:
         static constexpr double FIRE_SPEED = -1.0;      // -1 - 1 voltage
+        static constexpr double CONVEYOR_SPEED = 1.0;   // -1 - 1 voltage
         static constexpr double WINCH_SPEED = 1.0;      // -1 - 1 voltage
         static constexpr double SENSOR_THRESHOLD = 0.5; // 0 - 1 proximity
-        static constexpr double TIME_TO_LAUNCH = 500;   // ms
+        static constexpr double TIME_TO_LAUNCH = 1000;  // ms
 
         double ballTimer = -1;
+        double lastTime = -1;
 
         bool isFiring = false;
         bool enableSensor = false;
         SmartMotor catapultMotor;
         SmartMotor winchMotor;
+        SmartMotor conveyorMotor;
         OpticalSensor *sensor;
     };
 }

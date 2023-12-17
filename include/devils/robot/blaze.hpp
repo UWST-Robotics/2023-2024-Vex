@@ -27,7 +27,7 @@ namespace devils
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               imu("Blaze.IMU", IMU_PORT),
               storageSensor("Blaze.StorageSensor", STORAGE_SENSOR_PORT),
-              catapult(CATAPULT_MOTOR_PORT, WINCH_MOTOR_PORT),
+              catapult(CATAPULT_MOTOR_PORT, WINCH_MOTOR_PORT, CONVEYOR_MOTOR_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
@@ -70,6 +70,7 @@ namespace devils
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-8, -16, 17, 7}; //{1, -2, 11, -12};
         static constexpr uint8_t CATAPULT_MOTOR_PORT = 6;
         static constexpr uint8_t WINCH_MOTOR_PORT = 15;
+        static constexpr uint8_t CONVEYOR_MOTOR_PORT = 10;
 
         // V5 Sensors
         static constexpr uint8_t IMU_PORT = 20;
