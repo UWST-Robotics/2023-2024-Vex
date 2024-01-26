@@ -10,7 +10,6 @@ void initialize()
 {
 	Logger::init();
 	robot = std::make_shared<Blaze>();
-	robot->generateMotionProfile();
 	Logger::info("Initialized");
 }
 
@@ -45,27 +44,7 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-	Logger::info("Starting autocontrol");
-	double lastTime = pros::millis();
-	double timer = 1500;
-
-	// Loop
-	while (true)
-	{
-		double deltaTime = pros::millis() - lastTime;
-		lastTime = pros::millis();
-		timer -= deltaTime;
-
-		if (timer > 0)
-			robot->catapult.extend();
-		else
-			robot->catapult.stopWinch();
-
-		robot->catapult.fire();
-
-		// Delay to prevent the CPU from being overloaded
-		pros::delay(20);
-	}
+	robot->autonomous();
 }
 
 /**
@@ -83,58 +62,5 @@ void autonomous()
  */
 void opcontrol()
 {
-	Logger::info("Starting opcontrol");
-
-	// Teleop Controller
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-
-	// Display
-	OdomRenderer odomRenderer(&robot->odometry);
-	MotionRenderer motionRenderer(&robot->motionProfile);
-	Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
-
-	bool wasBlockerUp = false;
-	bool isBlockerUp = false;
-
-	// Loop
-	while (true)
-	{
-		// Controller
-		double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
-		double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
-		bool extendCatapult = master.get_digital(DIGITAL_R1);
-		bool retractCatapult = master.get_digital(DIGITAL_R2);
-		bool fireCatapult = master.get_digital(DIGITAL_L1);
-		bool block = master.get_digital(DIGITAL_A);
-		bool wings = master.get_digital(DIGITAL_B);
-
-		// Curve Inputs
-		leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
-		leftX = Curve::square(leftX);
-
-		// Catapult
-		if (fireCatapult)
-			robot->catapult.forceFire();
-		else
-			robot->catapult.stopLauncher();
-
-		if (extendCatapult)
-			robot->catapult.extend();
-		else if (retractCatapult)
-			robot->catapult.retract();
-		else
-			robot->catapult.stopWinch();
-
-		// Arcade Drive
-		robot->chassis.move(leftY, leftX);
-
-		// Odometry
-		robot->updateOdometry();
-
-		// Simulation
-		teleopDisplay.update();
-
-		// Delay to prevent the CPU from being overloaded
-		pros::delay(20);
-	}
+	robot->teleoperated();
 }

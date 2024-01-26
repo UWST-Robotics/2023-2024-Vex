@@ -3,7 +3,7 @@
 #include "../chassis/tankChassis.hpp"
 #include "../odom/tankWheelOdometry.hpp"
 #include "../path/motionProfile.hpp"
-#include "catapultSystem.hpp"
+#include "launcherSystem.hpp"
 #include "climbSystem.hpp"
 #include "intakeSystem.hpp"
 #include "wingSystem.hpp"
@@ -32,29 +32,102 @@ namespace devils
         {
             odometry.useIMU(&imu);
             catapult.useSensor(&storageSensor);
-        }
 
-        /**
-         * Updates the odometry of the robot.
-         */
-        void updateOdometry()
-        {
-            odometry.update(&chassis);
-        }
-
-        /**
-         * Generates the motion profile for the robot.
-         */
-        void generateMotionProfile()
-        {
+            // Motion Profile
             Logger::info("Generating Motion Profile...");
             auto generator = SplineGenerator();
             generator.generate(&motionProfile);
         }
 
+        /**
+         * Runs the robot during autonomous.
+         */
+        void autonomous()
+        {
+            Logger::info("Starting autocontrol");
+            double lastTime = pros::millis();
+            double timer = 1500;
+
+            // Loop
+            while (true)
+            {
+                double deltaTime = pros::millis() - lastTime;
+                lastTime = pros::millis();
+                timer -= deltaTime;
+
+                if (timer > 0)
+                    robot->catapult.extend();
+                else
+                    robot->catapult.stopWinch();
+
+                robot->catapult.fire();
+
+                // Delay to prevent the CPU from being overloaded
+                pros::delay(20);
+            }
+        }
+
+        /**
+         * Runs the robot during operator control.
+         */
+        void teleoperated()
+        {
+            Logger::info("Starting opcontrol");
+
+            // Teleop Controller
+            pros::Controller master(pros::E_CONTROLLER_MASTER);
+
+            // Display
+            OdomRenderer odomRenderer(&robot->odometry);
+            MotionRenderer motionRenderer(&robot->motionProfile);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
+
+            // Loop
+            while (true)
+            {
+                // Controller
+                double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
+                double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
+                bool extendCatapult = master.get_digital(DIGITAL_R1);
+                bool retractCatapult = master.get_digital(DIGITAL_R2);
+                bool fireLauncher = master.get_digital(DIGITAL_L1);
+                bool block = master.get_digital(DIGITAL_A);
+                bool wings = master.get_digital(DIGITAL_B);
+
+                // Curve Inputs
+                leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
+                leftX = Curve::square(leftX);
+
+                // Catapult
+                if (fireLauncher)
+                    robot->launcher.forceFire();
+                else
+                    robot->launcher.stopLauncher();
+
+                if (extendCatapult)
+                    robot->launcher.extend();
+                else if (retractCatapult)
+                    robot->launcher.retract();
+                else
+                    robot->launcher.stopWinch();
+
+                // Arcade Drive
+                robot->chassis.move(leftY, leftX);
+
+                // Odometry
+                odometry.update(&chassis);
+
+                // Simulation
+                teleopDisplay.update();
+
+                // Delay to prevent the CPU from being overloaded
+                pros::delay(20);
+            }
+        }
+
         // Subsystems
         TankChassis chassis;
-        CatapultSystem catapult;
+        LauncherSystem launcher;
 
         // Autonomous
         TankWheelOdometry odometry;
