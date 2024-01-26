@@ -15,52 +15,30 @@ namespace devils
         /**
          * Controls the intake system to intake triballs.
          * @param wheelPort The port of the flywheel motor.
-         * @param manipPort The ADI port of the articulation pneumatic.
          */
-        IntakeSystem(const int8_t wheelPort, const int8_t manipPort)
-            : intakeMotor("IntakeMotor", wheelPort),
-              manipPneumatic("ManipPneumatic", manipPort)
+        IntakeSystem(const int8_t wheelPort)
+            : intakeMotor("IntakeMotor", wheelPort)
         {
-        }
-
-        /**
-         * Pops out the intake
-         */
-        void extend()
-        {
-            manipPneumatic.extend();
-            isExtended = true;
-        }
-
-        /**
-         * Retracts the intake
-         */
-        void retract()
-        {
-            manipPneumatic.retract();
-            isExtended = false;
         }
 
         /**
          * Extends (if AUTO_EXTEND) and runs the intake wheels.
          * Stops if the Optical Sensor detects a triball.
          */
-        void intake()
+        void intake(double value = WHEEL_SPEED)
         {
             if (enableSensor && sensor->getProximity() > SENSOR_THRESHOLD)
                 stop();
             else
-                forceIntake();
+                forceIntake(value);
         }
 
         /**
          * Extends (if AUTO_EXTEND) and runs the intake, regardless of the Optical Sensor.
          */
-        void forceIntake()
+        void forceIntake(double value = WHEEL_SPEED)
         {
-            if (AUTO_EXTEND)
-                extend();
-            intakeMotor.moveVoltage(WHEEL_SPEED);
+            intakeMotor.moveVoltage(value);
             isIntaking = true;
             isOuttaking = false;
         }
@@ -70,8 +48,6 @@ namespace devils
          */
         void outtake()
         {
-            if (AUTO_EXTEND)
-                extend();
             intakeMotor.moveVoltage(-WHEEL_SPEED);
             isIntaking = false;
             isOuttaking = true;
@@ -82,8 +58,6 @@ namespace devils
          */
         void stop()
         {
-            if (AUTO_RETRACT)
-                retract();
             intakeMotor.stop();
             isIntaking = false;
             isOuttaking = false;
@@ -127,15 +101,12 @@ namespace devils
     private:
         static constexpr double WHEEL_SPEED = 1.0;
         static constexpr double SENSOR_THRESHOLD = 0.5;
-        static constexpr bool AUTO_RETRACT = true;
-        static constexpr bool AUTO_EXTEND = true;
 
         bool isExtended = false;
         bool isIntaking = false;
         bool isOuttaking = false;
         bool enableSensor = false;
         SmartMotor intakeMotor;
-        ScuffPneumatic manipPneumatic;
         OpticalSensor *sensor;
     };
 }

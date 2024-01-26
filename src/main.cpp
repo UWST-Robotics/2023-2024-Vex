@@ -93,6 +93,9 @@ void opcontrol()
 	MotionRenderer motionRenderer(&robot->motionProfile);
 	Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
+	bool wasBlockerUp = false;
+	bool isBlockerUp = false;
+
 	// Loop
 	while (true)
 	{
