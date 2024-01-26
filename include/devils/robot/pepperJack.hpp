@@ -3,7 +3,6 @@
 #include "../chassis/tankChassis.hpp"
 #include "../odom/tankWheelOdometry.hpp"
 #include "../path/motionProfile.hpp"
-#include "catapultSystem.hpp"
 #include "climbSystem.hpp"
 #include "intakeSystem.hpp"
 #include "wingSystem.hpp"
@@ -37,21 +36,89 @@ namespace devils
         }
 
         /**
-         * Updates the odometry of the robot.
+         * Runs the robot during autonomous.
          */
-        void updateOdometry()
+        void autonomous()
         {
-            odometry.update(&chassis);
+            // Loop
+            while (true)
+            {
+                // TODO: Write me!
+
+                // Delay to prevent the CPU from being overloaded
+                pros::delay(20);
+            }
         }
 
         /**
-         * Generates the motion profile for the robot.
+         * Runs the robot during operator control.
          */
-        void generateMotionProfile()
+        void opcontrol()
         {
-            // auto generator = SquigglesGenerator(MAX_VELOCITY, MAX_ACCELERATION, MAX_JERK, WHEEL_BASE);
-            auto generator = SplineGenerator();
-            generator.generate(&motionProfile);
+            Logger::warn("Starting opcontrol");
+
+            // Teleop Controller
+            pros::Controller master(pros::E_CONTROLLER_MASTER);
+
+            // Display
+            OdomRenderer odomRenderer(&odometry);
+            MotionRenderer motionRenderer(&motionProfile);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
+
+            bool wasBlockerUp = false;
+            bool isBlockerUp = false;
+
+            // Loop
+            while (true)
+            {
+                // Controller
+                double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
+                double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
+                bool leftWing = master.get_digital(DIGITAL_L2);
+                bool rightWing = master.get_digital(DIGITAL_R2);
+                bool blockerUp = master.get_digital(DIGITAL_X);
+                bool isBlockerDown = master.get_digital(DIGITAL_B);
+                double intakeValue = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
+
+                // Curve Inputs
+                leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
+                leftX = Curve::square(leftX);
+
+                // Wings
+                if (leftWing)
+                    wings.extendLeft();
+                else
+                    wings.retractLeft();
+                if (rightWing)
+                    wings.extendRight();
+                else
+                    wings.retractRight();
+
+                // Intake
+                intake.intake(intakeValue);
+
+                // Blocker
+                if (blockerUp && !wasBlockerUp)
+                    isBlockerUp = !isBlockerUp;
+                wasBlockerUp = blockerUp;
+
+                if (!isBlockerUp || isBlockerDown)
+                    blocker.retract(isBlockerDown);
+                else
+                    blocker.extend();
+
+                // Arcade Drive
+                chassis.move(leftY, leftX);
+
+                // Odometry
+                odometry.update(&chassis);
+
+                // Simulation
+                teleopDisplay.update();
+
+                // Delay to prevent the CPU from being overloaded
+                pros::delay(20);
+            }
         }
 
         // Subsystems

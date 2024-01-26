@@ -27,11 +27,11 @@ namespace devils
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               imu("Blaze.IMU", IMU_PORT),
               storageSensor("Blaze.StorageSensor", STORAGE_SENSOR_PORT),
-              catapult(CATAPULT_MOTOR_PORT, WINCH_MOTOR_PORT, CONVEYOR_MOTOR_PORT),
+              launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
-            catapult.useSensor(&storageSensor);
+            // launcher.useSensor(&storageSensor);
 
             // Motion Profile
             Logger::info("Generating Motion Profile...");
@@ -44,23 +44,10 @@ namespace devils
          */
         void autonomous()
         {
-            Logger::info("Starting autocontrol");
-            double lastTime = pros::millis();
-            double timer = 1500;
-
             // Loop
             while (true)
             {
-                double deltaTime = pros::millis() - lastTime;
-                lastTime = pros::millis();
-                timer -= deltaTime;
-
-                if (timer > 0)
-                    robot->catapult.extend();
-                else
-                    robot->catapult.stopWinch();
-
-                robot->catapult.fire();
+                // TODO: Write me!
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
@@ -70,7 +57,7 @@ namespace devils
         /**
          * Runs the robot during operator control.
          */
-        void teleoperated()
+        void opcontrol()
         {
             Logger::info("Starting opcontrol");
 
@@ -100,16 +87,18 @@ namespace devils
 
                 // Catapult
                 if (fireLauncher)
-                    robot->launcher.forceFire();
+                    launcher.fire();
                 else
-                    robot->launcher.stopLauncher();
+                    launcher.stop();
 
+                /*
                 if (extendCatapult)
-                    robot->launcher.extend();
+                    launcher.extend();
                 else if (retractCatapult)
-                    robot->launcher.retract();
+                    launcher.retract();
                 else
-                    robot->launcher.stopWinch();
+                    launcher.stopWinch();
+                    */
 
                 // Arcade Drive
                 robot->chassis.move(leftY, leftX);
@@ -141,9 +130,8 @@ namespace devils
         // V5 Motors
         static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {12, 4, -3, -11}; //{9, -10, 19, -20};
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-8, -16, 17, 7}; //{1, -2, 11, -12};
-        static constexpr uint8_t CATAPULT_MOTOR_PORT = 6;
-        static constexpr uint8_t WINCH_MOTOR_PORT = 15;
-        static constexpr uint8_t CONVEYOR_MOTOR_PORT = 10;
+        static constexpr uint8_t LEFT_LAUNCHER_PORT = 5;
+        static constexpr uint8_t RIGHT_LAUNCHER_PORT = 6;
 
         // V5 Sensors
         static constexpr uint8_t IMU_PORT = 20;
