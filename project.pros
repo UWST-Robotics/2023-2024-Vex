@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "PJ - DevilBots",
+    "project_name": "Blaze - DevilBots",
     "target": "v5",
     "templates": {
       "kernel": {
@@ -309,8 +309,8 @@
       }
     },
     "upload_options": {
-      "icon": "pizza",
-      "description": "DevilBots program for Pepper Jack"
+      "icon": "clawbot",
+      "description": "DevilBots program for Blaze"
     }
   }
 }
