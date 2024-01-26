@@ -17,7 +17,7 @@
 #define PROS_USE_LITERALS     // Allows us to use 200_ms instead of pros::c::millisecond_t(200)
 
 #include "api.h"           // Includes all the pros headers
-#include "devils/devils.h" // Includes all the devils headers
+#include "devils/robots.h" // Includes all the devilbot robots
 
 using namespace devils;
 

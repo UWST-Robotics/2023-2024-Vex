@@ -1,5 +1,6 @@
 #pragma once
 #include "pathFile.hpp"
+#include "../utils/logger.hpp"
 #include "../utils/stringUtils.hpp"
 #include "../utils/units.hpp"
 #include <fstream>

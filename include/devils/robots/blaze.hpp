@@ -1,16 +1,6 @@
 #pragma once
-#include "../utils/logger.hpp"
-#include "../chassis/tankChassis.hpp"
-#include "../odom/tankWheelOdometry.hpp"
-#include "../path/motionProfile.hpp"
-#include "launcherSystem.hpp"
-#include "climbSystem.hpp"
-#include "intakeSystem.hpp"
-#include "wingSystem.hpp"
-#include "blockerSystem.hpp"
-#include "ledSystem.hpp"
-#include "../path/squigglesGenerator.hpp"
-#include "../path/splineGenerator.hpp"
+
+#include "../devils.h"
 
 namespace devils
 {
@@ -65,8 +55,8 @@ namespace devils
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
             // Display
-            OdomRenderer odomRenderer(&robot->odometry);
-            MotionRenderer motionRenderer(&robot->motionProfile);
+            OdomRenderer odomRenderer(&odometry);
+            MotionRenderer motionRenderer(&motionProfile);
             Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
             // Loop
@@ -101,7 +91,7 @@ namespace devils
                     */
 
                 // Arcade Drive
-                robot->chassis.move(leftY, leftX);
+                chassis.move(leftY, leftX);
 
                 // Odometry
                 odometry.update(&chassis);

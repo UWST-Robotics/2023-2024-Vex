@@ -1,15 +1,6 @@
 #pragma once
-#include "../utils/logger.hpp"
-#include "../chassis/tankChassis.hpp"
-#include "../odom/tankWheelOdometry.hpp"
-#include "../path/motionProfile.hpp"
-#include "climbSystem.hpp"
-#include "intakeSystem.hpp"
-#include "wingSystem.hpp"
-#include "blockerSystem.hpp"
-#include "ledSystem.hpp"
-#include "../path/squigglesGenerator.hpp"
-#include "../path/splineGenerator.hpp"
+
+#include "../devils.h"
 
 namespace devils
 {

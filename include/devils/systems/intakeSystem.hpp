@@ -1,5 +1,5 @@
 #pragma once
-#include "devils/utils/logger.hpp"
+#include "../utils/logger.hpp"
 #include "../hardware/smartMotor.hpp"
 #include "../hardware/opticalSensor.hpp"
 #include "../hardware/scuffPneumatic.hpp"
