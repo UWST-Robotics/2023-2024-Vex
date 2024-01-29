@@ -28,7 +28,7 @@ using namespace devils;
  */
 extern "C"
 {
-    std::shared_ptr<Blaze> robot;
+    std::shared_ptr<Prototype> robot;
     void autonomous(void);
     void initialize(void);
     void disabled(void);

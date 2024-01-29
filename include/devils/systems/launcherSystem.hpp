@@ -23,10 +23,10 @@ namespace devils
         /**
          * Runs the launcher motors
          */
-        void fire()
+        void fire(double val = MOTOR_SPEED)
         {
-            leftMotor.moveVoltage(MOTOR_SPEED);
-            rightMotor.moveVoltage(-MOTOR_SPEED);
+            leftMotor.moveVoltage(val);
+            rightMotor.moveVoltage(-val);
             isFiring = true;
         }
 

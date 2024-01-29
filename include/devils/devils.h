@@ -34,6 +34,9 @@
 // Pros
 #include "api.h"
 
+// Robot
+#include "robots/robot.hpp"
+
 // Systems
 #include "systems/blockerSystem.hpp"
 #include "systems/intakeSystem.hpp"

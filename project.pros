@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Blaze - DevilBots",
+    "project_name": "Prototype - DevilBots",
     "target": "v5",
     "templates": {
       "kernel": {

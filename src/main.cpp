@@ -10,7 +10,7 @@ void initialize()
 {
 	Logger::info("==== Initialize ====");
 	Logger::init();
-	robot = std::make_shared<Blaze>();
+	robot = std::make_shared<Prototype>(); // <-- Change this to either PepperJack or Blaze
 	Logger::info("Initialized");
 }
 
@@ -35,7 +35,7 @@ void disabled()
  */
 void competition_initialize()
 {
-	Logger::info("==== Starting Competition ====");
+	Logger::info("==== Competition Initialize ====");
 }
 
 /**
@@ -51,7 +51,7 @@ void competition_initialize()
  */
 void autonomous()
 {
-	Logger::info("==== Starting Autonomous ====");
+	Logger::info("==== Autonomous ====");
 	robot->autonomous();
 }
 
@@ -70,6 +70,6 @@ void autonomous()
  */
 void opcontrol()
 {
-	Logger::info("==== Starting Teleoperated ====");
+	Logger::info("==== Teleoperated ====");
 	robot->opcontrol();
 }

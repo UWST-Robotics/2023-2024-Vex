@@ -7,7 +7,7 @@ namespace devils
     /**
      * Represents the Blaze robot and all of its subsystems.
      */
-    struct Blaze
+    struct Blaze : public Robot
     {
     public:
         /**
@@ -29,9 +29,6 @@ namespace devils
             generator.generate(&motionProfile);
         }
 
-        /**
-         * Runs the robot during autonomous.
-         */
         void autonomous()
         {
             // Loop
@@ -44,9 +41,6 @@ namespace devils
             }
         }
 
-        /**
-         * Runs the robot during operator control.
-         */
         void opcontrol()
         {
             Logger::info("Starting opcontrol");

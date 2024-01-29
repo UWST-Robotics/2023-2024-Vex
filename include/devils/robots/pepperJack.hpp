@@ -7,7 +7,7 @@ namespace devils
     /**
      * Represents the Pepper Jack robot and all of its subsystems.
      */
-    struct PepperJack
+    struct PepperJack : public Robot
     {
     public:
         /**
@@ -26,9 +26,6 @@ namespace devils
             // intake.useSensor(&storageSensor);
         }
 
-        /**
-         * Runs the robot during autonomous.
-         */
         void autonomous()
         {
             // Loop
@@ -41,9 +38,6 @@ namespace devils
             }
         }
 
-        /**
-         * Runs the robot during operator control.
-         */
         void opcontrol()
         {
             Logger::warn("Starting opcontrol");
