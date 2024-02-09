@@ -20,6 +20,7 @@
 #include "display/odomRenderer.hpp"
 #include "display/motionRenderer.hpp"
 #include "display/controlRenderer.hpp"
+#include "display/fieldRenderer.hpp"
 
 // Hardware
 #include "hardware/imu.hpp"
@@ -30,6 +31,7 @@
 
 // Path
 #include "path/splineGenerator.hpp"
+#include "path/squigglesGenerator.hpp"
 
 // Pros
 #include "api.h"

@@ -3,6 +3,8 @@
 #include "okapi/impl/util/timeUtilFactory.hpp"
 #include <string>
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
 
 namespace devils
 {
@@ -15,6 +17,15 @@ namespace devils
     {
     public:
         /**
+         * Checks if the SD card is inserted.
+         * @return True if the SD card is inserted.
+         */
+        static bool isSDInserted()
+        {
+            return pros::usd::is_installed() == 1;
+        }
+
+        /**
          * Initializes the logger.
          */
         static void init()
@@ -22,8 +33,23 @@ namespace devils
             pros::lcd::initialize();
             okapi::Logger::setDefaultLogger(std::make_shared<okapi::Logger>(
                 okapi::TimeUtilFactory::createDefault().getTimer(),
-                LOG_TO_FILE ? _getLogFilePath() : LOG_TERMINAL,
+                LOG_TERMINAL,
                 okapi::Logger::LogLevel::debug));
+
+            // Open Log File
+            if (isSDInserted())
+            {
+                std::string path = _getLogFilePath();
+                logFileStream.open(path);
+                if (logFileStream.is_open())
+                    info("Logger: Opened log file at " + path);
+                else
+                    warn("Logger: Failed to open log file at " + path);
+            }
+            else
+            {
+                warn("Logger: SD card is not installed!");
+            }
         }
 
         /**
@@ -33,20 +59,34 @@ namespace devils
         static std::string _getLogFilePath()
         {
             int index = 0;
-            std::string path = "";
+            std::string path;
             do
             {
                 path = "/usd/log-" + std::to_string(index) + ".txt";
                 index++;
-            } while (access(path.c_str(), F_OK) != -1);
+                info("Logger: Checking for log file at " + path);
+            } while (std::ifstream(path).good());
             return path;
+        }
+
+        /**
+         * Logs a message to the SD card.
+         * @param message The message to log.
+         */
+        static void _logToSD(std::string message)
+        {
+            if (logFileStream.is_open())
+            {
+                logFileStream << message << std::endl;
+                logFileStream.flush();
+            }
         }
 
         /**
          * Logs a message to the LCD.
          * @param message The message to send.
          */
-        static void sendToLCD(std::string message)
+        static void _logToLCD(std::string message)
         {
             static int line = 0;
             pros::lcd::set_text(line, message);
@@ -62,7 +102,9 @@ namespace devils
             okapi::Logger::getDefaultLogger()->info([=]()
                                                     { return std::string(message); });
             if (LOG_TO_DISPLAY)
-                sendToLCD(message);
+                _logToLCD(message);
+            if (LOG_TO_SD)
+                _logToSD(message);
         }
 
         /**
@@ -74,7 +116,9 @@ namespace devils
             okapi::Logger::getDefaultLogger()->warn([=]()
                                                     { return std::string(message); });
             if (LOG_TO_DISPLAY)
-                sendToLCD(message);
+                _logToLCD(message);
+            if (LOG_TO_SD)
+                _logToSD(message);
         }
 
         /**
@@ -86,7 +130,9 @@ namespace devils
             okapi::Logger::getDefaultLogger()->error([=]()
                                                      { return std::string(message); });
             if (LOG_TO_DISPLAY)
-                sendToLCD(message);
+                _logToLCD(message);
+            if (LOG_TO_SD)
+                _logToSD(message);
         }
 
         /**
@@ -98,7 +144,9 @@ namespace devils
             okapi::Logger::getDefaultLogger()->debug([=]()
                                                      { return std::string(message); });
             if (LOG_TO_DISPLAY)
-                sendToLCD(message);
+                _logToLCD(message);
+            if (LOG_TO_SD)
+                _logToSD(message);
         }
 
         /**
@@ -114,6 +162,8 @@ namespace devils
         inline static const std::string LOG_TERMINAL = "/ser/sout";
 
         static constexpr bool LOG_TO_DISPLAY = false;
-        static constexpr bool LOG_TO_FILE = false;
+        static constexpr bool LOG_TO_SD = false;
+
+        inline static std::ofstream logFileStream = std::ofstream();
     };
 }

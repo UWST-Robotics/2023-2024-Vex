@@ -14,8 +14,7 @@ namespace devils
          * Creates a new instance of Blaze.
          */
         Prototype()
-            : launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT),
-              testMotor("Test Motor", 3)
+            : launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT, TEST_MOTOR_PORT)
         {
         }
 
@@ -31,7 +30,7 @@ namespace devils
             // PID pidController = PID(0.017, 0, 0.5);
             PID pidController = PID(0.015, 0.0002, -0.05);
 
-            double maxValue = 0;
+            double maxValue = 0.5;
             bool wasUpPressed = false;
             bool wasDownPressed = false;
 
@@ -43,7 +42,7 @@ namespace devils
                 double inputValue = master.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double goalValue = inputValue * 200;
 
-                double rpm = testMotor.getSpeed();
+                double rpm = 0; // testMotor.getSpeed();
                 double output = pidController.update(goalValue - rpm);
 
                 Logger::info("Goal=" + std::to_string(goalValue) + ", RPM=" + std::to_string(rpm) + ", Output=" + std::to_string(output));
@@ -73,12 +72,10 @@ namespace devils
         // Subsystems
         LauncherSystem launcher;
 
-        // Motor
-        SmartMotor testMotor;
-
     private:
         // V5 Motors
         static constexpr uint8_t LEFT_LAUNCHER_PORT = 1;
         static constexpr uint8_t RIGHT_LAUNCHER_PORT = 2;
+        static constexpr uint8_t TEST_MOTOR_PORT = 3;
     };
 }

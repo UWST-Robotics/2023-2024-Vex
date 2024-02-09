@@ -23,7 +23,7 @@ namespace devils
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
-            // intake.useSensor(&storageSensor);
+            intake.useSensor(&storageSensor);
         }
 
         void autonomous()
@@ -127,8 +127,8 @@ namespace devils
         static constexpr uint8_t INTAKE_MOTOR_PORT = -21;
 
         // V5 Sensors
-        static constexpr uint8_t IMU_PORT = 6;
-        static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
+        static constexpr uint8_t IMU_PORT = 14;
+        static constexpr uint8_t STORAGE_SENSOR_PORT = 8;
 
         // ADI Ports
         static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 1;
@@ -137,8 +137,8 @@ namespace devils
         static constexpr uint8_t BLOCKER_PNEUMATIC_UP_PORT = 4;
 
         // Odometry
-        static constexpr double WHEEL_RADIUS = 3.25;                          // in
+        static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 12.0;                            // in
-        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
+        static constexpr double TICKS_PER_REVOLUTION = 360.0 * (60.0 / 36.0); // ticks
     };
 }

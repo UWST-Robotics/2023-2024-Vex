@@ -17,7 +17,8 @@ namespace devils
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               imu("Blaze.IMU", IMU_PORT),
               storageSensor("Blaze.StorageSensor", STORAGE_SENSOR_PORT),
-              launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT),
+              launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT, ARM_LAUNCHER_PORT),
+              intake(INTAKE_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
@@ -59,8 +60,7 @@ namespace devils
                 // Controller
                 double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = master.get_analog(ANALOG_RIGHT_X) / 127.0;
-                bool extendCatapult = master.get_digital(DIGITAL_R1);
-                bool retractCatapult = master.get_digital(DIGITAL_R2);
+                bool intakeInput = master.get_digital(DIGITAL_R1);
                 bool fireLauncher = master.get_digital(DIGITAL_L1);
                 bool block = master.get_digital(DIGITAL_A);
                 bool wings = master.get_digital(DIGITAL_B);
@@ -75,14 +75,11 @@ namespace devils
                 else
                     launcher.stop();
 
-                /*
-                if (extendCatapult)
-                    launcher.extend();
-                else if (retractCatapult)
-                    launcher.retract();
+                // Intake
+                if (intakeInput)
+                    intake.intake();
                 else
-                    launcher.stopWinch();
-                    */
+                    intake.stop();
 
                 // Arcade Drive
                 chassis.move(leftY, leftX);
@@ -100,6 +97,7 @@ namespace devils
 
         // Subsystems
         TankChassis chassis;
+        IntakeSystem intake;
         LauncherSystem launcher;
 
         // Autonomous
@@ -116,6 +114,8 @@ namespace devils
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-8, -16, 17, 7}; //{1, -2, 11, -12};
         static constexpr uint8_t LEFT_LAUNCHER_PORT = 5;
         static constexpr uint8_t RIGHT_LAUNCHER_PORT = 6;
+        static constexpr uint8_t ARM_LAUNCHER_PORT = 9;
+        static constexpr uint8_t INTAKE_PORT = 10;
 
         // V5 Sensors
         static constexpr uint8_t IMU_PORT = 20;

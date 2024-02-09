@@ -17,6 +17,11 @@ namespace devils
         virtual void move(double forward, double turn, double strafe = 0) = 0;
 
         /**
+         * Stops the robot.
+         */
+        virtual void stop() = 0;
+
+        /**
          * Returns whether or not the chassis is holonomic.
          * @return true if the chassis is holonomic, false otherwise.
          */

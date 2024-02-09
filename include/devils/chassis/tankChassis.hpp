@@ -63,6 +63,15 @@ namespace devils
             return &rightMotors;
         }
 
+        /**
+         * Forces the chassis to stop.
+         */
+        void stop()
+        {
+            leftMotors.stop();
+            rightMotors.stop();
+        }
+
     private:
         SmartMotorGroup leftMotors;
         SmartMotorGroup rightMotors;

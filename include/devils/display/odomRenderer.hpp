@@ -18,6 +18,13 @@ namespace devils
             this->odomSource = odomSource;
         }
 
+        ~OdomRenderer()
+        {
+            lv_obj_del(robotObject);
+            lv_obj_del(robotPointer);
+            lv_obj_del(robotLabel);
+        }
+
         void create(lv_obj_t *root)
         {
             // Robot Root

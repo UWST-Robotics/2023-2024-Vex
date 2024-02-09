@@ -40,6 +40,7 @@ namespace devils
         {
             for (Renderer *renderer : renderers)
                 renderer->update();
+            lv_obj_invalidate(rootObject);
         }
 
     private:
