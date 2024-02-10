@@ -28,5 +28,10 @@ namespace devils
          * The velocity of the right wheel in inches per second.
          */
         double rightWheelVelocity = -1;
+
+        /**
+         * Whether or not the point is going in the reverse direction.
+         */
+        bool isReversed = false;
     };
 }

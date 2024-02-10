@@ -98,7 +98,7 @@ namespace devils
             lv_line_set_points(robotPointer, linePoints, 2);
 
             // Label
-            std::string text = "(" + std::to_string((int)pose.x) + "," + std::to_string((int)pose.y) + ")";
+            std::string text = std::to_string((int)Units::radToDeg(pose.rotation));
             lv_label_set_text(robotLabel, text.c_str());
             lv_label_set_align(robotLabel, LV_LABEL_ALIGN_CENTER);
         }

@@ -24,6 +24,15 @@ namespace devils
 
         void autonomous()
         {
+            // Controller/Odom
+            PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
+
+            // Run
+            while (true)
+            {
+                pursuitController.update();
+                pros::delay(20);
+            }
         }
 
         void opcontrol()
@@ -31,27 +40,15 @@ namespace devils
             // Teleop Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-            // Generate Profile
-            SplineGenerator splineGenerator = SplineGenerator();
-            splineGenerator.generate(&motionProfile);
-
             // Display
             OdomRenderer odomRenderer(&odometry);
             MotionRenderer motionRenderer(&motionProfile);
             FieldRenderer fieldRenderer;
-
             Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &fieldRenderer});
-
-            // PID
-            // PID pidController = PID(0.06, 0, 0); // <-- Translation
-            // PID pidController = PID(0.6, 0, 0); // <-- Rotation
-            // PID pidController = PID(0.015, 0.0002, -0.05); // <-- Test motor
 
             // Loop
             while (true)
             {
-                // Exit if the A button is pressed
-
                 double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
                 double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
                 bool escape = master.get_digital(DIGITAL_A);

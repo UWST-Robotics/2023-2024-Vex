@@ -50,3 +50,4 @@
 // Utils
 #include "utils/curve.hpp"
 #include "utils/pid.hpp"
+#include "utils/autoTimer.hpp"

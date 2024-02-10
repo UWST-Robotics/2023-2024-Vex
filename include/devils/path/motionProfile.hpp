@@ -2,6 +2,7 @@
 #include "pathFileReader.hpp"
 #include "pathFile.hpp"
 #include "profilePose.hpp"
+#include "../odom/odomPose.hpp"
 #include "../utils/units.hpp"
 #include <vector>
 
@@ -61,6 +62,15 @@ namespace devils
                 return profilePoints[profilePoints.size() - 1];
 
             return profilePoints[(int)(t / dt)];
+        }
+
+        /**
+         * Gets the starting pose of the motion profile.
+         * @return The starting pose of the motion profile as an OdomPose.
+         */
+        const OdomPose getStartingPose()
+        {
+            return {0, 0, Units::degToRad(controlPoints[0].rotation)};
         }
 
         /**

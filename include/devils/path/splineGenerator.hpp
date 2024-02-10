@@ -60,18 +60,17 @@ namespace devils
                     p2Profile.y - p2.enterDelta * std::sin(p2Radians),
                     p2Radians};
 
-                // Reverse Point
-                if (p2.isReversed)
-                    isReversed = !isReversed;
-
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)
                 {
                     auto lerp = PathUtils::cubicLerpPoints(p1Profile, a1, a2, p2Profile, t);
-                    // lerp.x *= 2;
-                    // lerp.y *= 2;
+                    lerp.isReversed = isReversed;
                     profilePoints.push_back(lerp);
                 }
+
+                // Reverse Point
+                if (p2.isReversed)
+                    isReversed = !isReversed;
             }
 
             // Set profile

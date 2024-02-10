@@ -6,6 +6,7 @@
 #include "../utils/logger.hpp"
 #include "../utils/curve.hpp"
 #include "../path/profilePose.hpp"
+#include "../utils/pid.hpp"
 #include "autoController.hpp"
 #include "pros/rtos.hpp"
 #include <cmath>
@@ -49,6 +50,7 @@ namespace devils
         void restart() override
         {
             currentPathIndex = 0;
+            odometry.setPose(motionProfile.getStartingPose());
         }
 
         /**
@@ -69,6 +71,7 @@ namespace devils
          */
         void update() override
         {
+            // Get Current Pose
             auto currentPose = odometry.getPose();
             auto controlPoints = motionProfile.getControlPoints();
             auto profilePoints = motionProfile.getProfilePoints();
@@ -89,17 +92,21 @@ namespace devils
             }
 
             // Update Path Point
+            auto firstPoint = controlPoints.front();
             for (int i = currentPointIndex; i < controlPoints.size(); i++)
             {
                 auto point = controlPoints[i];
-                double xPos = point.x;
-                double yPos = point.y;
+                double xPos = point.x - firstPoint.x;
+                double yPos = point.y - firstPoint.y;
                 double distance = sqrt(pow(xPos - currentPose.x, 2) + pow(yPos - currentPose.y, 2));
                 if (distance < EVENT_RANGE)
                     currentPointIndex = i;
                 if (i - currentPointIndex > EVENT_MAX_INDICES)
                     break;
             }
+            auto currentEvents = getCurrentEvents();
+            for (int i = 0; i < currentEvents.size(); i++)
+                Logger::debug("Event: " + currentEvents[i].name);
 
             // Get Current Point
             auto currentPathPoint = profilePoints[currentPathIndex];
@@ -110,27 +117,50 @@ namespace devils
             double deltaY = currentProfilePoint.y - currentPose.y;
             double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
             double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
-            double normalForward = deltaForward / LOOKAHEAD_DISTANCE;
 
-            double forward = normalForward * TRANSLATION_SCALE;
-            double turn = deltaRotation * ROTATION_SCALE;
+            // Handle Reversed
+            if (currentPathPoint.isReversed)
+                deltaRotation = Units::diffRad(deltaRotation, M_PI);
+
+            double forward = translationPID.update(deltaForward);
+            double turn = rotationPID.update(deltaRotation);
 
             // Clamp Values
             forward = Curve::clamp(-1.0, 1.0, forward) * SPEED_SCALE;
             turn = Curve::clamp(-1.0, 1.0, turn) * SPEED_SCALE;
 
+            // Stop when near finish
+            auto lastPoint = profilePoints.back();
+            if (sqrt(pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2)) < FINISH_RANGE &&
+                currentPathIndex == profilePoints.size() - 1)
+            {
+                pause();
+                return;
+            }
+
+            // Move Chassis
             chassis.move(forward, turn);
         }
 
-    private:
-        static constexpr double LOOKAHEAD_DISTANCE = 3; // in
-        static constexpr int LOOKAHEAD_MAX_INDICES = 10;
-        static constexpr double TRANSLATION_SCALE = 0.7;
-        static constexpr double ROTATION_SCALE = 0.18;
-        static constexpr double SPEED_SCALE = 0.9;
+        /**
+         * Pauses the controller.
+         */
+        void pause()
+        {
+            chassis.move(0, 0);
+        }
 
-        static constexpr double EVENT_RANGE = 12; // in
+    private:
+        static constexpr double LOOKAHEAD_DISTANCE = 4.0; // in
+        static constexpr int LOOKAHEAD_MAX_INDICES = 10;
+        static constexpr double SPEED_SCALE = 0.4;
+
+        static constexpr double FINISH_RANGE = 4; // in
+        static constexpr double EVENT_RANGE = 4;  // in
         static constexpr int EVENT_MAX_INDICES = 10;
+
+        PID translationPID = PID(0.2, 0, 0); // <-- Translation
+        PID rotationPID = PID(1.0, 0, 0);    // <-- Rotation
 
         BaseChassis &chassis;
         MotionProfile &motionProfile;

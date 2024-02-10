@@ -32,7 +32,7 @@ namespace devils
          */
         double getHeading()
         {
-            double heading = imu.get_heading();
+            double heading = imu.get_heading() + headingOffset;
             if (heading == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get heading failed");
             return Units::degToRad(heading);
@@ -44,10 +44,7 @@ namespace devils
          */
         double setHeading(double heading)
         {
-            double status = imu.set_heading(Units::radToDeg(heading));
-            if (status == PROS_ERR && LOGGING_ENABLED)
-                Logger::error(name + ": imu set heading failed");
-            return status;
+            headingOffset = Units::radToDeg(heading);
         }
 
         /**
@@ -64,6 +61,8 @@ namespace devils
 
     private:
         static constexpr bool LOGGING_ENABLED = true;
+
+        double headingOffset = 0;
 
         std::string name;
         pros::IMU imu;

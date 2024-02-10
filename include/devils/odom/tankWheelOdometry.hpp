@@ -121,6 +121,8 @@ namespace devils
         void setPose(OdomPose pose) override
         {
             currentPose = pose;
+            if (enableIMU)
+                imu->setHeading(pose.rotation);
         }
 
     private:

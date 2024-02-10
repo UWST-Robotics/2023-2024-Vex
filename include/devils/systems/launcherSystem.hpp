@@ -23,20 +23,38 @@ namespace devils
         }
 
         /**
-         * Runs the launcher motors
+         * Runs the launcher motors at the default speed
          */
-        void fire(double val = FLYWHEEL_SPEED)
+        void fire()
+        {
+            fire(flywheelSpeed);
+        }
+
+        /**
+         * Runs the launcher motors at the given speed
+         * @param speed The speed to run the launcher motors
+         */
+        void fire(double speed)
         {
             // Flywheels
-            leftMotor.moveVoltage(val);
-            rightMotor.moveVoltage(-val);
+            leftMotor.moveVoltage(speed);
+            rightMotor.moveVoltage(-speed);
             isFiring = true;
+        }
+
+        /**
+         * Runs the launcher motors at the given speed
+         * and automatically extends and retracts the arm.
+         */
+        void autoFire()
+        {
+            fire();
 
             // Arm
             if (isArmUp)
-                armPneumatic.extend();
+                raiseArm();
             else
-                armPneumatic.retract();
+                lowerArm();
 
             // Handle Arm Timer
             int deltaTime = pros::millis() - startTime;
@@ -54,7 +72,7 @@ namespace devils
         {
             leftMotor.moveVoltage(0);
             rightMotor.moveVoltage(0);
-            armPneumatic.retract();
+            raiseArm();
             isFiring = false;
             isArmUp = false;
         }
@@ -68,6 +86,24 @@ namespace devils
         }
 
         /**
+         * Raises the arm.
+         */
+        void raiseArm()
+        {
+            armPneumatic.retract();
+            isArmUp = true;
+        }
+
+        /**
+         * Lowers the arm.
+         */
+        void lowerArm()
+        {
+            armPneumatic.extend();
+            isArmUp = false;
+        }
+
+        /**
          * Returns true if the arm is up.
          */
         const bool getArmUp()
@@ -75,13 +111,43 @@ namespace devils
             return isArmUp;
         }
 
-    private:
-        static constexpr double FLYWHEEL_SPEED = 1.0;
-        static constexpr int ARM_TIME = 500; // ms
+        /**
+         * Increases the flywheel speed.
+         * @return The new flywheel speed
+         */
+        double increaseSpeed()
+        {
+            flywheelSpeed += FLYWHEEL_INCREMENT;
+            return flywheelSpeed;
+        }
 
+        /**
+         * Decreases the flywheel speed.
+         * @return The new flywheel speed
+         */
+        double decreaseSpeed()
+        {
+            flywheelSpeed -= FLYWHEEL_INCREMENT;
+            return flywheelSpeed;
+        }
+
+        /**
+         * Returns the current flywheel speed.
+         * @return The flywheel speed
+         */
+        double getSpeed()
+        {
+            return flywheelSpeed;
+        }
+
+    private:
+        static constexpr double DEFAULT_FLYWHEEL_SPEED = 0.55;
+        static constexpr double FLYWHEEL_INCREMENT = 0.05;
+        static constexpr int ARM_TIME = 1000; // ms
+
+        double flywheelSpeed = DEFAULT_FLYWHEEL_SPEED;
         bool isFiring = false;
         bool isArmUp = false;
-
         int startTime = 0;
 
         SmartMotor leftMotor;

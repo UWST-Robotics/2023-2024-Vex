@@ -24,14 +24,83 @@ namespace devils
         {
             odometry.useIMU(&imu);
             intake.useSensor(&storageSensor);
+
+            // Motion Profile
+            Logger::info("Generating Motion Profile...");
+            auto generator = SplineGenerator();
+            generator.generate(&motionProfile);
         }
 
         void autonomous()
         {
-            // Loop
+            // Controller/Odom
+            PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
+            AutoTimer pauseTimer;
+
+            pursuitController.restart();
+
+            // Display
+            OdomRenderer odomRenderer(&odometry);
+            MotionRenderer motionRenderer(&motionProfile);
+            ControlRenderer controlRenderer(&pursuitController);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+
+            // Run
             while (true)
             {
-                // TODO: Write me!
+                // Handle Events
+                auto currentEvents = pursuitController.getCurrentEvents();
+                for (int i = 0; i < currentEvents.size(); i++)
+                {
+                    auto currentEvent = currentEvents[i];
+                    if (currentEvent.name == "intake")
+                    {
+                        intake.intake();
+                        if (currentEvent.params != "")
+                            pauseTimer.start("intake", std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "outtake")
+                    {
+                        intake.outtake();
+                        if (currentEvent.params != "")
+                            pauseTimer.start("outtake", std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "stopIntake")
+                    {
+                        intake.stop();
+                    }
+                    else if (currentEvent.name == "closeWings")
+                    {
+                        wings.retractLeft();
+                        wings.retractRight();
+                    }
+                    else if (currentEvent.name == "wings")
+                    {
+                        wings.extendLeft();
+                        wings.extendRight();
+                    }
+                    else if (currentEvent.name == "pause")
+                    {
+                        pauseTimer.start("pause", std::stoi(currentEvent.params));
+                    }
+                }
+
+                if (currentEvents.size() <= 0)
+                {
+                    intake.stop();
+                    wings.retractLeft();
+                    wings.retractRight();
+                }
+
+                // Run Pursuit Controller
+                odometry.update(&chassis);
+                if (!pauseTimer.getRunning())
+                    pursuitController.update();
+                else
+                    pursuitController.pause();
+
+                // Run Display
+                teleopDisplay.update();
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
@@ -46,9 +115,11 @@ namespace devils
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
             // Display
+            PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
             OdomRenderer odomRenderer(&odometry);
             MotionRenderer motionRenderer(&motionProfile);
-            Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
+            ControlRenderer controlRenderer(&pursuitController);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
 
             bool wasBlockerUp = false;
             bool isBlockerUp = false;
@@ -131,14 +202,14 @@ namespace devils
         static constexpr uint8_t STORAGE_SENSOR_PORT = 8;
 
         // ADI Ports
-        static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 1;
-        static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 2;
-        static constexpr uint8_t BLOCKER_PNEUMATIC_DOWN_PORT = 3;
-        static constexpr uint8_t BLOCKER_PNEUMATIC_UP_PORT = 4;
+        static constexpr uint8_t RIGHT_WINGS_PNEUMATIC_PORT = 4;
+        static constexpr uint8_t LEFT_WINGS_PNEUMATIC_PORT = 3;
+        static constexpr uint8_t BLOCKER_PNEUMATIC_DOWN_PORT = 2;
+        static constexpr uint8_t BLOCKER_PNEUMATIC_UP_PORT = 1;
 
         // Odometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 12.0;                            // in
-        static constexpr double TICKS_PER_REVOLUTION = 360.0 * (60.0 / 36.0); // ticks
+        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
     };
 }

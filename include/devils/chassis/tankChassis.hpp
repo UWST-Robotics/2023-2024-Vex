@@ -37,6 +37,17 @@ namespace devils
         }
 
         /**
+         * Runs the chassis in voltage mode with individual control of the left and right sides.
+         * @param left The voltage to run the left side of the chassis.
+         * @param right The voltage to run the right side of the chassis.
+         */
+        void moveTank(double left, double right)
+        {
+            leftMotors.moveVoltage(left);
+            rightMotors.moveVoltage(right);
+        }
+
+        /**
          * Returns whether or not the chassis is holonomic.
          * @return false
          */
