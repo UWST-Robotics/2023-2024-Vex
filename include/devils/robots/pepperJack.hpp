@@ -79,6 +79,14 @@ namespace devils
                         wings.extendLeft();
                         wings.extendRight();
                     }
+                    else if (currentEvent.name == "liftClimber")
+                    {
+                        blocker.extend();
+                    }
+                    else if (currentEvent.name == "lowerClimber")
+                    {
+                        blocker.retract();
+                    }
                     else if (currentEvent.name == "pause")
                     {
                         pauseTimer.start("pause", std::stoi(currentEvent.params));
@@ -90,6 +98,7 @@ namespace devils
                     intake.stop();
                     wings.retractLeft();
                     wings.retractRight();
+                    blocker.retract();
                 }
 
                 // Run Pursuit Controller
