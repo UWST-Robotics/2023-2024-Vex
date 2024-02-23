@@ -12,10 +12,11 @@ namespace devils
          * @param timerID The ID of the timer.
          * @param duration The duration of the timer in milliseconds.
          */
-        void start(std::string timerID, double duration)
+        void start(int timerID, double duration)
         {
             if (lastTimerID == timerID)
                 return;
+            Logger::info("Starting Timer " + std::to_string(timerID) + "(from " + std::to_string(lastTimerID) + ")");
 
             lastTimerID = timerID;
             isRunning = true;
@@ -32,6 +33,15 @@ namespace devils
         }
 
         /**
+         * Returns the time remaining on the timer.
+         * @return The time remaining on the timer.
+         */
+        double getTimeRemaining()
+        {
+            return duration - (pros::millis() - startTime);
+        }
+
+        /**
          * Returns true if the timer is running.
          */
         bool getRunning()
@@ -42,7 +52,7 @@ namespace devils
         }
 
     private:
-        std::string lastTimerID = "";
+        int lastTimerID = 0;
         bool isRunning = false;
         double startTime = 0;
         double duration = 0;

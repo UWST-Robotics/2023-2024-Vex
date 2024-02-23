@@ -121,6 +121,9 @@ namespace devils
             int index = 0;
             PathEvent event;
 
+            // Randomize ID
+            event.id = std::rand();
+
             // Iterate through each property
             for (int i = 0; i < split.size(); i++)
             {

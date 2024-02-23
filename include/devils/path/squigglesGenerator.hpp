@@ -25,10 +25,10 @@ namespace devils
          * @param robotTrackWidth The width of the robot in inches.
          */
         SquigglesGenerator(
-            const float maxVelocity,
-            const float maxAcceleration,
-            const float maxJerk,
-            const float robotTrackWidth)
+            const double maxVelocity,
+            const double maxAcceleration,
+            const double maxJerk,
+            const double robotTrackWidth)
             : constraints(Units::inToMeters(maxVelocity), Units::inToMeters(maxAcceleration), Units::inToMeters(maxJerk)),
               model(std::make_shared<squiggles::TankModel>(Units::inToMeters(robotTrackWidth), constraints)),
               generator(constraints, model, DT)
@@ -50,6 +50,12 @@ namespace devils
 
             auto devilsControl = devils::PathFileReader::readFromSD();
             auto squigglesControl = _devilsToSquigglesPose(devilsControl.points);
+
+            for (auto point : squigglesControl)
+            {
+                Logger::info("Point: " + std::to_string(point.x) + ", " + std::to_string(point.y) + ", " + std::to_string(point.yaw));
+            }
+
             auto squigglesProfile = generator.generate(squigglesControl);
             auto devilsProfile = _squigglesToDevilsProfile(squigglesProfile);
             motionProfile->setProfilePoints(devilsControl.points, devilsProfile, DT);
@@ -84,13 +90,23 @@ namespace devils
         const std::vector<squiggles::Pose> _devilsToSquigglesPose(const std::vector<PathPoint> &devilPoints)
         {
             std::vector<squiggles::Pose> squigglesPoints;
+            bool isReversed = false;
             for (auto devilPoint : devilPoints)
             {
+                auto lastPoint = squigglesPoints.empty() ? squiggles::Pose{0, 0, 0} : squigglesPoints.back();
+
                 squigglesPoints.push_back({
                     Units::inToMeters(devilPoint.x),
                     Units::inToMeters(devilPoint.y),
                     Units::degToRad(devilPoint.rotation),
                 });
+
+                if (isReversed)
+                    squigglesPoints.back().yaw -= M_PI;
+                squigglesPoints.back().yaw = Units::normalizeRadians(squigglesPoints.back().yaw);
+
+                if (devilPoint.isReversed)
+                    isReversed = !isReversed;
             }
             return squigglesPoints;
         }

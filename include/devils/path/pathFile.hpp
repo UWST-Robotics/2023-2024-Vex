@@ -10,6 +10,8 @@ namespace devils
      */
     struct PathEvent
     {
+        /// @brief Random ID created at runtime
+        int id = 0;
         /// @brief The name of the event
         std::string name;
         /// @brief The parameters of the event

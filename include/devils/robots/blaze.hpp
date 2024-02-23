@@ -18,7 +18,8 @@ namespace devils
               imu("Blaze.IMU", IMU_PORT),
               launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT, ARM_LAUNCHER_PORT),
               intake(INTAKE_PORT),
-              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
+              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
+              deployer("Deployer", DEPLOY_PORT)
         {
             odometry.useIMU(&imu);
 
@@ -35,6 +36,9 @@ namespace devils
             {
                 // Auto Fire Launcher
                 launcher.autoFire();
+
+                // Drop Intake
+                intake.intake();
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
@@ -57,6 +61,7 @@ namespace devils
                 bool fireLauncherA = master.get_digital(DIGITAL_L1);
                 bool fireLauncherB = master.get_digital(DIGITAL_L2);
                 bool lowerArm = master.get_digital(DIGITAL_A);
+                bool deployPneumatic = master.get_digital(DIGITAL_X);
                 bool increaseSpeed = master.get_digital_new_press(DIGITAL_UP);
                 bool decreaseSpeed = master.get_digital_new_press(DIGITAL_DOWN);
 
@@ -76,11 +81,19 @@ namespace devils
                 else
                     launcher.raiseArm();
 
+                // Deploy Pneumatic
+                if (deployPneumatic)
+                    deployer.extend();
+                else
+                    deployer.retract();
+
                 // Speed Change
                 if (increaseSpeed)
                     launcher.increaseSpeed();
                 if (decreaseSpeed)
                     launcher.decreaseSpeed();
+
+                // Update Display
                 if (increaseSpeed || decreaseSpeed)
                 {
                     std::string launchSpeed = std::to_string((int)(launcher.getSpeed() * 100)) + "%";
@@ -114,20 +127,22 @@ namespace devils
 
         // Extra Sensors
         IMU imu;
+        ScuffPneumatic deployer;
 
     private:
         // V5 Motors
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {1, -2, -3, 4}; //{9, -10, 19, -20};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {5, 6, -7, -8}; //{1, -2, 11, -12};
-        static constexpr uint8_t LEFT_LAUNCHER_PORT = 9;
-        static constexpr uint8_t RIGHT_LAUNCHER_PORT = 10;
-        static constexpr uint8_t INTAKE_PORT = -19;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-7, 8, -9, 10};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {11, -12, -15, 16};
+        static constexpr uint8_t LEFT_LAUNCHER_PORT = 13;
+        static constexpr uint8_t RIGHT_LAUNCHER_PORT = 14;
+        static constexpr uint8_t INTAKE_PORT = -20;
 
         // V5 Sensors
-        static constexpr uint8_t IMU_PORT = 20;
+        static constexpr uint8_t IMU_PORT = 21;
 
         // ADI Ports
-        static constexpr uint8_t ARM_LAUNCHER_PORT = 1;
+        static constexpr uint8_t ARM_LAUNCHER_PORT = 3;
+        static constexpr uint8_t DEPLOY_PORT = 2;
 
         // Odometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // Radius of the wheel in inches

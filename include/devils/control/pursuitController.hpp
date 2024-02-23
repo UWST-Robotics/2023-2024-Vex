@@ -41,7 +41,7 @@ namespace devils
                 return ProfilePose();
 
             auto allPoints = motionProfile.getProfilePoints();
-            return allPoints[currentPathIndex];
+            return allPoints[lookaheadPathIndex];
         }
 
         /**
@@ -49,7 +49,7 @@ namespace devils
          */
         void restart() override
         {
-            currentPathIndex = 0;
+            lookaheadPathIndex = 0;
             odometry.setPose(motionProfile.getStartingPose());
         }
 
@@ -60,9 +60,18 @@ namespace devils
         const std::vector<PathEvent> getCurrentEvents()
         {
             auto controlPoints = motionProfile.getControlPoints();
-            if (currentPointIndex >= controlPoints.size() || currentPointIndex < 0)
+            if (currentEventIndex >= controlPoints.size() || currentEventIndex < 0)
                 return {};
-            return controlPoints[currentPointIndex].events;
+            return controlPoints[currentEventIndex].events;
+        }
+
+        /**
+         * Gets the current event index.
+         * @return The current event index.
+         */
+        int getCurrentEventIndex()
+        {
+            return currentEventIndex;
         }
 
         /**
@@ -78,38 +87,35 @@ namespace devils
 
             // Update Closest Motion Profile Point
             double closestDistance = 100000;
-            for (int i = currentPathIndex; i < profilePoints.size(); i++)
+            for (int i = lookaheadPathIndex; i < profilePoints.size(); i++)
             {
                 auto point = profilePoints[i];
                 double distance = abs(LOOKAHEAD_DISTANCE - sqrt(pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2)));
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
-                    currentPathIndex = i;
+                    lookaheadPathIndex = i;
                 }
-                if (i - currentPathIndex > LOOKAHEAD_MAX_INDICES)
+                if (i - lookaheadPathIndex > LOOKAHEAD_MAX_INDICES)
                     break;
             }
 
-            // Update Path Point
+            // Update Event Index
             auto firstPoint = controlPoints.front();
-            for (int i = currentPointIndex; i < controlPoints.size(); i++)
+            for (int i = currentEventIndex; i < controlPoints.size(); i++)
             {
                 auto point = controlPoints[i];
                 double xPos = point.x - firstPoint.x;
                 double yPos = point.y - firstPoint.y;
-                double distance = sqrt(pow(xPos - currentPose.x, 2) + pow(yPos - currentPose.y, 2));
-                if (distance < EVENT_RANGE)
-                    currentPointIndex = i;
-                if (i - currentPointIndex > EVENT_MAX_INDICES)
+                double distance = pow(xPos - currentPose.x, 2) + pow(yPos - currentPose.y, 2);
+                if (distance < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE)
+                    currentEventIndex = i;
+                if (i - currentEventIndex >= EVENT_MAX_INDICES)
                     break;
             }
-            auto currentEvents = getCurrentEvents();
-            for (int i = 0; i < currentEvents.size(); i++)
-                Logger::debug("Event: " + currentEvents[i].name);
 
             // Get Current Point
-            auto currentPathPoint = profilePoints[currentPathIndex];
+            auto currentPathPoint = profilePoints[lookaheadPathIndex];
             auto currentProfilePoint = getCurrentProfilePoint();
 
             // Calculate Forward & Turn
@@ -131,8 +137,9 @@ namespace devils
 
             // Stop when near finish
             auto lastPoint = profilePoints.back();
-            if (sqrt(pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2)) < FINISH_RANGE &&
-                currentPathIndex == profilePoints.size() - 1)
+            bool withinRangeOfLastPoint = pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2) < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE;
+            bool lookingAtLastPoint = lookaheadPathIndex == profilePoints.size() - 1;
+            if (withinRangeOfLastPoint && lookingAtLastPoint)
             {
                 pause();
                 return;
@@ -152,20 +159,19 @@ namespace devils
 
     private:
         static constexpr double LOOKAHEAD_DISTANCE = 4.0; // in
-        static constexpr int LOOKAHEAD_MAX_INDICES = 10;
+        static constexpr int LOOKAHEAD_MAX_INDICES = 6;
         static constexpr double SPEED_SCALE = 0.4;
 
-        static constexpr double FINISH_RANGE = 4; // in
-        static constexpr double EVENT_RANGE = 4;  // in
-        static constexpr int EVENT_MAX_INDICES = 10;
+        static constexpr double EVENT_TRIGGER_RANGE = 8; // in
+        static constexpr int EVENT_MAX_INDICES = 1;      // Max number of indices to check for events
 
         PID translationPID = PID(0.2, 0, 0); // <-- Translation
-        PID rotationPID = PID(1.0, 0, 0);    // <-- Rotation
+        PID rotationPID = PID(0.5, 0, 0);    // <-- Rotation
 
         BaseChassis &chassis;
         MotionProfile &motionProfile;
         OdomSource &odometry;
-        int currentPathIndex = 0;  // Motion Profile Points
-        int currentPointIndex = 0; // Path File Points
+        int lookaheadPathIndex = 0; // Closest index of the lookahead point
+        int currentEventIndex = 0;  // Current index of the event
     };
 }

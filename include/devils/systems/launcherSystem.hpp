@@ -90,7 +90,7 @@ namespace devils
          */
         void raiseArm()
         {
-            armPneumatic.retract();
+            armPneumatic.extend();
             isArmUp = true;
         }
 
@@ -99,7 +99,7 @@ namespace devils
          */
         void lowerArm()
         {
-            armPneumatic.extend();
+            armPneumatic.retract();
             isArmUp = false;
         }
 

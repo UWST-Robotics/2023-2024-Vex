@@ -22,7 +22,7 @@ namespace devils
               blocker(BLOCKER_PNEUMATIC_DOWN_PORT, BLOCKER_PNEUMATIC_UP_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
-            odometry.useIMU(&imu);
+            // odometry.useIMU(&imu);
             intake.useSensor(&storageSensor);
 
             // Motion Profile
@@ -33,9 +33,13 @@ namespace devils
 
         void autonomous()
         {
+            // Game Controller
+            pros::Controller master(pros::E_CONTROLLER_MASTER);
+
             // Controller/Odom
             PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
             AutoTimer pauseTimer;
+            OdomPose lastOdom;
 
             pursuitController.restart();
 
@@ -45,25 +49,33 @@ namespace devils
             ControlRenderer controlRenderer(&pursuitController);
             Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
 
+            // Enable Ramping
+            chassis.getLeftMotors()->setRampRate(4);
+            chassis.getRightMotors()->setRampRate(4);
+
             // Run
             while (true)
             {
+                // Debug
+                master.set_text(0, 0, std::to_string(pauseTimer.getTimeRemaining()));
                 // Handle Events
                 auto currentEvents = pursuitController.getCurrentEvents();
                 for (int i = 0; i < currentEvents.size(); i++)
                 {
                     auto currentEvent = currentEvents[i];
+                    Logger::info("Event: " + currentEvent.name);
+
                     if (currentEvent.name == "intake")
                     {
                         intake.intake();
                         if (currentEvent.params != "")
-                            pauseTimer.start("intake", std::stoi(currentEvent.params));
+                            pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
                     else if (currentEvent.name == "outtake")
                     {
                         intake.outtake();
                         if (currentEvent.params != "")
-                            pauseTimer.start("outtake", std::stoi(currentEvent.params));
+                            pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
                     else if (currentEvent.name == "stopIntake")
                     {
@@ -85,23 +97,25 @@ namespace devils
                     }
                     else if (currentEvent.name == "lowerClimber")
                     {
-                        blocker.retract();
+                        blocker.retract(currentEvent.params == "climb");
+                    }
+                    else if (currentEvent.name == "push")
+                    {
+                        pauseTimer.start(currentEvent.id, 100);
+                        if (pauseTimer.getRunning())
+                        {
+                            odometry.setPose(lastOdom);
+                            chassis.move(1.0, 0.0);
+                        }
                     }
                     else if (currentEvent.name == "pause")
                     {
-                        pauseTimer.start("pause", std::stoi(currentEvent.params));
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
                 }
 
-                if (currentEvents.size() <= 0)
-                {
-                    intake.stop();
-                    wings.retractLeft();
-                    wings.retractRight();
-                    blocker.retract();
-                }
-
                 // Run Pursuit Controller
+                lastOdom = odometry.getPose();
                 odometry.update(&chassis);
                 if (!pauseTimer.getRunning())
                     pursuitController.update();
@@ -130,7 +144,11 @@ namespace devils
             ControlRenderer controlRenderer(&pursuitController);
             Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
 
-            bool wasBlockerUp = false;
+            // Disable Ramping
+            chassis.getLeftMotors()->setRampRate(4);
+            chassis.getRightMotors()->setRampRate(4);
+
+            // Blocker
             bool isBlockerUp = false;
 
             // Loop
@@ -141,13 +159,13 @@ namespace devils
                 double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
                 bool leftWing = master.get_digital(DIGITAL_L2);
                 bool rightWing = master.get_digital(DIGITAL_R2);
-                bool blockerUp = master.get_digital(DIGITAL_X);
-                bool isBlockerDown = master.get_digital(DIGITAL_B);
+                bool blockerUp = master.get_digital_new_press(DIGITAL_X);
+                bool blockerDown = master.get_digital(DIGITAL_B);
                 double intakeValue = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
 
                 // Curve Inputs
                 leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
-                leftX = Curve::square(leftX);
+                leftX = Curve::cubic(leftX);
 
                 // Wings
                 if (leftWing)
@@ -163,12 +181,11 @@ namespace devils
                 intake.intake(intakeValue);
 
                 // Blocker
-                if (blockerUp && !wasBlockerUp)
+                if (blockerUp)
                     isBlockerUp = !isBlockerUp;
-                wasBlockerUp = blockerUp;
 
-                if (!isBlockerUp || isBlockerDown)
-                    blocker.retract(isBlockerDown);
+                if (!isBlockerUp || blockerDown)
+                    blocker.retract(blockerDown);
                 else
                     blocker.extend();
 
@@ -220,5 +237,12 @@ namespace devils
         static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 12.0;                            // in
         static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
+
+        // Motion Control
+        /*
+        static constexpr double MAX_VELOCITY = 1.0;     // m/s
+        static constexpr double MAX_ACCELERATION = 1.0; // m/s^2
+        static constexpr double MAX_JERK = 1.0;         // m/s^3
+        */
     };
 }
