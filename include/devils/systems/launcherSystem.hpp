@@ -37,8 +37,8 @@ namespace devils
         void fire(double speed)
         {
             // Flywheels
-            leftMotor.moveVoltage(speed);
-            rightMotor.moveVoltage(-speed);
+            leftMotor.moveVoltage(speed + deltaSpeed);
+            rightMotor.moveVoltage(-speed + deltaSpeed);
             isFiring = true;
         }
 
@@ -57,8 +57,9 @@ namespace devils
                 lowerArm();
 
             // Handle Arm Timer
+            int duration = isArmUp ? ARM_UP_TIME : ARM_DOWN_TIME;
             int deltaTime = pros::millis() - startTime;
-            if (deltaTime > ARM_TIME)
+            if (deltaTime > duration)
             {
                 isArmUp = !isArmUp;
                 startTime = pros::millis();
@@ -132,6 +133,35 @@ namespace devils
         }
 
         /**
+         * Increases the delta speed.
+         * @return The new delta speed
+         */
+        double increaseDelta()
+        {
+            deltaSpeed += DELTA_INCREMENT;
+            return deltaSpeed;
+        }
+
+        /**
+         * Decreases the delta speed.
+         * @return The new delta speed
+         */
+        double decreaseDelta()
+        {
+            deltaSpeed -= DELTA_INCREMENT;
+            return deltaSpeed;
+        }
+
+        /**
+         * Returns the delta speed.
+         * @return The delta speed
+         */
+        double getDelta()
+        {
+            return deltaSpeed;
+        }
+
+        /**
          * Returns the current flywheel speed.
          * @return The flywheel speed
          */
@@ -141,11 +171,15 @@ namespace devils
         }
 
     private:
-        static constexpr double DEFAULT_FLYWHEEL_SPEED = 0.55;
+        static constexpr double DEFAULT_FLYWHEEL_SPEED = 0.65;
+        static constexpr double DEFAULT_DELTA = 0.2;
         static constexpr double FLYWHEEL_INCREMENT = 0.05;
-        static constexpr int ARM_TIME = 1000; // ms
+        static constexpr double DELTA_INCREMENT = 0.05;
+        static constexpr int ARM_DOWN_TIME = 500; // ms
+        static constexpr int ARM_UP_TIME = 2000;  // ms
 
         double flywheelSpeed = DEFAULT_FLYWHEEL_SPEED;
+        double deltaSpeed = DEFAULT_DELTA; // Difference between left and right motor speeds
         bool isFiring = false;
         bool isArmUp = false;
         int startTime = 0;

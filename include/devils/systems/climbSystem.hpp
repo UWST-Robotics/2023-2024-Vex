@@ -20,6 +20,14 @@ namespace devils
         }
 
         /**
+         * Restarts the climb timer
+         */
+        void restart()
+        {
+            startTime = pros::millis();
+        }
+
+        /**
          * Runs the catapult motor
          */
         void climb()
@@ -67,9 +75,11 @@ namespace devils
 
     private:
         static constexpr double MOTOR_SPEED = 1.0;
+        static constexpr int AUTO_CLIMB_TIME = 1000 * 119; // 1:59
 
         bool isClimbing = false;
         bool isDropping = false;
         SmartMotor climbMotor;
+        int startTime = 0;
     };
 }

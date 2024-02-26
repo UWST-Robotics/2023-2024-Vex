@@ -42,7 +42,7 @@ namespace devils
          * Sets the current heading of the IMU in radians.
          * @param heading The heading to set the IMU to in radians.
          */
-        double setHeading(double heading)
+        void setHeading(double heading)
         {
             headingOffset = Units::radToDeg(heading);
         }

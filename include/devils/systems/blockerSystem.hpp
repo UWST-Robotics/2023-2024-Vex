@@ -21,6 +21,16 @@ namespace devils
         }
 
         /**
+         * Forces the robot to climb at the end of the match.
+         */
+        void autoClimb()
+        {
+            int elapsedTime = pros::millis() - startTime;
+            if (elapsedTime > AUTO_CLIMB_TIME)
+                retract(true);
+        }
+
+        /**
          * Pops out the blocker.
          */
         void extend()
@@ -44,6 +54,14 @@ namespace devils
         }
 
         /**
+         * Restarts the climb timer
+         */
+        void restart()
+        {
+            startTime = pros::millis();
+        }
+
+        /**
          * Gets if the blocker is extended.
          * @return True if the blocker is extended
          */
@@ -53,7 +71,10 @@ namespace devils
         }
 
     private:
+        static constexpr int AUTO_CLIMB_TIME = 1000 * 119; // 1:59
+
         bool isExtended = false;
+        int startTime = pros::millis();
         ScuffPneumatic downPneumatics;
         ScuffPneumatic upPneumatics;
     };

@@ -13,5 +13,10 @@ namespace devils
          * Ran at the start of the Driver Control period.
          */
         void opcontrol() {}
+
+        /**
+         * Ran at the start of the Disabled period.
+         */
+        void disabled() {}
     };
 }

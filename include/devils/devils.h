@@ -10,6 +10,7 @@
 // Autonomous
 #include "control/openLoopController.hpp"
 #include "control/pursuitController.hpp"
+#include "control/linearController.hpp"
 
 // Chassis
 #include "chassis/chassis.hpp"
@@ -32,6 +33,7 @@
 // Path
 #include "path/splineGenerator.hpp"
 #include "path/squigglesGenerator.hpp"
+#include "path/linearGenerator.hpp"
 
 // Pros
 #include "api.h"

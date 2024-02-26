@@ -38,7 +38,7 @@ namespace devils
                 launcher.autoFire();
 
                 // Drop Intake
-                intake.intake();
+                intake.outtake();
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
@@ -64,6 +64,8 @@ namespace devils
                 bool deployPneumatic = master.get_digital(DIGITAL_X);
                 bool increaseSpeed = master.get_digital_new_press(DIGITAL_UP);
                 bool decreaseSpeed = master.get_digital_new_press(DIGITAL_DOWN);
+                bool increaseDelta = master.get_digital_new_press(DIGITAL_RIGHT);
+                bool decreaseDelta = master.get_digital_new_press(DIGITAL_LEFT);
 
                 // Curve Inputs
                 leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
@@ -92,11 +94,15 @@ namespace devils
                     launcher.increaseSpeed();
                 if (decreaseSpeed)
                     launcher.decreaseSpeed();
+                if (increaseDelta)
+                    launcher.increaseDelta();
+                if (decreaseDelta)
+                    launcher.decreaseDelta();
 
                 // Update Display
-                if (increaseSpeed || decreaseSpeed)
+                if (increaseSpeed || decreaseSpeed || increaseDelta || decreaseDelta)
                 {
-                    std::string launchSpeed = std::to_string((int)(launcher.getSpeed() * 100)) + "%";
+                    std::string launchSpeed = std::to_string((int)(launcher.getSpeed() * 100)) + "% [" + std::to_string(launcher.getDelta()) + "]";
                     master.set_text(1, 1, launchSpeed);
                 }
 

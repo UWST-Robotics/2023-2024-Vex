@@ -22,12 +22,12 @@ namespace devils
               blocker(BLOCKER_PNEUMATIC_DOWN_PORT, BLOCKER_PNEUMATIC_UP_PORT),
               odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
-            // odometry.useIMU(&imu);
+            odometry.useIMU(&imu);
             intake.useSensor(&storageSensor);
 
             // Motion Profile
             Logger::info("Generating Motion Profile...");
-            auto generator = SplineGenerator();
+            auto generator = LinearGenerator();
             generator.generate(&motionProfile);
         }
 
@@ -37,7 +37,7 @@ namespace devils
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
             // Controller/Odom
-            PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
+            LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
             AutoTimer pauseTimer;
             OdomPose lastOdom;
 
@@ -57,7 +57,8 @@ namespace devils
             while (true)
             {
                 // Debug
-                master.set_text(0, 0, std::to_string(pauseTimer.getTimeRemaining()));
+                master.set_text(0, 0, std::to_string(pursuitController.getCurrentIndex()));
+
                 // Handle Events
                 auto currentEvents = pursuitController.getCurrentEvents();
                 for (int i = 0; i < currentEvents.size(); i++)
@@ -98,6 +99,11 @@ namespace devils
                     else if (currentEvent.name == "lowerClimber")
                     {
                         blocker.retract(currentEvent.params == "climb");
+                    }
+                    else if (currentEvent.name == "wack")
+                    {
+                        wings.autoExtendLeft();
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
                     else if (currentEvent.name == "push")
                     {
@@ -150,6 +156,7 @@ namespace devils
 
             // Blocker
             bool isBlockerUp = false;
+            blocker.restart();
 
             // Loop
             while (true)
@@ -157,15 +164,15 @@ namespace devils
                 // Controller
                 double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = master.get_analog(ANALOG_LEFT_X) / 127.0;
-                bool leftWing = master.get_digital(DIGITAL_L2);
-                bool rightWing = master.get_digital(DIGITAL_R2);
+                bool leftWing = master.get_digital(DIGITAL_L1) || master.get_digital(DIGITAL_L2);
+                bool rightWing = master.get_digital(DIGITAL_R1) || master.get_digital(DIGITAL_R2);
                 bool blockerUp = master.get_digital_new_press(DIGITAL_X);
                 bool blockerDown = master.get_digital(DIGITAL_B);
                 double intakeValue = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
 
                 // Curve Inputs
                 leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
-                leftX = Curve::cubic(leftX);
+                leftX = Curve::square(leftX);
 
                 // Wings
                 if (leftWing)
@@ -201,6 +208,14 @@ namespace devils
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
             }
+        }
+
+        void disabled()
+        {
+            Logger::warn("Disabling PepperJack");
+
+            // Climb
+            blocker.retract(true);
         }
 
         // Subsystems

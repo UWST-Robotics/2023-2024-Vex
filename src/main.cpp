@@ -10,7 +10,7 @@ void initialize()
 {
 	Logger::info("==== Initialize ====");
 	Logger::init();
-	robot = std::make_shared<PepperJack>(); // <-- Change this to PepperJack or Blaze
+	robot = std::make_shared<Blaze>(); // <-- Change this to PepperJack or Blaze
 	Logger::info("Initialized");
 }
 
@@ -22,6 +22,7 @@ void initialize()
 void disabled()
 {
 	Logger::info("==== Disabled ====");
+	robot->disabled();
 }
 
 /**
