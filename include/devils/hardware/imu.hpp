@@ -39,6 +39,18 @@ namespace devils
         }
 
         /**
+         * Gets the current pitch of the IMU in radians.
+         * @return The current pitch of the IMU in radians.
+         */
+        double getPitch()
+        {
+            double pitch = imu.get_pitch();
+            if (pitch == PROS_ERR_F && LOGGING_ENABLED)
+                Logger::error(name + ": imu get pitch failed");
+            return pitch;
+        }
+
+        /**
          * Sets the current heading of the IMU in radians.
          * @param heading The heading to set the IMU to in radians.
          */

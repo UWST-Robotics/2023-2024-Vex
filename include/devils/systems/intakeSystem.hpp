@@ -99,7 +99,7 @@ namespace devils
         }
 
     private:
-        static constexpr double WHEEL_SPEED = 1.0;
+        static constexpr double WHEEL_SPEED = 0.5;
         static constexpr double SENSOR_SPEED = 0.5;
         static constexpr double SENSOR_THRESHOLD = 0.5;
 

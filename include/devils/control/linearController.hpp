@@ -33,7 +33,7 @@ namespace devils
         const std::vector<PathEvent> getCurrentEvents()
         {
             auto controlPoints = motionProfile.getControlPoints();
-            if (currentIndex >= controlPoints.size() || currentIndex <= 0)
+            if (currentIndex > controlPoints.size() || currentIndex <= 0)
                 return {};
             return controlPoints[currentIndex - 1].events;
         }
@@ -65,6 +65,15 @@ namespace devils
             isReversed = false;
             currentIndex = 1;
             lastCheckpointTime = pros::millis();
+
+            // Set Initial Rotation
+            auto controlPoints = motionProfile.getControlPoints();
+            if (controlPoints.size() > 0)
+            {
+                auto firstPoint = controlPoints.front();
+                OdomPose initialPose = OdomPose{0, 0, Units::degToRad(firstPoint.rotation)};
+                odometry.setPose(initialPose);
+            }
         }
 
         /**
@@ -72,7 +81,25 @@ namespace devils
          */
         void pause()
         {
-            chassis.move(0, 0);
+            chassis.stop();
+            lastCheckpointTime = pros::millis();
+        }
+
+        /**
+         * Sets the maximum speed of the chassis.
+         * @param speed The maximum speed of the chassis from 0 to 1.
+         */
+        void setMaxSpeed(double speed)
+        {
+            maxSpeed = speed;
+        }
+
+        /**
+         * Resets the maximum speed of the chassis to the default.
+         */
+        void resetMaxSpeed()
+        {
+            maxSpeed = DEFAULT_MAX_SPEED;
         }
 
         /**
@@ -134,14 +161,24 @@ namespace devils
             double turn = rotationPID.update(deltaRotation);
 
             // Clamp Values
-            forward = Curve::clamp(-MAX_SPEED, MAX_SPEED, forward);
-            turn = Curve::clamp(-MAX_SPEED, MAX_SPEED, turn);
+            forward = Curve::clamp(-maxSpeed, maxSpeed, forward);
+            turn = Curve::clamp(-maxSpeed, maxSpeed, turn);
 
             // Disable forward if need to rotate
             if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
+            {
                 forward = 0;
-            // Disable once reached
-            else if (currentIndex >= controlPoints.size())
+                lastRotationTime = pros::millis();
+            }
+
+            // Delay acceleration after rotation
+            if (pros::millis() - lastRotationTime < ACCEL_DELAY)
+            {
+                forward = 0;
+            }
+
+            // Disable once finish reached
+            if (currentIndex >= controlPoints.size())
             {
                 forward = 0;
                 turn = 0;
@@ -152,19 +189,22 @@ namespace devils
         }
 
     private:
-        static constexpr double MAX_SPEED = 0.5;
-        static constexpr double CHECKPOINT_TIMEOUT = 5000;      // ms
+        static constexpr double DEFAULT_MAX_SPEED = 0.45;
+        static constexpr double CHECKPOINT_TIMEOUT = 3000;      // ms
         static constexpr double DISABLE_ACCEL_RANGE = M_PI / 6; // rads
         static constexpr double CHECKPOINT_RANGE = 4;           // in
+        static constexpr double ACCEL_DELAY = 100;              // ms
 
-        PID translationPID = PID(0.08, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.6, 0, 0);     // <-- Rotation
+        PID translationPID = PID(0.1, 0, 0); // <-- Translation
+        PID rotationPID = PID(0.5, 0, 0);    // <-- Rotation
 
         BaseChassis &chassis;
         MotionProfile &motionProfile;
         OdomSource &odometry;
         int currentIndex = 1; // Current control point driving towards
         double lastCheckpointTime = 0;
+        double lastRotationTime = 0;
+        double maxSpeed = DEFAULT_MAX_SPEED;
         bool isReversed = false;
     };
 }

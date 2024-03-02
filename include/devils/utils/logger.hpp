@@ -37,7 +37,7 @@ namespace devils
                 okapi::Logger::LogLevel::debug));
 
             // Open Log File
-            if (isSDInserted())
+            if (isSDInserted() && LOG_TO_SD)
             {
                 std::string path = _getLogFilePath();
                 logFileStream.open(path);
@@ -46,7 +46,7 @@ namespace devils
                 else
                     warn("Logger: Failed to open log file at " + path);
             }
-            else
+            else if (LOG_TO_SD)
             {
                 warn("Logger: SD card is not installed!");
             }

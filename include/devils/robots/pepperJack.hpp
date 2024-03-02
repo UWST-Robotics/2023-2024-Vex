@@ -39,7 +39,6 @@ namespace devils
             // Controller/Odom
             LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
             AutoTimer pauseTimer;
-            OdomPose lastOdom;
 
             pursuitController.restart();
 
@@ -92,6 +91,30 @@ namespace devils
                         wings.extendLeft();
                         wings.extendRight();
                     }
+                    else if (currentEvent.name == "rightWing")
+                    {
+                        wings.extendRight();
+                        if (currentEvent.params == "closeLeft")
+                            wings.retractLeft();
+                    }
+                    else if (currentEvent.name == "leftWing")
+                    {
+                        wings.extendLeft();
+                        if (currentEvent.params == "closeRight")
+                            wings.retractRight();
+                    }
+                    else if (currentEvent.name == "liftClimber")
+                    {
+                        blocker.extend();
+                    }
+                    else if (currentEvent.name == "lowerClimber")
+                    {
+                        blocker.retract(currentEvent.params == "climb");
+                    }
+                    else if (currentEvent.name == "pause")
+                    {
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    }
                     else if (currentEvent.name == "liftClimber")
                     {
                         blocker.extend();
@@ -105,25 +128,40 @@ namespace devils
                         wings.autoExtendLeft();
                         pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
-                    else if (currentEvent.name == "push")
-                    {
-                        pauseTimer.start(currentEvent.id, 100);
-                        if (pauseTimer.getRunning())
-                        {
-                            odometry.setPose(lastOdom);
-                            chassis.move(1.0, 0.0);
-                        }
-                    }
                     else if (currentEvent.name == "pause")
                     {
                         pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     }
                 }
 
-                // Run Pursuit Controller
-                lastOdom = odometry.getPose();
+                // Check For Fast/Slow
+                bool isFast = false;
+                bool isSlow = false;
+                for (int i = 0; i < currentEvents.size(); i++)
+                {
+                    auto currentEvent = currentEvents[i];
+                    if (currentEvent.name == "fast")
+                        isFast = true;
+                    else if (currentEvent.name == "slow")
+                        isSlow = true;
+                }
+
+                // Set Max Speed
+                if (isFast)
+                    pursuitController.setMaxSpeed(1.0);
+                else if (isSlow)
+                    pursuitController.setMaxSpeed(0.25);
+                else
+                    pursuitController.resetMaxSpeed();
+
+                // Update Odometry
                 odometry.update(&chassis);
-                if (!pauseTimer.getRunning())
+
+                // Anti-Tip
+                if (imu.getPitch() > 25)
+                    chassis.move(-1.0, 0.0);
+                // Run Pursuit Controller
+                else if (!pauseTimer.getRunning())
                     pursuitController.update();
                 else
                     pursuitController.pause();

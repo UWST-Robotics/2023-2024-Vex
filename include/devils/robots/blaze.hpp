@@ -16,29 +16,160 @@ namespace devils
         Blaze()
             : chassis(L_MOTOR_PORTS, R_MOTOR_PORTS),
               imu("Blaze.IMU", IMU_PORT),
-              launcher(LEFT_LAUNCHER_PORT, RIGHT_LAUNCHER_PORT, ARM_LAUNCHER_PORT),
-              intake(INTAKE_PORT),
-              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION),
-              deployer("Deployer", DEPLOY_PORT)
+              intake(INTAKE_PORT, INTAKE_ACTUATOR_PORT),
+              wings(LEFT_WINGS_PORT, RIGHT_WINGS_PORT),
+              odometry(WHEEL_RADIUS, WHEEL_BASE, TICKS_PER_REVOLUTION)
         {
             odometry.useIMU(&imu);
 
             // Motion Profile
             Logger::info("Generating Motion Profile...");
-            auto generator = SplineGenerator();
+            auto generator = LinearGenerator();
             generator.generate(&motionProfile);
+        }
+
+        void disabled()
+        {
+            intake.raise();
         }
 
         void autonomous()
         {
-            // Loop
+            // Game Controller
+            pros::Controller master(pros::E_CONTROLLER_MASTER);
+
+            // Controller/Odom
+            LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
+            AutoTimer pauseTimer;
+
+            pursuitController.restart();
+
+            // Display
+            OdomRenderer odomRenderer(&odometry);
+            MotionRenderer motionRenderer(&motionProfile);
+            ControlRenderer controlRenderer(&pursuitController);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+
+            // Enable Ramping
+            chassis.getLeftMotors()->setRampRate(4);
+            chassis.getRightMotors()->setRampRate(4);
+
+            // Run
             while (true)
             {
-                // Auto Fire Launcher
-                launcher.autoFire();
+                // Debug
+                master.set_text(0, 0, std::to_string(pursuitController.getCurrentIndex()));
 
-                // Drop Intake
-                intake.outtake();
+                // Handle Events
+                auto currentEvents = pursuitController.getCurrentEvents();
+                for (int i = 0; i < currentEvents.size(); i++)
+                {
+                    auto currentEvent = currentEvents[i];
+                    Logger::info("Event: " + currentEvent.name);
+
+                    if (currentEvent.name == "intake")
+                    {
+                        intake.intake();
+                        if (currentEvent.params != "")
+                            pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "outtake")
+                    {
+                        intake.outtake();
+                        if (currentEvent.params != "")
+                            pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "stopIntake")
+                    {
+                        intake.stop();
+                    }
+                    else if (currentEvent.name == "closeWings")
+                    {
+                        wings.retractLeft();
+                        wings.retractRight();
+                    }
+                    else if (currentEvent.name == "wings")
+                    {
+                        wings.extendLeft();
+                        wings.extendRight();
+                    }
+                    else if (currentEvent.name == "rightWing")
+                    {
+                        wings.extendRight();
+                        if (currentEvent.params == "closeLeft")
+                            wings.retractLeft();
+                    }
+                    else if (currentEvent.name == "leftWing")
+                    {
+                        wings.extendLeft();
+                        if (currentEvent.params == "closeRight")
+                            wings.retractRight();
+                    }
+                    else if (currentEvent.name == "pause")
+                    {
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "liftIntake")
+                    {
+                        intake.raise();
+                    }
+                    else if (currentEvent.name == "lowerIntake")
+                    {
+                        intake.lower();
+                    }
+                    else if (currentEvent.name == "wack")
+                    {
+                        wings.autoExtendRight();
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                        if (!pauseTimer.getRunning())
+                            wings.retractRight();
+                    }
+                    else if (currentEvent.name == "pause")
+                    {
+                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    }
+                    else if (currentEvent.name == "abortIfDriver")
+                    {
+                        bool isDriverControl = !pros::competition::is_autonomous() && !pros::competition::is_disabled();
+                        if (isDriverControl)
+                            return;
+                    }
+                }
+
+                // Check For Fast/Slow
+                bool isFast = false;
+                bool isSlow = false;
+                for (int i = 0; i < currentEvents.size(); i++)
+                {
+                    auto currentEvent = currentEvents[i];
+                    if (currentEvent.name == "fast")
+                        isFast = true;
+                    else if (currentEvent.name == "slow")
+                        isSlow = true;
+                }
+
+                // Set Max Speed
+                if (isFast)
+                    pursuitController.setMaxSpeed(1.0);
+                else if (isSlow)
+                    pursuitController.setMaxSpeed(0.25);
+                else
+                    pursuitController.resetMaxSpeed();
+
+                // Update Odometry
+                odometry.update(&chassis);
+
+                // Anti-Tip
+                if (imu.getPitch() > 25)
+                    chassis.move(-1.0, 0.0);
+                // Run Pursuit Controller
+                else if (!pauseTimer.getRunning())
+                    pursuitController.update();
+                else
+                    pursuitController.pause();
+
+                // Run Display
+                teleopDisplay.update();
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
@@ -50,69 +181,60 @@ namespace devils
             // Teleop Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
+            // Wings
+            bool leftWing = false;
+            bool rightWing = false;
+
+            // Run autonomous at the start
+            if (master.get_digital(DIGITAL_A))
+                autonomous();
+
             // Loop
             while (true)
             {
                 // Controller
                 double leftY = master.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double rightY = master.get_analog(ANALOG_RIGHT_Y) / 127.0;
-                bool intakeInput = master.get_digital(DIGITAL_R1);
-                bool outtakeInput = master.get_digital(DIGITAL_R2);
-                bool fireLauncherA = master.get_digital(DIGITAL_L1);
-                bool fireLauncherB = master.get_digital(DIGITAL_L2);
-                bool lowerArm = master.get_digital(DIGITAL_A);
-                bool deployPneumatic = master.get_digital(DIGITAL_X);
-                bool increaseSpeed = master.get_digital_new_press(DIGITAL_UP);
-                bool decreaseSpeed = master.get_digital_new_press(DIGITAL_DOWN);
-                bool increaseDelta = master.get_digital_new_press(DIGITAL_RIGHT);
-                bool decreaseDelta = master.get_digital_new_press(DIGITAL_LEFT);
+                bool leftWingButton = master.get_digital_new_press(DIGITAL_L1);
+                bool rightWingButton = master.get_digital_new_press(DIGITAL_R1);
+                bool intakeUp = master.get_digital(DIGITAL_X);
+                bool intakeDown = master.get_digital(DIGITAL_B);
+                bool intakeInput = master.get_digital(DIGITAL_R2);
+                bool outtakeInput = master.get_digital(DIGITAL_L2);
 
                 // Curve Inputs
                 leftY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, leftY));
                 rightY = Curve::square(Curve::dlerp(0.1, 0.3, 1.0, rightY));
 
-                // Launcher
-                if (fireLauncherA || fireLauncherB)
-                    launcher.fire();
-                else
-                    launcher.stop();
+                // Intake Actuation
+                if (intakeUp)
+                    intake.raise();
+                if (intakeDown)
+                    intake.lower();
 
-                // Arm
-                if (lowerArm)
-                    launcher.lowerArm();
-                else
-                    launcher.raiseArm();
-
-                // Deploy Pneumatic
-                if (deployPneumatic)
-                    deployer.extend();
-                else
-                    deployer.retract();
-
-                // Speed Change
-                if (increaseSpeed)
-                    launcher.increaseSpeed();
-                if (decreaseSpeed)
-                    launcher.decreaseSpeed();
-                if (increaseDelta)
-                    launcher.increaseDelta();
-                if (decreaseDelta)
-                    launcher.decreaseDelta();
-
-                // Update Display
-                if (increaseSpeed || decreaseSpeed || increaseDelta || decreaseDelta)
-                {
-                    std::string launchSpeed = std::to_string((int)(launcher.getSpeed() * 100)) + "% [" + std::to_string(launcher.getDelta()) + "]";
-                    master.set_text(1, 1, launchSpeed);
-                }
-
-                // Intake
+                // Intake Control
                 if (intakeInput)
                     intake.intake();
                 else if (outtakeInput)
                     intake.outtake();
                 else
                     intake.stop();
+
+                // Wing Buttons
+                if (leftWingButton)
+                    leftWing = !leftWing;
+                if (rightWingButton)
+                    rightWing = !rightWing;
+
+                // Wing Control
+                if (leftWing)
+                    wings.extendLeft();
+                else
+                    wings.retractLeft();
+                if (rightWing)
+                    wings.extendRight();
+                else
+                    wings.retractRight();
 
                 // Tank Drive
                 chassis.moveTank(leftY, rightY);
@@ -124,8 +246,8 @@ namespace devils
 
         // Subsystems
         TankChassis chassis;
-        IntakeSystem intake;
-        LauncherSystem launcher;
+        WingSystem wings;
+        ActuateIntakeSystem intake;
 
         // Autonomous
         TankWheelOdometry odometry;
@@ -133,22 +255,22 @@ namespace devils
 
         // Extra Sensors
         IMU imu;
-        ScuffPneumatic deployer;
+
+        bool isDriverControl = false;
 
     private:
         // V5 Motors
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-7, 8, -9, 10};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {11, -12, -15, 16};
-        static constexpr uint8_t LEFT_LAUNCHER_PORT = 13;
-        static constexpr uint8_t RIGHT_LAUNCHER_PORT = 14;
-        static constexpr uint8_t INTAKE_PORT = -20;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-10, 6, -7, 8, -9};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {20, 19, 17, -18, -16};
+        static constexpr uint8_t INTAKE_PORT = 4;
 
         // V5 Sensors
         static constexpr uint8_t IMU_PORT = 21;
 
         // ADI Ports
-        static constexpr uint8_t ARM_LAUNCHER_PORT = 3;
-        static constexpr uint8_t DEPLOY_PORT = 2;
+        static constexpr uint8_t INTAKE_ACTUATOR_PORT = 4;
+        static constexpr uint8_t LEFT_WINGS_PORT = 2;
+        static constexpr uint8_t RIGHT_WINGS_PORT = 3;
 
         // Odometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // Radius of the wheel in inches

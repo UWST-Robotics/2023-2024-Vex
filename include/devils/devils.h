@@ -44,6 +44,7 @@
 // Systems
 #include "systems/blockerSystem.hpp"
 #include "systems/intakeSystem.hpp"
+#include "systems/actuateIntakeSystem.hpp"
 #include "systems/launcherSystem.hpp"
 #include "systems/wingSystem.hpp"
 #include "systems/climbSystem.hpp"

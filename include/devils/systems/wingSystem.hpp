@@ -38,12 +38,30 @@ namespace devils
             }
         }
 
+        void autoExtendRight()
+        {
+            // Arm
+            if (isRightExtended)
+                extendRight();
+            else
+                retractRight();
+
+            // Handle Arm Timer
+            int duration = isRightExtended ? AUTO_OPEN_TIME : AUTO_CLOSE_TIME;
+            int deltaTime = pros::millis() - startTime;
+            if (deltaTime > duration)
+            {
+                isRightExtended = !isRightExtended;
+                startTime = pros::millis();
+            }
+        }
         /**
          * Pops out the left wing.
          */
         void extendLeft()
         {
             leftPneumatic.extend();
+            isLeftExtended = true;
         }
 
         /**
@@ -52,7 +70,7 @@ namespace devils
         void extendRight()
         {
             rightPneumatic.extend();
-            isLeftExtended = true;
+            isRightExtended = true;
         }
 
         /**
@@ -70,13 +88,15 @@ namespace devils
         void retractRight()
         {
             rightPneumatic.retract();
+            isRightExtended = false;
         }
 
     private:
         static constexpr int AUTO_OPEN_TIME = 250;   // ms
-        static constexpr int AUTO_CLOSE_TIME = 1000; // ms
+        static constexpr int AUTO_CLOSE_TIME = 1250; // ms
 
         bool isLeftExtended = false;
+        bool isRightExtended = false;
         int startTime = 0;
         ScuffPneumatic leftPneumatic;
         ScuffPneumatic rightPneumatic;
