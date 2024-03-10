@@ -42,7 +42,7 @@ namespace devils
             LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
             AutoTimer pauseTimer;
 
-            pursuitController.restart();
+            pursuitController.reset();
 
             // Display
             OdomRenderer odomRenderer(&odometry);
@@ -150,11 +150,11 @@ namespace devils
 
                 // Set Max Speed
                 if (isFast)
-                    pursuitController.setMaxSpeed(1.0);
+                    pursuitController.setSpeed(1.0);
                 else if (isSlow)
-                    pursuitController.setMaxSpeed(0.25);
+                    pursuitController.setSpeed(0.25);
                 else
-                    pursuitController.resetMaxSpeed();
+                    pursuitController.setSpeed(0.5);
 
                 // Update Odometry
                 odometry.update(&chassis);
@@ -163,8 +163,8 @@ namespace devils
                 if (imu.getPitch() > 25)
                     chassis.move(-1.0, 0.0);
                 // Run Pursuit Controller
-                else if (!pauseTimer.getRunning())
-                    pursuitController.update();
+                // else if (!pauseTimer.getRunning())
+                //    pursuitController.update();
                 else
                     pursuitController.pause();
 
@@ -186,7 +186,7 @@ namespace devils
 
             // Controller/Odom
             LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
-            pursuitController.restart();
+            // pursuitController.restart();
 
             // Enable Ramping
             chassis.getLeftMotors()->setRampRate(4);
@@ -222,17 +222,17 @@ namespace devils
 
                 // Set Max Speed
                 if (isFast)
-                    pursuitController.setMaxSpeed(1.0);
+                    pursuitController.setSpeed(1.0);
                 else if (isSlow)
-                    pursuitController.setMaxSpeed(0.25);
+                    pursuitController.setSpeed(0.25);
                 else
-                    pursuitController.resetMaxSpeed();
+                    pursuitController.setSpeed(0.5);
 
                 // Update Odometry
                 odometry.update(&chassis);
 
                 // Run Pursuit Controller
-                pursuitController.update();
+                // pursuitController.update();
 
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);

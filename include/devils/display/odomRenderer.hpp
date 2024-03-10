@@ -1,5 +1,5 @@
 #pragma once
-#include "../odom/odomPose.hpp"
+#include "../odom/pose.hpp"
 #include "../odom/odomSource.hpp"
 #include "displayUtils.hpp"
 #include "renderer.hpp"
@@ -14,9 +14,8 @@ namespace devils
     class OdomRenderer : public Renderer
     {
     public:
-        OdomRenderer(OdomSource *odomSource)
+        OdomRenderer(OdomSource *odomSource) : odomSource(odomSource)
         {
-            this->odomSource = odomSource;
         }
 
         ~OdomRenderer()
@@ -71,7 +70,7 @@ namespace devils
         void update()
         {
             // Pose
-            OdomPose pose = odomSource->getPose();
+            Pose pose = odomSource->getPose();
 
             // Object
             lv_obj_set_pos(

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "../odom/pose.hpp"
 
 namespace devils
 {
@@ -30,14 +31,8 @@ namespace devils
     /**
      * A struct representing a point in the robot path.
      */
-    struct PathPoint
+    struct PathPoint : Pose
     {
-        /// @brief The x position of the robot in inches
-        double x = 0;
-        /// @brief The y position of the robot in inches
-        double y = 0;
-        /// @brief The rotation of the robot in degrees
-        double rotation = 0;
         /// @brief The entry delta of the robot in inches
         double enterDelta = 0;
         /// @brief The exit delta of the robot in inches

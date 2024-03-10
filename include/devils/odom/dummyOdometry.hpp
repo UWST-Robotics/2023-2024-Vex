@@ -1,6 +1,6 @@
 #pragma once
 #include "pros/gps.hpp"
-#include "odomPose.hpp"
+#include "pose.hpp"
 #include "../utils/logger.hpp"
 #include "odomSource.hpp"
 
@@ -16,7 +16,7 @@ namespace devils
          * Gets the current pose of the robot
          * @return The current pose of the robot
          */
-        const OdomPose getPose() override
+        const Pose getPose() override
         {
             return currentPose;
         }
@@ -26,12 +26,12 @@ namespace devils
          * @param pose The pose to set the robot to
          * @return The current pose of the robot
          */
-        void setPose(const OdomPose pose) override
+        void setPose(const Pose pose) override
         {
             currentPose = pose;
         }
 
     private:
-        OdomPose currentPose;
+        Pose currentPose;
     };
 }

@@ -2,7 +2,7 @@
 #include "../chassis/tankChassis.hpp"
 #include "../hardware/imu.hpp"
 #include "../utils/logger.hpp"
-#include "odomPose.hpp"
+#include "pose.hpp"
 #include "odomSource.hpp"
 #include "pros/rtos.hpp"
 #include "pros/error.h"
@@ -109,7 +109,7 @@ namespace devils
         /**
          * Gets the current pose of the robot.
          */
-        const OdomPose getPose() override
+        const Pose getPose() override
         {
             return currentPose;
         }
@@ -118,7 +118,7 @@ namespace devils
          * Sets the current pose of the robot.
          * @param pose The pose to set the robot to.
          */
-        void setPose(OdomPose pose) override
+        void setPose(Pose pose) override
         {
             currentPose = pose;
             if (enableIMU)
@@ -130,7 +130,7 @@ namespace devils
         const double wheelBase;
         const double ticksPerRevolution;
 
-        OdomPose currentPose;
+        Pose currentPose;
         uint32_t lastUpdateTimestamp = 0;
         double lastLeft = 0;
         double lastRight = 0;

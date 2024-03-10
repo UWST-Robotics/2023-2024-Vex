@@ -74,7 +74,7 @@ namespace devils
                 devilsPoints.push_back({
                     Units::metersToIn(squigglesPoint.vector.pose.x),
                     Units::metersToIn(squigglesPoint.vector.pose.y),
-                    Units::radToDeg(squigglesPoint.vector.pose.yaw),
+                    squigglesPoint.vector.pose.yaw,
                     Units::metersToIn(squigglesPoint.wheel_velocities[0]),
                     Units::metersToIn(squigglesPoint.wheel_velocities[1]),
                 });
@@ -98,7 +98,7 @@ namespace devils
                 squigglesPoints.push_back({
                     Units::inToMeters(devilPoint.x),
                     Units::inToMeters(devilPoint.y),
-                    Units::degToRad(devilPoint.rotation),
+                    devilPoint.rotation,
                 });
 
                 if (isReversed)

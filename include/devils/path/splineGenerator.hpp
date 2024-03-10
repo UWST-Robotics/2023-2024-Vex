@@ -36,29 +36,25 @@ namespace devils
                 auto p1 = controlPoints.points[i];
                 auto p2 = controlPoints.points[i + 1];
 
-                // Convert to Radians
-                auto p1Radians = Units::degToRad(p1.rotation);
-                auto p2Radians = Units::degToRad(p2.rotation);
-
                 // Convert to ProfilePose
                 auto p1Profile = ProfilePose{
                     p1.x - initialPoint.x,
                     p1.y - initialPoint.y,
-                    p1Radians};
+                    p1.rotation};
                 auto p2Profile = ProfilePose{
                     p2.x - initialPoint.x,
                     p2.y - initialPoint.y,
-                    p2Radians};
+                    p2.rotation};
 
                 // Get Anchor Points
                 auto a1 = ProfilePose{
-                    p1Profile.x + p1.exitDelta * std::cos(p1Radians) * (isReversed ? -1 : 1),
-                    p1Profile.y + p1.exitDelta * std::sin(p1Radians) * (isReversed ? -1 : 1),
-                    p1Radians};
+                    p1Profile.x + p1.exitDelta * std::cos(p1.rotation) * (isReversed ? -1 : 1),
+                    p1Profile.y + p1.exitDelta * std::sin(p1.rotation) * (isReversed ? -1 : 1),
+                    p1.rotation};
                 auto a2 = ProfilePose{
-                    p2Profile.x - p2.enterDelta * std::cos(p2Radians),
-                    p2Profile.y - p2.enterDelta * std::sin(p2Radians),
-                    p2Radians};
+                    p2Profile.x - p2.enterDelta * std::cos(p2.rotation),
+                    p2Profile.y - p2.enterDelta * std::sin(p2.rotation),
+                    p2.rotation};
 
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)

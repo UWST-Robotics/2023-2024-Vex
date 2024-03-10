@@ -40,7 +40,7 @@ namespace devils
             LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
             AutoTimer pauseTimer;
 
-            pursuitController.restart();
+            pursuitController.reset();
 
             // Display
             OdomRenderer odomRenderer(&odometry);
@@ -148,11 +148,11 @@ namespace devils
 
                 // Set Max Speed
                 if (isFast)
-                    pursuitController.setMaxSpeed(1.0);
+                    pursuitController.setSpeed(1.0);
                 else if (isSlow)
-                    pursuitController.setMaxSpeed(0.25);
+                    pursuitController.setSpeed(0.25);
                 else
-                    pursuitController.resetMaxSpeed();
+                    pursuitController.setSpeed(0.5);
 
                 // Update Odometry
                 odometry.update(&chassis);
@@ -161,8 +161,8 @@ namespace devils
                 if (imu.getPitch() > 25)
                     chassis.move(-1.0, 0.0);
                 // Run Pursuit Controller
-                else if (!pauseTimer.getRunning())
-                    pursuitController.update();
+                // else if (!pauseTimer.getRunning())
+                //    pursuitController.update();
                 else
                     pursuitController.pause();
 
@@ -182,11 +182,11 @@ namespace devils
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
             // Display
-            PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
+            // PursuitController pursuitController = PursuitController(chassis, motionProfile, odometry);
             OdomRenderer odomRenderer(&odometry);
             MotionRenderer motionRenderer(&motionProfile);
-            ControlRenderer controlRenderer(&pursuitController);
-            Display teleopDisplay = Display({&odomRenderer, &motionRenderer, &controlRenderer});
+            // ControlRenderer controlRenderer(&pursuitController);
+            Display teleopDisplay = Display({&odomRenderer, &motionRenderer});
 
             // Disable Ramping
             chassis.getLeftMotors()->setRampRate(4);

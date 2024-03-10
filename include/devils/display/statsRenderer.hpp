@@ -1,5 +1,5 @@
 #pragma once
-#include "../odom/odomPose.hpp"
+#include "../odom/pose.hpp"
 #include "../odom/odomSource.hpp"
 #include "../../pros/misc.hpp"
 #include "displayUtils.hpp"
@@ -77,6 +77,21 @@ namespace devils
                 stream << "Rotation: " << (int)Units::radToDeg(pose.rotation) << "°\n";
             }
 
+            // Auto Controller
+            if (autoController != nullptr)
+            {
+                auto events = autoController->getCurrentEvents();
+                stream << "\n";
+                stream << "Events: \n";
+                for (auto event : events)
+                {
+                    stream << event.name;
+                    if (event.params.size() > 0)
+                        stream << " #aaaaaa (" << event.params << ")#";
+                    stream << "\n";
+                }
+            }
+
             // Additional Text
             stream << "\n";
             stream << additionalText;
@@ -93,6 +108,15 @@ namespace devils
         void useController(pros::Controller *controller)
         {
             this->controller = controller;
+        }
+
+        /**
+         * Uses an auto controller to display additional stats.
+         * @param controller The auto controller
+         */
+        void useAutoController(AutoController *controller)
+        {
+            this->autoController = controller;
         }
 
         /**
@@ -119,6 +143,7 @@ namespace devils
         std::string additionalText = "";
         lv_obj_t *textObject;
         pros::Controller *controller;
+        AutoController *autoController;
         OdomSource *odomSource;
     };
 }

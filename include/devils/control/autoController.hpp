@@ -1,5 +1,6 @@
 #pragma once
 #include "squiggles.hpp"
+#include "pros/rtos.hpp"
 
 namespace devils
 {
@@ -9,18 +10,37 @@ namespace devils
     struct AutoController
     {
         /**
+         * Gets a list of current events.
+         * @return List of current events.
+         */
+        virtual const std::vector<PathEvent> getCurrentEvents() = 0;
+
+        /**
          * Gets the current target point of the controller.
+         * @return The current target point of the controller.
          */
-        virtual const ProfilePose getCurrentProfilePoint() = 0;
+        virtual const ProfilePose getTargetPose() = 0;
 
         /**
-         * Restarts the controller from the beginning.
+         * Returns true if the controller has finished.
+         * @return True if the controller has finished.
          */
-        virtual void restart() = 0;
+        virtual bool isFinished() = 0;
 
         /**
-         * Updates the controller & calls move on the chassis.
+         * Sets the speed of the controller.
          */
-        virtual void update() = 0;
+        virtual void setSpeed(double speed) = 0;
+
+        /**
+         * Runs the controller as a PROS task.
+         * @return The PROS task that runs the controller.
+         */
+        pros::Task run()
+        {
+            return pros::Task([=]
+                              { _run(); });
+        }
+        virtual void _run() = 0;
     };
 }

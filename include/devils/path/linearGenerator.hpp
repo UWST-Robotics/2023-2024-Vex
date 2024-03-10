@@ -8,8 +8,10 @@ namespace devils
     class LinearGenerator
     {
     public:
-        LinearGenerator()
+        LinearGenerator() = default;
+        LinearGenerator(MotionProfile &motionProfile)
         {
+            generate(&motionProfile);
         }
 
         /**
@@ -37,19 +39,15 @@ namespace devils
                 auto p1 = controlPoints.points[i];
                 auto p2 = controlPoints.points[i + 1];
 
-                // Convert to Radians
-                auto p1Radians = Units::degToRad(p1.rotation);
-                auto p2Radians = Units::degToRad(p2.rotation);
-
                 // Convert to ProfilePose
                 auto p1Profile = ProfilePose{
                     p1.x,
                     p1.y,
-                    p1Radians};
+                    p1.rotation};
                 auto p2Profile = ProfilePose{
                     p2.x,
                     p2.y,
-                    p2Radians};
+                    p2.rotation};
 
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)

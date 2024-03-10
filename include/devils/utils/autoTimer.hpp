@@ -38,6 +38,8 @@ namespace devils
          */
         double getTimeRemaining()
         {
+            if (!getRunning())
+                return 0;
             return duration - (pros::millis() - startTime);
         }
 

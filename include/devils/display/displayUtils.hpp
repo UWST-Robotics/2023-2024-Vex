@@ -16,6 +16,8 @@ namespace devils
          */
         static std::string colorScale(double value)
         {
+            value = std::clamp(value, 0.0, 1.0);
+
             int r = 255;
             int g = 255;
             int b = 255;

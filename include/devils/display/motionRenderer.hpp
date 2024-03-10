@@ -14,9 +14,8 @@ namespace devils
     class MotionRenderer : public Renderer
     {
     public:
-        MotionRenderer(MotionProfile *motionProfile)
+        MotionRenderer(MotionProfile *motionProfile) : motionProfile(motionProfile)
         {
-            this->motionProfile = motionProfile;
         }
 
         void create(lv_obj_t *root)

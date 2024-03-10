@@ -96,7 +96,7 @@ namespace devils
                 if (index == 1)
                     point.y = std::stof(split[i]);
                 if (index == 2)
-                    point.rotation = Units::radToDeg(std::stof(split[i]));
+                    point.rotation = std::stof(split[i]);
                 if (index == 3)
                     point.enterDelta = std::stof(split[i]);
                 if (index == 4)

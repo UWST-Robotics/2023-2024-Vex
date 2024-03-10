@@ -2,36 +2,31 @@
 
 namespace devils
 {
-    struct ProfilePose
+    struct ProfilePose : public PathPoint
     {
-        /**
-         * The x position of the robot in inches.
-         */
-        double x = 0;
+        ProfilePose() : PathPoint()
+        {
+        }
 
-        /**
-         * The y position of the robot in inches.
-         */
-        double y = 0;
+        ProfilePose(double x, double y, double rotation)
+            : PathPoint{x, y, rotation}
+        {
+        }
 
-        /**
-         * The rotation of the robot in radians.
-         */
-        double rotation = 0;
+        ProfilePose(double x, double y, double rotation, double enterDelta, double exitDelta, bool isReversed, std::vector<PathEvent> events)
+            : PathPoint{x, y, rotation, enterDelta, exitDelta, isReversed, events}
+        {
+        }
 
-        /**
-         * The velocity of the left wheel in inches per second.
-         */
-        double leftWheelVelocity = -1;
-
-        /**
-         * The velocity of the right wheel in inches per second.
-         */
-        double rightWheelVelocity = -1;
-
-        /**
-         * Whether or not the point is going in the reverse direction.
-         */
-        bool isReversed = false;
+        ProfilePose(PathPoint point)
+        {
+            x = point.x;
+            y = point.y;
+            rotation = point.rotation;
+            enterDelta = point.enterDelta;
+            exitDelta = point.exitDelta;
+            isReversed = point.isReversed;
+            events = point.events;
+        }
     };
 }

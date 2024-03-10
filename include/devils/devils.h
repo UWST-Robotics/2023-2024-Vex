@@ -8,13 +8,13 @@
  */
 
 // Autonomous
-#include "control/openLoopController.hpp"
 #include "control/pursuitController.hpp"
 #include "control/linearController.hpp"
 
 // Chassis
 #include "chassis/chassis.hpp"
 #include "chassis/tankChassis.hpp"
+#include "chassis/dummyChassis.hpp"
 
 // Display
 #include "display/display.hpp"

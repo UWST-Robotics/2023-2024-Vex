@@ -51,28 +51,113 @@ namespace devils
          * Returns the current point of the motion profile.
          * @return The current point of the motion profile.
          */
-        const ProfilePose getCurrentProfilePoint() override
+        const ProfilePose getTargetPose() override
         {
-            return ProfilePose();
-            // return motionProfile.getPointAtTime(currentIndex);
+            auto controlPoints = motionProfile.getControlPoints();
+            if (currentIndex >= controlPoints.size() || currentIndex < 0)
+                return ProfilePose();
+            return controlPoints[currentIndex];
         }
 
         /**
-         * Restarts the motion profile from the beginning.
+         * Resets the motion profile from the beginning.
          */
-        void restart() override
+        void reset()
         {
             isReversed = false;
             currentIndex = 1;
             lastCheckpointTime = pros::millis();
+        }
 
-            // Set Initial Rotation
+        /**
+         * Returns true if the controller has finished.
+         * @return True if the controller has finished.
+         */
+        bool isFinished() override
+        {
+            return currentIndex >= motionProfile.getControlPoints().size();
+        }
+
+        /**
+         * Updates the chassis based on the current point of the motion profile.
+         * Also updates the chassis input.
+         */
+        void _run() override
+        {
+            // Reset
+            reset();
+
+            // Get Path
             auto controlPoints = motionProfile.getControlPoints();
-            if (controlPoints.size() > 0)
+
+            // Loop
+            while (true)
             {
-                auto firstPoint = controlPoints.front();
-                OdomPose initialPose = OdomPose{0, 0, Units::degToRad(firstPoint.rotation)};
-                odometry.setPose(initialPose);
+                // Get Current Pose
+                auto currentPose = odometry.getPose();
+
+                // Calculate time since last checkpoint
+                double timeSinceLastCheckpoint = pros::millis() - lastCheckpointTime;
+                bool skipCheckpoint = timeSinceLastCheckpoint > CHECKPOINT_TIMEOUT && CHECKPOINT_TIMEOUT > 0;
+
+                // Calculate Point
+                auto point = controlPoints[currentIndex];
+                double distanceSquared = pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2);
+
+                // Check within trigger range
+                if (distanceSquared < CHECKPOINT_RANGE_SQ || skipCheckpoint)
+                {
+                    currentIndex++;
+                    lastCheckpointTime = pros::millis();
+                    if (point.isReversed)
+                        isReversed = !isReversed;
+                    continue;
+                }
+
+                // Get Current Point
+                auto currentPoint = controlPoints[currentIndex % controlPoints.size()];
+
+                // Calculate direction of travel
+                double deltaX = currentPoint.x - currentPose.x;
+                double deltaY = currentPoint.y - currentPose.y;
+                double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
+                double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
+
+                // Handle Reversed
+                if (isReversed)
+                    deltaRotation = Units::diffRad(deltaRotation, M_PI);
+
+                // Calculate Speeds
+                double forward = translationPID.update(deltaForward);
+                double turn = rotationPID.update(deltaRotation);
+
+                // Clamp Values
+                forward = Curve::clamp(-maxSpeed, maxSpeed, forward);
+                turn = Curve::clamp(-maxSpeed, maxSpeed, turn);
+
+                // Disable forward if need to rotate
+                if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
+                {
+                    forward = 0;
+                    lastRotationTime = pros::millis();
+                }
+
+                // Delay acceleration after rotation
+                if (pros::millis() - lastRotationTime < ACCEL_DELAY)
+                    forward = 0;
+
+                // Finish
+                if (currentIndex >= controlPoints.size())
+                {
+                    pause();
+                    break;
+                }
+
+                // Move Chassis
+                chassis.move(forward, turn);
+
+                // Delay Task
+                pros::delay(10);
             }
         }
 
@@ -89,115 +174,27 @@ namespace devils
          * Sets the maximum speed of the chassis.
          * @param speed The maximum speed of the chassis from 0 to 1.
          */
-        void setMaxSpeed(double speed)
+        void setSpeed(double speed) override
         {
             maxSpeed = speed;
         }
 
-        /**
-         * Resets the maximum speed of the chassis to the default.
-         */
-        void resetMaxSpeed()
-        {
-            maxSpeed = DEFAULT_MAX_SPEED;
-        }
-
-        /**
-         * Updates the chassis based on the current point of the motion profile.
-         * Also updates the chassis input.
-         */
-        void update() override
-        {
-            // Get Current Pose
-            auto currentPose = odometry.getPose();
-            auto controlPoints = motionProfile.getControlPoints();
-            auto profilePoints = motionProfile.getProfilePoints();
-
-            // Calculate time since last checkpoint
-            double timeSinceLastCheckpoint = pros::millis() - lastCheckpointTime;
-            bool skipCheckpoint = timeSinceLastCheckpoint > CHECKPOINT_TIMEOUT && CHECKPOINT_TIMEOUT > 0;
-
-            // Update checkpoints once reached
-            auto firstPoint = controlPoints.front();
-            for (int i = currentIndex; i < controlPoints.size(); i++)
-            {
-                // Calculate Point
-                auto point = controlPoints[i];
-                double xPos = point.x - firstPoint.x;
-                double yPos = point.y - firstPoint.y;
-                double distance = pow(xPos - currentPose.x, 2) + pow(yPos - currentPose.y, 2);
-
-                // Check within trigger range
-                if (distance < CHECKPOINT_RANGE * CHECKPOINT_RANGE || skipCheckpoint)
-                {
-                    currentIndex = i + 1;
-                    lastCheckpointTime = pros::millis();
-                    skipCheckpoint = false;
-                    if (point.isReversed)
-                        isReversed = !isReversed;
-                    continue;
-                }
-
-                break;
-            }
-
-            // Get Current Point
-            auto currentPoint = controlPoints[currentIndex % controlPoints.size()];
-            currentPoint.x -= firstPoint.x;
-            currentPoint.y -= firstPoint.y;
-
-            // Calculate direction of travel
-            double deltaX = currentPoint.x - currentPose.x;
-            double deltaY = currentPoint.y - currentPose.y;
-            double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
-            double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
-
-            // Handle Reversed
-            if (isReversed)
-                deltaRotation = Units::diffRad(deltaRotation, M_PI);
-
-            // Calculate Speeds
-            double forward = translationPID.update(deltaForward);
-            double turn = rotationPID.update(deltaRotation);
-
-            // Clamp Values
-            forward = Curve::clamp(-maxSpeed, maxSpeed, forward);
-            turn = Curve::clamp(-maxSpeed, maxSpeed, turn);
-
-            // Disable forward if need to rotate
-            if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
-            {
-                forward = 0;
-                lastRotationTime = pros::millis();
-            }
-
-            // Delay acceleration after rotation
-            if (pros::millis() - lastRotationTime < ACCEL_DELAY)
-            {
-                forward = 0;
-            }
-
-            // Disable once finish reached
-            if (currentIndex >= controlPoints.size())
-            {
-                forward = 0;
-                turn = 0;
-            }
-
-            // Move Chassis
-            chassis.move(forward, turn);
-        }
-
     private:
+        // Constants
         static constexpr double DEFAULT_MAX_SPEED = 0.45;
-        static constexpr double CHECKPOINT_TIMEOUT = 3000;      // ms
-        static constexpr double DISABLE_ACCEL_RANGE = M_PI / 6; // rads
-        static constexpr double CHECKPOINT_RANGE = 4;           // in
-        static constexpr double ACCEL_DELAY = 100;              // ms
+        static constexpr double CHECKPOINT_TIMEOUT = 3000;       // ms
+        static constexpr double DISABLE_ACCEL_RANGE = M_PI / 10; // rads
+        static constexpr double ACCEL_DELAY = 200;               // ms
+        static constexpr double CHECKPOINT_RANGE = 4;            // in
 
+        // Derived Constants
+        static constexpr double CHECKPOINT_RANGE_SQ = CHECKPOINT_RANGE * CHECKPOINT_RANGE; // sq in
+
+        // PID
         PID translationPID = PID(0.1, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.5, 0, 0);    // <-- Rotation
+        PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
 
+        // Members
         BaseChassis &chassis;
         MotionProfile &motionProfile;
         OdomSource &odometry;
