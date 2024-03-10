@@ -8,10 +8,9 @@
  */
 void initialize()
 {
-	Logger::info("==== Initialize ====");
 	Logger::init();
-	robot = std::make_shared<Blaze>(); // <-- Change this to PepperJack or Blaze
-	Logger::info("Initialized");
+	Logger::info("==== Initialize ====");
+	robot = std::make_shared<AutoTest>(); // <-- Change this to PepperJack or Blaze
 }
 
 /**

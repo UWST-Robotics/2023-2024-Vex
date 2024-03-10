@@ -1,6 +1,7 @@
 #pragma once
 #include "../path/motionProfile.hpp"
 #include "../utils/logger.hpp"
+#include "displayUtils.hpp"
 #include "renderer.hpp"
 #include <cmath>
 #include <string>
@@ -20,8 +21,13 @@ namespace devils
 
         void create(lv_obj_t *root)
         {
+            // Get Path
             auto profilePoints = motionProfile->getProfilePoints();
             auto controlPoints = motionProfile->getControlPoints();
+
+            // Calculate Offset
+            double offsetX = DisplayUtils::DISPLAY_WIDTH / 2;
+            double offsetY = DisplayUtils::DISPLAY_HEIGHT / 2;
 
             // Path
             static lv_obj_t *robotPath = lv_line_create(root, NULL);
@@ -31,25 +37,24 @@ namespace devils
                 linePointVector.clear();
                 for (int i = 0; i < profilePoints.size(); i++)
                 {
-                    linePointVector.push_back({(short)(profilePoints[i].x + 50),
-                                               (short)(profilePoints[i].y + 50)});
+                    linePointVector.push_back({(short)(profilePoints[i].x * DisplayUtils::PX_PER_IN + offsetX),
+                                               (short)(profilePoints[i].y * DisplayUtils::PX_PER_IN + offsetY)});
                 }
 
+                // Create Line
                 static lv_point_t *linePoints;
                 linePoints = linePointVector.data();
-
-                // Create line
                 lv_line_set_points(robotPath, linePoints, linePointVector.size());
-                lv_line_set_auto_size(robotPath, true);
 
                 // Style
                 static lv_style_t pathStyle;
                 lv_style_copy(&pathStyle, &lv_style_plain);
-                pathStyle.line.color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
-                pathStyle.line.width = 1;
+                pathStyle.line.color = LV_COLOR_MAKE(0xff, 0xff, 0xff);
+                pathStyle.line.width = 2;
                 lv_obj_set_style(robotPath, &pathStyle);
             }
 
+            /*
             // Points
             static std::vector<lv_obj_t *> pointObjects;
             {
@@ -71,6 +76,7 @@ namespace devils
                     }
                 }
             }
+            */
         }
 
         void update() {}

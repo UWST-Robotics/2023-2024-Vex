@@ -70,5 +70,32 @@ namespace devils
         {
             return std::fmod(radians + 2 * M_PI, 2 * M_PI);
         }
+
+        /**
+         * Converts inches to a string.
+         * @param inches The inches to convert.
+         * @return The string representation of the inches and feet
+         */
+        static std::string inToString(int inches)
+        {
+            // Handle Negative
+            bool negative = inches < 0;
+            if (negative)
+                inches = -inches;
+
+            // Split Inches and Feet
+            int feet = inches / 12;
+            inches = inches % 12;
+
+            // Create String
+            std::stringstream stream;
+            if (negative)
+                stream << "-";
+            if (feet > 0)
+                stream << feet << "' ";
+            stream << inches << "\"";
+
+            return stream.str();
+        }
     };
 }

@@ -18,6 +18,7 @@ namespace devils
          */
         void generate(MotionProfile *motionProfile)
         {
+            Logger::info("Generating Linear Motion Profile...");
             if (!PathFileReader::isSDInserted())
             {
                 Logger::warn("LinearGenerator: SD Card not inserted");
@@ -28,7 +29,7 @@ namespace devils
             std::vector<ProfilePose> profilePoints;
             profilePoints.reserve(controlPoints.points.size() * (1 / DT));
 
-            auto initialPoint = controlPoints.points[0];
+            // auto initialPoint = controlPoints.points[0];
             bool isReversed = false;
             for (int i = 0; i < controlPoints.points.size() - 1; i++)
             {
@@ -42,12 +43,12 @@ namespace devils
 
                 // Convert to ProfilePose
                 auto p1Profile = ProfilePose{
-                    p1.x - initialPoint.x,
-                    p1.y - initialPoint.y,
+                    p1.x,
+                    p1.y,
                     p1Radians};
                 auto p2Profile = ProfilePose{
-                    p2.x - initialPoint.x,
-                    p2.y - initialPoint.y,
+                    p2.x,
+                    p2.y,
                     p2Radians};
 
                 // Lerp between points

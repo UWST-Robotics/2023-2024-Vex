@@ -28,7 +28,7 @@ using namespace devils;
  */
 extern "C"
 {
-    std::shared_ptr<Blaze> robot; // <-- Change this to PepperJack or Blaze
+    std::shared_ptr<AutoTest> robot; // <-- Change this to PepperJack or Blaze
     void autonomous(void);
     void initialize(void);
     void disabled(void);

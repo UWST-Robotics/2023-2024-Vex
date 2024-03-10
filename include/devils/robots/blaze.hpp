@@ -181,13 +181,66 @@ namespace devils
             // Teleop Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);
 
+            // Autonomous Code
+            bool abortAuto = false;
+
+            // Controller/Odom
+            LinearController pursuitController = LinearController(chassis, motionProfile, odometry);
+            pursuitController.restart();
+
+            // Enable Ramping
+            chassis.getLeftMotors()->setRampRate(4);
+            chassis.getRightMotors()->setRampRate(4);
+
+            // Run
+            while (master.get_digital(DIGITAL_A) && !abortAuto)
+            {
+                // Handle Events
+                auto currentEvents = pursuitController.getCurrentEvents();
+
+                // Check For Fast/Slow
+                bool isFast = false;
+                bool isSlow = false;
+                for (int i = 0; i < currentEvents.size(); i++)
+                {
+                    auto currentEvent = currentEvents[i];
+                    if (currentEvent.name == "fast")
+                        isFast = true;
+                    else if (currentEvent.name == "slow")
+                        isSlow = true;
+                    else if (currentEvent.name == "abortIfDriver")
+                    {
+                        chassis.stop();
+                        abortAuto = true;
+                        master.rumble("-");
+                        break;
+                    }
+                }
+
+                if (abortAuto)
+                    break;
+
+                // Set Max Speed
+                if (isFast)
+                    pursuitController.setMaxSpeed(1.0);
+                else if (isSlow)
+                    pursuitController.setMaxSpeed(0.25);
+                else
+                    pursuitController.resetMaxSpeed();
+
+                // Update Odometry
+                odometry.update(&chassis);
+
+                // Run Pursuit Controller
+                pursuitController.update();
+
+                // Delay to prevent the CPU from being overloaded
+                pros::delay(20);
+            }
+
             // Wings
             bool leftWing = false;
             bool rightWing = false;
-
-            // Run autonomous at the start
-            if (master.get_digital(DIGITAL_A))
-                autonomous();
 
             // Loop
             while (true)

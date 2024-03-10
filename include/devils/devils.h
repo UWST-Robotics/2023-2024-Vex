@@ -21,7 +21,9 @@
 #include "display/odomRenderer.hpp"
 #include "display/motionRenderer.hpp"
 #include "display/controlRenderer.hpp"
+#include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
+#include "display/statsRenderer.hpp"
 
 // Hardware
 #include "hardware/imu.hpp"
@@ -29,6 +31,7 @@
 
 // Odom
 #include "odom/tankWheelOdometry.hpp"
+#include "odom/dummyOdometry.hpp"
 
 // Path
 #include "path/splineGenerator.hpp"
