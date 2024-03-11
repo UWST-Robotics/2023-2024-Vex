@@ -40,7 +40,9 @@ namespace devils
         {
             for (Renderer *renderer : renderers)
                 renderer->update();
-            lv_obj_invalidate(rootObject);
+
+            // Uncomment to force a redraw every frame
+            // lv_obj_invalidate(rootObject);
         }
 
     private:

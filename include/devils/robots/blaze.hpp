@@ -9,7 +9,6 @@ namespace devils
      */
     struct Blaze : public Robot
     {
-    public:
         /**
          * Creates a new instance of Blaze.
          */
@@ -28,12 +27,12 @@ namespace devils
             generator.generate(&motionProfile);
         }
 
-        void disabled()
+        void disabled() override
         {
             intake.raise();
         }
 
-        void autonomous()
+        void autonomous() override
         {
             // Game Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -176,7 +175,7 @@ namespace devils
             }
         }
 
-        void opcontrol()
+        void opcontrol() override
         {
             // Teleop Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);

@@ -31,7 +31,7 @@ namespace devils
     /**
      * A struct representing a point in the robot path.
      */
-    struct PathPoint : Pose
+    struct PathPoint : public Pose
     {
         /// @brief The entry delta of the robot in inches
         double enterDelta = 0;

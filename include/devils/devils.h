@@ -23,6 +23,8 @@
 #include "display/controlRenderer.hpp"
 #include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
+#include "display/rectRenderer.hpp"
+#include "display/gameObjectRenderer.hpp"
 #include "display/statsRenderer.hpp"
 
 // Hardware
@@ -37,6 +39,9 @@
 #include "path/splineGenerator.hpp"
 #include "path/squigglesGenerator.hpp"
 #include "path/linearGenerator.hpp"
+
+// Game Object
+#include "gameobject/gameobject.hpp"
 
 // Pros
 #include "api.h"
@@ -57,3 +62,4 @@
 #include "utils/curve.hpp"
 #include "utils/pid.hpp"
 #include "utils/autoTimer.hpp"
+#include "utils/rect.hpp"

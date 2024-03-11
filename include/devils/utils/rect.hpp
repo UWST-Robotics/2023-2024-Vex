@@ -8,9 +8,8 @@ namespace devils
     /**
      * Represents a rectangular area.
      */
-    class Rect
+    struct Rect
     {
-    public:
         /**
          * Creates a new rectangle.
          * @param x The x position in inches.
@@ -36,7 +35,15 @@ namespace devils
             return pose.x >= x && pose.x <= x + width && pose.y >= y && pose.y <= y + height;
         }
 
-    private:
+        /**
+         * Gets a random pose within the rectangle.
+         * @return A random pose within the rectangle.
+         */
+        Pose getRandomPose()
+        {
+            return Pose{x + (rand() % (int)width), y + (rand() % (int)height), 0};
+        }
+
         double x;
         double y;
         double width;

@@ -34,13 +34,13 @@ namespace devils
          * Controller tries to choose LOOKAHEAD_DISTANCE inches ahead of the robot.
          * @return The current target point of the motion profile.
          */
-        const ProfilePose getTargetPose() override
+        const Pose getTargetPose() override
         {
             if (!motionProfile.isGenerated())
-                return ProfilePose();
+                return Pose();
 
             auto allPoints = motionProfile.getProfilePoints();
-            return allPoints[lookaheadPathIndex];
+            return allPoints[pathPointIndex];
         }
 
         /**
@@ -48,7 +48,7 @@ namespace devils
          */
         void reset()
         {
-            lookaheadPathIndex = 0;
+            pathPointIndex = 0;
             odometry.setPose(motionProfile.getStartingPose());
         }
 
@@ -59,9 +59,9 @@ namespace devils
         const std::vector<PathEvent> getCurrentEvents() override
         {
             auto controlPoints = motionProfile.getControlPoints();
-            if (currentEventIndex >= controlPoints.size() || currentEventIndex < 0)
+            if (controlPointIndex >= controlPoints.size() || controlPointIndex < 0)
                 return {};
-            return controlPoints[currentEventIndex].events;
+            return controlPoints[controlPointIndex].events;
         }
 
         /**
@@ -88,37 +88,36 @@ namespace devils
                 // Get Current Pose
                 auto currentPose = odometry.getPose();
 
-                // Update Closest Motion Profile Point
+                // Update Path Point Index
                 double closestDistance = 100000;
-                for (int i = lookaheadPathIndex; i < profilePoints.size(); i++)
+                for (int i = pathPointIndex; i < profilePoints.size(); i++)
                 {
                     auto point = profilePoints[i];
                     double distance = abs(LOOKAHEAD_DISTANCE - sqrt(pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2)));
                     if (distance < closestDistance)
                     {
                         closestDistance = distance;
-                        lookaheadPathIndex = i;
+                        pathPointIndex = i;
                     }
-                    if (i - lookaheadPathIndex > LOOKAHEAD_MAX_INDICES)
+                    if (i - pathPointIndex > LOOKAHEAD_MAX_INDICES)
                         break;
                 }
 
-                // Update Event Index
-                if (currentEventIndex < controlPoints.size() - 1)
+                // Update Control Point Index
+                if (controlPointIndex < controlPoints.size() - 1)
                 {
-                    auto controlPoint = controlPoints[currentEventIndex + 1];
+                    auto controlPoint = controlPoints[controlPointIndex + 1];
                     double distanceSq = pow(controlPoint.x - currentPose.x, 2) + pow(controlPoint.y - currentPose.y, 2);
                     if (distanceSq < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE)
-                        currentEventIndex++;
+                        controlPointIndex++;
                 }
 
                 // Get Current Point
-                auto currentPathPoint = profilePoints[lookaheadPathIndex];
-                auto currentTargetPoint = getTargetPose();
+                auto currentPathPoint = profilePoints[pathPointIndex];
 
                 // Calculate Forward & Turn
-                double deltaX = currentTargetPoint.x - currentPose.x;
-                double deltaY = currentTargetPoint.y - currentPose.y;
+                double deltaX = currentPathPoint.x - currentPose.x;
+                double deltaY = currentPathPoint.y - currentPose.y;
                 double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
                 double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
 
@@ -126,36 +125,30 @@ namespace devils
                 if (currentPathPoint.isReversed)
                     deltaRotation = Units::diffRad(deltaRotation, M_PI);
 
+                // Calculate PID
                 double forward = translationPID.update(deltaForward);
                 double turn = rotationPID.update(deltaRotation);
 
-                Logger::debug(std::to_string(forward) + ", " + std::to_string(turn));
-
                 // Clamp Values
-                forward = Curve::clamp(-1.0, 1.0, forward) * maxSpeed;
-                turn = Curve::clamp(-1.0, 1.0, turn) * maxSpeed;
+                forward = Curve::clamp(-1.0, 1.0, forward) * speed;
+                turn = Curve::clamp(-1.0, 1.0, turn) * speed;
 
-                // Finish
+                // Prevent Sparatic Rotation
+                // if (abs(deltaForward) < DISABLE_ROTATION_RANGE)
+                //    turn = 0;
+                // else if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
+                //    forward = 0;
+
+                // Handle Finish
                 bool withinRangeOfLastPoint = pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2) < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE;
-                bool lookingAtLastPoint = lookaheadPathIndex == profilePoints.size() - 1;
+                bool lookingAtLastPoint = pathPointIndex == profilePoints.size() - 1;
                 if (withinRangeOfLastPoint && lookingAtLastPoint)
                     hasFinished = true;
 
-                // Move Chassis
+                // Execute
                 chassis.move(forward, turn);
-
-                // Delay Task
                 pros::delay(20);
             }
-        }
-
-        /**
-         * Sets the speed of the controller.
-         * @param speed The speed to set.
-         */
-        void setSpeed(double speed) override
-        {
-            maxSpeed = speed;
         }
 
         /**
@@ -168,9 +161,11 @@ namespace devils
         }
 
     private:
-        static constexpr double LOOKAHEAD_DISTANCE = 4.0; // in
         static constexpr int LOOKAHEAD_MAX_INDICES = 10;
-        static constexpr double EVENT_TRIGGER_RANGE = 6; // in
+        static constexpr double LOOKAHEAD_DISTANCE = 4.0;        // in
+        static constexpr double EVENT_TRIGGER_RANGE = 6;         // in
+        static constexpr double DISABLE_ROTATION_RANGE = 3.0;    // in
+        static constexpr double DISABLE_ACCEL_RANGE = M_PI / 10; // rads
 
         PID translationPID = PID(0.1, 0, 0); // <-- Translation
         PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
@@ -178,9 +173,8 @@ namespace devils
         BaseChassis &chassis;
         MotionProfile &motionProfile;
         OdomSource &odometry;
-        int lookaheadPathIndex = 0; // Closest index of the lookahead point
-        int currentEventIndex = 0;  // Current index of the event
-        float maxSpeed = 0.5;
+        int pathPointIndex = 0;    // Closest index of the lookahead point
+        int controlPointIndex = 0; // Current index of the event
 
         bool isPaused = false;
         bool hasFinished = false;

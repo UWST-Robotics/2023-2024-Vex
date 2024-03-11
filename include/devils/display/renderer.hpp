@@ -9,7 +9,21 @@ namespace devils
     struct Renderer
     {
     public:
-        virtual void create(lv_obj_t *root) {}
+        /**
+         * Called when the renderer is destroyed.
+         * Should call `lv_obj_del` on any objects created.
+         */
+        // virtual ~Renderer() = 0;
+
+        /**
+         * Called when the renderer is initialized with a display root.
+         * @param root The root canvas object to append to.
+         */
+        virtual void create(lv_obj_t *root) = 0;
+
+        /**
+         * Called when the renderer should refresh its display.
+         */
         virtual void update() {}
     };
 }

@@ -18,7 +18,12 @@ namespace devils
         {
         }
 
-        void create(lv_obj_t *root)
+        ~MotionRenderer()
+        {
+            lv_obj_del(robotPath);
+        }
+
+        void create(lv_obj_t *root) override
         {
             // Get Path
             auto profilePoints = motionProfile->getProfilePoints();
@@ -29,7 +34,7 @@ namespace devils
             double offsetY = DisplayUtils::DISPLAY_HEIGHT / 2;
 
             // Path
-            static lv_obj_t *robotPath = lv_line_create(root, NULL);
+            robotPath = lv_line_create(root, NULL);
             {
                 // Convert path to vector of points
                 static std::vector<lv_point_t> linePointVector;
@@ -52,37 +57,12 @@ namespace devils
                 pathStyle.line.width = 2;
                 lv_obj_set_style(robotPath, &pathStyle);
             }
-
-            /*
-            // Points
-            static std::vector<lv_obj_t *> pointObjects;
-            {
-                static lv_style_t pointStyle;
-                lv_style_copy(&pointStyle, &lv_style_plain);
-                pointStyle.body.main_color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
-                pointStyle.body.grad_color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
-                pointStyle.body.radius = LV_RADIUS_CIRCLE;
-
-                for (auto point : controlPoints)
-                {
-                    lv_obj_t *pointObject = lv_obj_create(root, NULL);
-                    {
-                        pointObjects.push_back(pointObject);
-
-                        lv_obj_set_size(pointObject, 8, 8);
-                        lv_obj_set_pos(pointObject, Units::metersToIn(point.x) + 50 - 4, Units::metersToIn(point.y) + 50 - 4);
-                        lv_obj_set_style(pointObject, &pointStyle);
-                    }
-                }
-            }
-            */
         }
-
-        void update() {}
 
     private:
         static constexpr float DT = 0.1;
 
         MotionProfile *motionProfile;
+        lv_obj_t *robotPath;
     };
 }

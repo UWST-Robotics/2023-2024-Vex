@@ -32,10 +32,10 @@ namespace devils
          */
         double getHeading()
         {
-            double heading = imu.get_heading() + headingOffset;
+            double heading = imu.get_heading();
             if (heading == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get heading failed");
-            return Units::degToRad(heading);
+            return heading == PROS_ERR_F ? 0 : Units::degToRad(heading + headingOffset);
         }
 
         /**
@@ -47,7 +47,7 @@ namespace devils
             double pitch = imu.get_pitch();
             if (pitch == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get pitch failed");
-            return pitch;
+            return pitch == PROS_ERR_F ? 0 : Units::degToRad(pitch);
         }
 
         /**
@@ -68,7 +68,8 @@ namespace devils
             auto accel = imu.get_accel();
             if (accel.x == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get accel failed");
-            return sqrt(pow(accel.x, 2) + pow(accel.y, 2) + pow(accel.z, 2));
+            double avgAcceleration = sqrt(pow(accel.x, 2) + pow(accel.y, 2) + pow(accel.z, 2));
+            return accel.x == PROS_ERR_F ? 0 : avgAcceleration;
         }
 
     private:

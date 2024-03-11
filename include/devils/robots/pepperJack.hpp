@@ -9,7 +9,6 @@ namespace devils
      */
     struct PepperJack : public Robot
     {
-    public:
         /**
          * Creates a new instance of PepperJack.
          */
@@ -31,7 +30,7 @@ namespace devils
             generator.generate(&motionProfile);
         }
 
-        void autonomous()
+        void autonomous() override
         {
             // Game Controller
             pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -174,7 +173,7 @@ namespace devils
             }
         }
 
-        void opcontrol()
+        void opcontrol() override
         {
             Logger::warn("Starting opcontrol");
 
@@ -248,7 +247,7 @@ namespace devils
             }
         }
 
-        void disabled()
+        void disabled() override
         {
             Logger::warn("Disabling PepperJack");
 

@@ -47,6 +47,7 @@ namespace devils
 
         /**
          * Sets the LED to a boolean value. True is on, false is off.
+         * @param enabled Whether or not the LED should be on
          */
         void setEnabled(bool enabled)
         {

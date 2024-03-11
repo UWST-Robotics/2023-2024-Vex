@@ -39,22 +39,15 @@ namespace devils
                 auto p1 = controlPoints.points[i];
                 auto p2 = controlPoints.points[i + 1];
 
-                // Convert to ProfilePose
-                auto p1Profile = ProfilePose{
-                    p1.x,
-                    p1.y,
-                    p1.rotation};
-                auto p2Profile = ProfilePose{
-                    p2.x,
-                    p2.y,
-                    p2.rotation};
-
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)
                 {
-                    auto lerp = PathUtils::lerpPoints(p1Profile, p2Profile, t);
-                    lerp.isReversed = isReversed;
-                    profilePoints.push_back(lerp);
+                    auto lerp = PathUtils::lerpPoints(p1, p2, t);
+                    profilePoints.push_back(ProfilePose{
+                        lerp.x,
+                        lerp.y,
+                        lerp.rotation,
+                        isReversed});
                 }
 
                 // Reverse Point

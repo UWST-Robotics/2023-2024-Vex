@@ -37,6 +37,17 @@ namespace devils
         }
 
         /**
+         * Adds color to a string of text for LVGL.
+         * @param text The text to colorize
+         * @param colorHex The hex color to use (e.g. `#ff0000` for red)
+         * @return The colorized text for LVGL. Format: `colorHex text#`
+         */
+        static std::string colorText(std::string text, std::string colorHex)
+        {
+            return colorHex + " " + text + "#";
+        }
+
+        /**
          * Converts a boolean to a hex color.
          * Red if false, green if true.
          * @param value The value to convert from 0-1
@@ -55,7 +66,7 @@ namespace devils
          */
         static std::string colorizeValue(bool value, std::string text)
         {
-            return DisplayUtils::colorScale(value) + " " + text + "#\n";
+            return colorText(text, colorScale(value)) + "\n";
         }
 
         /**
@@ -66,7 +77,7 @@ namespace devils
          */
         static std::string colorizeValue(double value, std::string text)
         {
-            return DisplayUtils::colorScale(value) + " " + text + "#\n";
+            return colorText(text, colorScale(value)) + "\n";
         }
 
         /**

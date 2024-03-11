@@ -9,7 +9,6 @@ namespace devils
      */
     struct AutoTest : public Robot
     {
-    public:
         /**
          * Creates a new instance of Blaze.
          */
@@ -19,8 +18,10 @@ namespace devils
               autoController(chassis, motionProfile, odometry),
               motionRenderer(&motionProfile),
               odomRenderer(&odometry),
+              rectRenderer(&autonomousArea),
+              gameObjectRenderer(&knownGameObjects),
               controlRenderer(&autoController),
-              teleopDisplay({&motionRenderer, &fieldRenderer, &odomRenderer, &controlRenderer, &statsRenderer})
+              teleopDisplay({&motionRenderer, &fieldRenderer, &odomRenderer, &controlRenderer, &gameObjectRenderer, &rectRenderer, &statsRenderer})
         {
             // Motion Profile
             auto generator = LinearGenerator();
@@ -32,27 +33,23 @@ namespace devils
             statsRenderer.useAutoController(&autoController);
         }
 
-        void disabled()
-        {
-            // Loop
-            while (true)
-            {
-                // Display
-                teleopDisplay.update();
-
-                // Delay
-                pros::delay(20);
-            }
-        }
-
-        void autonomous()
+        void disabled() override
         {
         }
 
-        void opcontrol()
+        void autonomous() override
         {
+        }
 
+        void opcontrol() override
+        {
             chassis.setPose(motionProfile.getStartingPose());
+
+            // Generate random test objects
+            knownGameObjects.clear();
+            for (int i = 0; i < 20; i++)
+                knownGameObjects.push_back(fieldArea.getRandomPose());
+            gameObjectRenderer.useRect(&autonomousArea);
 
             // Start Auto Task
             pros::Task autoTask = autoController.run();
@@ -103,6 +100,7 @@ namespace devils
                 stream << "Pause Timer: " << DisplayUtils::colorizeValue(pauseTimer.getTimeRemaining() / 5000, std::to_string((int)pauseTimer.getTimeRemaining()) + "ms");
                 stream << "Fast: " << DisplayUtils::colorizeValue(isFast, isFast ? "Yes" : "No");
                 stream << "Slow: " << DisplayUtils::colorizeValue(isSlow, isSlow ? "Yes" : "No");
+                stream << "Speed: " << DisplayUtils::colorizeValue(autoController.getSpeed(), std::to_string((int)(autoController.getSpeed() * 100)) + "%");
                 std::string additionalText = stream.str();
                 statsRenderer.setAdditionalText(additionalText);
 
@@ -115,6 +113,10 @@ namespace devils
         }
 
     private:
+        // Field Area
+        Rect fieldArea = Rect(-72, -72, 144, 144);
+        Rect autonomousArea = Rect(-36, 0, 72, 48);
+
         // Chassis
         DummyChassis chassis;
         OdomSource &odometry = (OdomSource &)chassis;
@@ -123,6 +125,7 @@ namespace devils
         MotionProfile motionProfile;
         LinearGenerator linearGenerator;
         PursuitController autoController;
+        std::vector<GameObject> knownGameObjects;
 
         // Teleop Controller
         pros::Controller controller;
@@ -132,6 +135,8 @@ namespace devils
         FieldRenderer fieldRenderer;
         OdomRenderer odomRenderer;
         ControlRenderer controlRenderer;
+        GameObjectRenderer gameObjectRenderer;
+        RectRenderer rectRenderer;
         StatsRenderer statsRenderer;
         Display teleopDisplay;
     };

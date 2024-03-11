@@ -51,11 +51,11 @@ namespace devils
          * Returns the current point of the motion profile.
          * @return The current point of the motion profile.
          */
-        const ProfilePose getTargetPose() override
+        const Pose getTargetPose() override
         {
             auto controlPoints = motionProfile.getControlPoints();
             if (currentIndex >= controlPoints.size() || currentIndex < 0)
-                return ProfilePose();
+                return Pose();
             return controlPoints[currentIndex];
         }
 
@@ -132,8 +132,8 @@ namespace devils
                 double turn = rotationPID.update(deltaRotation);
 
                 // Clamp Values
-                forward = Curve::clamp(-maxSpeed, maxSpeed, forward);
-                turn = Curve::clamp(-maxSpeed, maxSpeed, turn);
+                forward = Curve::clamp(-speed, speed, forward);
+                turn = Curve::clamp(-speed, speed, turn);
 
                 // Disable forward if need to rotate
                 if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
@@ -170,15 +170,6 @@ namespace devils
             lastCheckpointTime = pros::millis();
         }
 
-        /**
-         * Sets the maximum speed of the chassis.
-         * @param speed The maximum speed of the chassis from 0 to 1.
-         */
-        void setSpeed(double speed) override
-        {
-            maxSpeed = speed;
-        }
-
     private:
         // Constants
         static constexpr double DEFAULT_MAX_SPEED = 0.45;
@@ -201,7 +192,6 @@ namespace devils
         int currentIndex = 1; // Current control point driving towards
         double lastCheckpointTime = 0;
         double lastRotationTime = 0;
-        double maxSpeed = DEFAULT_MAX_SPEED;
         bool isReversed = false;
     };
 }

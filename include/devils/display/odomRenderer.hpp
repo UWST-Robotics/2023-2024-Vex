@@ -21,10 +21,11 @@ namespace devils
         ~OdomRenderer()
         {
             lv_obj_del(robotObject);
+            lv_obj_del(robotBGObject);
             lv_obj_del(robotPointer);
         }
 
-        void create(lv_obj_t *root)
+        void create(lv_obj_t *root) override
         {
             // Robot Root
             robotObject = lv_obj_create(root, NULL);
@@ -40,7 +41,7 @@ namespace devils
             }
 
             // Background
-            static lv_obj_t *robotBGObject = lv_obj_create(robotObject, NULL);
+            robotBGObject = lv_obj_create(robotObject, NULL);
             {
                 lv_obj_set_size(robotBGObject, ROBOT_SIZE, ROBOT_SIZE);
                 lv_obj_align(robotBGObject, robotObject, LV_ALIGN_CENTER, 0, 0);
@@ -67,7 +68,7 @@ namespace devils
             }
         }
 
-        void update()
+        void update() override
         {
             // Pose
             Pose pose = odomSource->getPose();
@@ -95,6 +96,7 @@ namespace devils
         OdomSource *odomSource;
 
         lv_obj_t *robotObject;
+        lv_obj_t *robotBGObject;
         lv_obj_t *robotPointer;
     };
 }

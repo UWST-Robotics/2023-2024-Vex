@@ -1,32 +1,11 @@
 #pragma once
+#include "../odom/pose.hpp"
 
 namespace devils
 {
-    struct ProfilePose : public PathPoint
+    struct ProfilePose : public Pose
     {
-        ProfilePose() : PathPoint()
-        {
-        }
-
-        ProfilePose(double x, double y, double rotation)
-            : PathPoint{x, y, rotation}
-        {
-        }
-
-        ProfilePose(double x, double y, double rotation, double enterDelta, double exitDelta, bool isReversed, std::vector<PathEvent> events)
-            : PathPoint{x, y, rotation, enterDelta, exitDelta, isReversed, events}
-        {
-        }
-
-        ProfilePose(PathPoint point)
-        {
-            x = point.x;
-            y = point.y;
-            rotation = point.rotation;
-            enterDelta = point.enterDelta;
-            exitDelta = point.exitDelta;
-            isReversed = point.isReversed;
-            events = point.events;
-        }
+        /// @brief True if the robot is reversed
+        bool isReversed = false;
     };
 }

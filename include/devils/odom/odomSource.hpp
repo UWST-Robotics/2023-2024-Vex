@@ -8,7 +8,6 @@ namespace devils
      */
     struct OdomSource
     {
-    public:
         /**
          * Gets the current pose of the robot
          * @return The current pose of the robot

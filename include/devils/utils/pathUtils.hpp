@@ -1,5 +1,5 @@
 #pragma once
-#include "../path/profilePose.hpp"
+#include "../odom/pose.hpp"
 #include "units.hpp"
 #include <cmath>
 
@@ -52,9 +52,9 @@ namespace devils
          * @param t The ratio between a and b. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static ProfilePose lerpPoints(ProfilePose a, ProfilePose b, double t)
+        static Pose lerpPoints(Pose a, Pose b, double t)
         {
-            return ProfilePose{
+            return Pose{
                 cubicLerp(a.x, b.x, t),
                 cubicLerp(a.y, b.y, t),
                 rotationLerp(a.rotation, b.rotation, t)};
@@ -68,10 +68,10 @@ namespace devils
          * @param t The ratio between a and c. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static ProfilePose quadraticLerpPoints(ProfilePose a, ProfilePose b, ProfilePose c, double t)
+        static Pose quadraticLerpPoints(Pose a, Pose b, Pose c, double t)
         {
-            ProfilePose ab = lerpPoints(a, b, t);
-            ProfilePose bc = lerpPoints(b, c, t);
+            Pose ab = lerpPoints(a, b, t);
+            Pose bc = lerpPoints(b, c, t);
             return lerpPoints(ab, bc, t);
         }
 
@@ -84,10 +84,10 @@ namespace devils
          * @param t The ratio between a and d. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static ProfilePose cubicLerpPoints(ProfilePose a, ProfilePose b, ProfilePose c, ProfilePose d, double t)
+        static Pose cubicLerpPoints(Pose a, Pose b, Pose c, Pose d, double t)
         {
-            ProfilePose abc = quadraticLerpPoints(a, b, c, t);
-            ProfilePose bcd = quadraticLerpPoints(b, c, d, t);
+            Pose abc = quadraticLerpPoints(a, b, c, t);
+            Pose bcd = quadraticLerpPoints(b, c, d, t);
             return lerpPoints(abc, bcd, t);
         }
     };

@@ -20,7 +20,7 @@ namespace devils
             lv_obj_del(textObject);
         }
 
-        void create(lv_obj_t *root)
+        void create(lv_obj_t *root) override
         {
             // Label Object
             textObject = lv_label_create(root, NULL);
@@ -42,7 +42,7 @@ namespace devils
             }
         }
 
-        void update()
+        void update() override
         {
             // Get Stats
             double batteryPercent = pros::battery::get_capacity();
@@ -141,9 +141,9 @@ namespace devils
         static constexpr int PADDING = 4;
 
         std::string additionalText = "";
-        lv_obj_t *textObject;
-        pros::Controller *controller;
-        AutoController *autoController;
-        OdomSource *odomSource;
+        lv_obj_t *textObject = nullptr;
+        pros::Controller *controller = nullptr;
+        AutoController *autoController = nullptr;
+        OdomSource *odomSource = nullptr;
     };
 }

@@ -14,17 +14,24 @@ namespace devils
     class ControlRenderer : public Renderer
     {
     public:
+        /**
+         * Creates a new control renderer with the autonomous controller
+         * @param controller The autonomous controller to use.
+         */
         ControlRenderer(AutoController *controller)
             : controller(controller)
         {
         }
 
+        /**
+         * Called when the renderer is destroyed.
+         */
         ~ControlRenderer()
         {
             lv_obj_del(pointObject);
         }
 
-        void create(lv_obj_t *root)
+        void create(lv_obj_t *root) override
         {
             pointObject = lv_obj_create(root, NULL);
             {
@@ -40,7 +47,7 @@ namespace devils
             }
         }
 
-        void update()
+        void update() override
         {
             if (controller->isFinished())
                 lv_obj_set_hidden(pointObject, true);

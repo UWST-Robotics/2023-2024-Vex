@@ -77,7 +77,7 @@ namespace devils
         /**
          * Forces the chassis to stop.
          */
-        void stop()
+        void stop() override
         {
             leftMotors.stop();
             rightMotors.stop();

@@ -10,7 +10,6 @@ namespace devils
      */
     struct IMotor
     {
-    public:
         /**
          * Runs the motor in voltage mode.
          * @param voltage The voltage to run the motor at, from -1 to 1.

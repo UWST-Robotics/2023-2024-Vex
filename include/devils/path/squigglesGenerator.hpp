@@ -74,9 +74,9 @@ namespace devils
                 devilsPoints.push_back({
                     Units::metersToIn(squigglesPoint.vector.pose.x),
                     Units::metersToIn(squigglesPoint.vector.pose.y),
-                    squigglesPoint.vector.pose.yaw,
-                    Units::metersToIn(squigglesPoint.wheel_velocities[0]),
-                    Units::metersToIn(squigglesPoint.wheel_velocities[1]),
+                    squigglesPoint.vector.pose.yaw
+                    // Units::metersToIn(squigglesPoint.wheel_velocities[0]),
+                    // Units::metersToIn(squigglesPoint.wheel_velocities[1]),
                 });
             }
             return devilsPoints;
@@ -95,11 +95,9 @@ namespace devils
             {
                 auto lastPoint = squigglesPoints.empty() ? squiggles::Pose{0, 0, 0} : squigglesPoints.back();
 
-                squigglesPoints.push_back({
-                    Units::inToMeters(devilPoint.x),
-                    Units::inToMeters(devilPoint.y),
-                    devilPoint.rotation,
-                });
+                squigglesPoints.push_back({Units::inToMeters(devilPoint.x),
+                                           Units::inToMeters(devilPoint.y),
+                                           devilPoint.rotation});
 
                 if (isReversed)
                     squigglesPoints.back().yaw -= M_PI;

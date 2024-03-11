@@ -3,12 +3,20 @@
 #include "pose.hpp"
 #include "../utils/logger.hpp"
 #include "odomSource.hpp"
+#include "../utils/units.hpp"
 
 namespace devils
 {
+    /**
+     * Represents a Vex V5 GPS as an odometry source
+     */
     class GPSOdometry : public OdomSource
     {
     public:
+        /**
+         * Initializes a Vex V5 GPS as an odometry source
+         * @param gpsPort The port of the GPS
+         */
         GPSOdometry(uint8_t gpsPort) : gps(gpsPort)
         {
             if (errno != 0)
@@ -21,12 +29,16 @@ namespace devils
         void update()
         {
             auto status = gps.get_status();
-            currentPose.x = status.x;
-            currentPose.y = status.y;
-            currentPose.rotation = status.yaw;
 
             if (status.yaw == PROS_ERR_F)
+            {
                 Logger::error("GPSOdometry: GPS update failed");
+                return;
+            }
+
+            currentPose.x = Units::metersToIn(status.x);
+            currentPose.y = Units::metersToIn(status.y);
+            currentPose.rotation = Units::degToRad(status.yaw);
         }
 
         /**
@@ -49,16 +61,6 @@ namespace devils
 
             if (status != 1)
                 Logger::error("GPSOdometry: GPS set position failed");
-        }
-
-        /**
-         * Returns true if the robot is out of bounds
-         * @return True if the robot is out of bounds
-         */
-        const bool isOutOfBounds()
-        {
-            // TODO: Check out of bounds
-            return false;
         }
 
     private:

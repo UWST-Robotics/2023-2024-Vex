@@ -1,6 +1,7 @@
 #pragma once
 #include "squiggles.hpp"
 #include "pros/rtos.hpp"
+#include "../odom/pose.hpp"
 
 namespace devils
 {
@@ -19,7 +20,7 @@ namespace devils
          * Gets the current target point of the controller.
          * @return The current target point of the controller.
          */
-        virtual const ProfilePose getTargetPose() = 0;
+        virtual const Pose getTargetPose() = 0;
 
         /**
          * Returns true if the controller has finished.
@@ -29,8 +30,21 @@ namespace devils
 
         /**
          * Sets the speed of the controller.
+         * @param speed The speed of the controller from 0 to 1.s
          */
-        virtual void setSpeed(double speed) = 0;
+        virtual void setSpeed(double speed)
+        {
+            this->speed = speed;
+        }
+
+        /**
+         * Gets the speed of the controller.
+         * @return The speed of the controller from 0 to 1.
+         */
+        virtual double getSpeed()
+        {
+            return speed;
+        }
 
         /**
          * Runs the controller as a PROS task.
@@ -42,5 +56,10 @@ namespace devils
                               { _run(); });
         }
         virtual void _run() = 0;
+
+    protected:
+        static constexpr double DEFAULT_SPEED = 0.5;
+
+        float speed = DEFAULT_SPEED;
     };
 }
