@@ -6,21 +6,21 @@
 namespace devils
 {
     /**
-     * Represents a system for controlling the robot chassis autonomously.
+     * Represents a stateful system for controlling the robot chassis autonomously.
      */
     struct AutoController
     {
         /**
-         * Gets a list of current events.
-         * @return List of current events.
+         * Gets the current control point of the controller.
+         * @return The current control point of the controller.
          */
-        virtual const std::vector<PathEvent> getCurrentEvents() = 0;
+        virtual PathPoint *getControlPoint() = 0;
 
         /**
-         * Gets the current target point of the controller.
+         * Gets the current target point of the controller, for debugging purposes.
          * @return The current target point of the controller.
          */
-        virtual const Pose getTargetPose() = 0;
+        virtual Pose *getTargetPose() = 0;
 
         /**
          * Returns true if the controller has finished.

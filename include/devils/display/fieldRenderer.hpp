@@ -14,8 +14,6 @@ namespace devils
     class FieldRenderer : public Renderer
     {
     public:
-        FieldRenderer() {}
-
         ~FieldRenderer()
         {
             lv_obj_del(boundingRect);

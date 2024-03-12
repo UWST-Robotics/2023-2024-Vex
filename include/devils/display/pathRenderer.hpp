@@ -1,5 +1,5 @@
 #pragma once
-#include "../path/motionProfile.hpp"
+#include "../path/generatedPath.hpp"
 #include "../utils/logger.hpp"
 #include "displayUtils.hpp"
 #include "renderer.hpp"
@@ -9,16 +9,20 @@
 namespace devils
 {
     /**
-     * Renderer that displays the robot's position.
+     * Renderer that displays the a robot's path.
      */
-    class MotionRenderer : public Renderer
+    class PathRenderer : public Renderer
     {
     public:
-        MotionRenderer(MotionProfile *motionProfile) : motionProfile(motionProfile)
+        /**
+         * Creates a new PathRenderer
+         * @param generatedPath The generated path to render
+         */
+        PathRenderer(GeneratedPath *generatedPath) : generatedPath(generatedPath)
         {
         }
 
-        ~MotionRenderer()
+        ~PathRenderer()
         {
             lv_obj_del(robotPath);
         }
@@ -26,8 +30,8 @@ namespace devils
         void create(lv_obj_t *root) override
         {
             // Get Path
-            auto profilePoints = motionProfile->getProfilePoints();
-            auto controlPoints = motionProfile->getControlPoints();
+            auto pathPoints = &generatedPath->pathPoints;
+            auto controlPoints = &generatedPath->controlPoints;
 
             // Calculate Offset
             double offsetX = DisplayUtils::DISPLAY_WIDTH / 2;
@@ -39,10 +43,10 @@ namespace devils
                 // Convert path to vector of points
                 static std::vector<lv_point_t> linePointVector;
                 linePointVector.clear();
-                for (int i = 0; i < profilePoints.size(); i++)
+                for (int i = 0; i < pathPoints->size(); i++)
                 {
-                    linePointVector.push_back({(short)(profilePoints[i].x * DisplayUtils::PX_PER_IN + offsetX),
-                                               (short)(profilePoints[i].y * DisplayUtils::PX_PER_IN + offsetY)});
+                    linePointVector.push_back({(short)(pathPoints->at(i).x * DisplayUtils::PX_PER_IN + offsetX),
+                                               (short)(pathPoints->at(i).y * DisplayUtils::PX_PER_IN + offsetY)});
                 }
 
                 // Create Line
@@ -62,7 +66,7 @@ namespace devils
     private:
         static constexpr float DT = 0.1;
 
-        MotionProfile *motionProfile;
+        GeneratedPath *generatedPath;
         lv_obj_t *robotPath;
     };
 }

@@ -30,7 +30,7 @@ namespace devils
          * @param pose The odometry pose to check.
          * @return True if the odometry pose is within the rectangle.
          */
-        bool contains(const Pose pose)
+        bool contains(Pose &pose)
         {
             return pose.x >= x && pose.x <= x + width && pose.y >= y && pose.y <= y + height;
         }

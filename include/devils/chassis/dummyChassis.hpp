@@ -10,6 +10,7 @@ namespace devils
 {
     /**
      * Represents a chassis that maintains a virtual position and orientation.
+     * This is useful for testing autonomous routines without a physical robot.
      */
     class DummyChassis : public BaseChassis, OdomSource
     {
@@ -17,7 +18,15 @@ namespace devils
         /**
          * Creates a new dummy chassis.
          */
-        DummyChassis() {}
+        DummyChassis() : updateTask([=]
+                                    { _update(); })
+        {
+        }
+
+        ~DummyChassis()
+        {
+            updateTask.remove();
+        }
 
         void move(double forward, double turn, double strafe = 0) override
         {
@@ -25,9 +34,30 @@ namespace devils
             turn = std::clamp(turn, -1.0, 1.0);
             strafe = std::clamp(strafe, -1.0, 1.0);
 
-            currentPose.x += (cos(currentPose.rotation) * forward + sin(currentPose.rotation) * strafe) * TRANSLATION_SPEED;
-            currentPose.y += (sin(currentPose.rotation) * forward + cos(currentPose.rotation) * strafe) * TRANSLATION_SPEED;
-            currentPose.rotation += turn * ROTATION_SPEED;
+            lastForward = forward;
+            lastTurn = turn;
+            lastStrafe = strafe;
+        }
+
+        /**
+         * PROS Task to update the position of the robot.
+         */
+        void _update()
+        {
+            while (true)
+            {
+                // Calculate Acceleration
+                currentAcceleration.x += (cos(currentPose.rotation) * lastForward + sin(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
+                currentAcceleration.y += (sin(currentPose.rotation) * lastForward + cos(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
+                currentAcceleration.rotation += lastTurn * ROTATION_ACCEL;
+                currentAcceleration = currentAcceleration * ACCEL_DECAY;
+
+                // Update Pose
+                currentPose = currentPose + currentAcceleration;
+
+                // Delay
+                pros::delay(20);
+            }
         }
 
         bool isHolonomic() override
@@ -35,22 +65,31 @@ namespace devils
             return false;
         }
 
-        void stop() override {}
+        void stop() override
+        {
+            move(0, 0);
+        }
 
-        void setPose(const Pose pose) override
+        void setPose(Pose &pose) override
         {
             currentPose = pose;
         }
 
-        const Pose getPose() override
+        Pose &getPose() override
         {
             return currentPose;
         }
 
     private:
-        static constexpr double TRANSLATION_SPEED = 4;
-        static constexpr double ROTATION_SPEED = 2;
+        static constexpr double TRANSLATION_ACCEL = 0.3;
+        static constexpr double ROTATION_ACCEL = 0.8;
+        static constexpr double ACCEL_DECAY = 0.8;
 
-        Pose currentPose;
+        pros::Task updateTask;
+        double lastForward = 0;
+        double lastTurn = 0;
+        double lastStrafe = 0;
+        Pose currentAcceleration = Pose();
+        Pose currentPose = Pose();
     };
 }

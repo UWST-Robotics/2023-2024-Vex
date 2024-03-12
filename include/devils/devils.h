@@ -19,7 +19,7 @@
 // Display
 #include "display/display.hpp"
 #include "display/odomRenderer.hpp"
-#include "display/motionRenderer.hpp"
+#include "display/pathRenderer.hpp"
 #include "display/controlRenderer.hpp"
 #include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
@@ -32,13 +32,14 @@
 #include "hardware/opticalSensor.hpp"
 
 // Odom
-#include "odom/tankWheelOdometry.hpp"
-#include "odom/dummyOdometry.hpp"
+#include "odom/pose.hpp"
+#include "odom/odomSource.hpp"
+#include "odom/mergedOdom.hpp"
+#include "odom/trackingWheelOdom.hpp"
+#include "odom/differentialWheelOdom.hpp"
 
 // Path
-#include "path/splineGenerator.hpp"
-#include "path/squigglesGenerator.hpp"
-#include "path/linearGenerator.hpp"
+#include "path/pathGenerator.hpp"
 
 // Game Object
 #include "gameobject/gameobject.hpp"
@@ -52,11 +53,9 @@
 // Systems
 #include "systems/blockerSystem.hpp"
 #include "systems/intakeSystem.hpp"
-#include "systems/actuateIntakeSystem.hpp"
 #include "systems/launcherSystem.hpp"
 #include "systems/wingSystem.hpp"
 #include "systems/climbSystem.hpp"
-#include "systems/ledSystem.hpp"
 
 // Utils
 #include "utils/curve.hpp"

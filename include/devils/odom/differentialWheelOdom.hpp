@@ -2,6 +2,7 @@
 #include "../chassis/tankChassis.hpp"
 #include "../hardware/imu.hpp"
 #include "../utils/logger.hpp"
+#include "../hardware/rotationSensor.hpp"
 #include "pose.hpp"
 #include "odomSource.hpp"
 #include "pros/rtos.hpp"
@@ -14,9 +15,9 @@
 namespace devils
 {
     /**
-     * Represents a tank wheel odometry system.
+     * Represents an odometry system using a set of differential wheels
      */
-    class TankWheelOdometry : public OdomSource
+    class DifferentialWheelOdometry : public OdomSource
     {
     public:
         /**
@@ -24,35 +25,29 @@ namespace devils
          * Position is calculated using the left and right encoder values.
          * @param wheelRadius The radius of the wheels in inches.
          * @param wheelBase The distance between the wheels in inches.
-         * @param ticksPerRevolution The number of ticks per revolution of the encoders.
          */
-        TankWheelOdometry(const double wheelRadius, const double wheelBase, const double ticksPerRevolution)
+        DifferentialWheelOdometry(const double wheelRadius,
+                                  const double wheelBase)
             : wheelRadius(wheelRadius),
-              wheelBase(wheelBase),
-              ticksPerRevolution(ticksPerRevolution)
+              wheelBase(wheelBase)
         {
-            this->currentPose.x = 0;
-            this->currentPose.y = 0;
-            this->currentPose.rotation = 0;
             lastUpdateTimestamp = pros::millis();
         }
 
         /**
-         * Updates the odometry.
-         * @param leftEncoder The left encoder ticks.
-         * @param rightEncoder The right encoder ticks.
-         * @param delta The time since the last update.
+         * Updates the odometry from the left and right rotational wheels.
+         * @param leftRotations The left wheel rotations.
+         * @param rightRotations The right wheel rotations.
          */
-        void update(const int leftEncoder, const int rightEncoder)
+        void update(int leftRotations, int rightRotations)
         {
-
             // Get Delta Time
             uint32_t deltaT = lastUpdateTimestamp - pros::millis();
             lastUpdateTimestamp = pros::millis();
 
             // Get Distance
-            double left = (leftEncoder / ticksPerRevolution) * 2 * M_PI * wheelRadius;
-            double right = (rightEncoder / ticksPerRevolution) * 2 * M_PI * wheelRadius;
+            double left = leftRotations * 2 * M_PI * wheelRadius;
+            double right = rightRotations * 2 * M_PI * wheelRadius;
 
             // Get Delta Distance
             double deltaLeft = left - lastLeft;
@@ -74,42 +69,59 @@ namespace devils
             currentPose.rotation += deltaRotation;
 
             // Update IMU
-            if (enableIMU)
-            {
-                double imuHeading = imu->getHeading();
-                if (imuHeading == PROS_ERR_F)
-                    Logger::error("TankWheelOdometry: Failed to update from IMU");
-                else
-                    currentPose.rotation = imuHeading;
-            }
+            _updateIMU();
         }
 
         /**
-         * Updates the odometry.
-         * @param chassis The chassis to update from.
+         * Updates the odometry from the left and right rotation sensors.
+         * @param leftSensor The left rotation sensor.
+         * @param rightSensor The right rotation sensor.
          */
-        void update(TankChassis *chassis)
+        void update(RotationSensor &leftSensor, RotationSensor &rightSensor)
         {
-            auto leftPosition = chassis->getLeftMotors()->getPosition();
-            auto rightPosition = chassis->getRightMotors()->getPosition();
+            double leftRotations = leftSensor.getAngle() / (2 * M_PI);
+            double rightRotations = rightSensor.getAngle() / (2 * M_PI);
+            update(leftRotations, rightRotations);
+        }
 
+        /**
+         * Updates the odometry from the left and right motor encoders of a tank chassis.
+         */
+        void update(TankChassis &chassis)
+        {
+            double leftPosition = chassis.getLeftMotors().getPosition();
+            double rightPosition = chassis.getRightMotors().getPosition();
             update(leftPosition, rightPosition);
+        }
+
+        /**
+         * Updates the rotation from an IMU specified in `useIMU`.
+         */
+        void _updateIMU()
+        {
+            if (imu == nullptr)
+                return;
+
+            double imuHeading = imu->getHeading();
+            if (imuHeading == PROS_ERR_F)
+                Logger::error("TankWheelOdometry: Failed to update from IMU");
+            else
+                currentPose.rotation = imuHeading;
         }
 
         /**
          * Enables the IMU for the odometry.
          * @param imu The IMU to use.
          */
-        void useIMU(IMU *imu)
+        void useIMU(IMU &imu)
         {
-            enableIMU = true;
-            this->imu = imu;
+            this->imu = &imu;
         }
 
         /**
          * Gets the current pose of the robot.
          */
-        const Pose getPose() override
+        Pose &getPose() override
         {
             return currentPose;
         }
@@ -118,25 +130,26 @@ namespace devils
          * Sets the current pose of the robot.
          * @param pose The pose to set the robot to.
          */
-        void setPose(Pose pose) override
+        void setPose(Pose &pose) override
         {
             currentPose = pose;
-            if (enableIMU)
+            if (imu != nullptr)
                 imu->setHeading(pose.rotation);
         }
 
     private:
         const double wheelRadius;
         const double wheelBase;
-        const double ticksPerRevolution;
 
-        Pose currentPose;
+        Pose currentPose = Pose();
         uint32_t lastUpdateTimestamp = 0;
+
         double lastLeft = 0;
         double lastRight = 0;
+        double lastVertical = 0;
+        double lastHorizontal = 0;
 
         // IMU
-        bool enableIMU = false;
-        IMU *imu;
+        IMU *imu = nullptr;
     };
 }

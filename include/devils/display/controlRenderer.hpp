@@ -55,8 +55,8 @@ namespace devils
             auto point = controller->getTargetPose();
             lv_obj_set_pos(
                 pointObject,
-                point.x * DisplayUtils::PX_PER_IN + OFFSET_X,
-                point.y * DisplayUtils::PX_PER_IN + OFFSET_Y);
+                point->x * DisplayUtils::PX_PER_IN + OFFSET_X,
+                point->y * DisplayUtils::PX_PER_IN + OFFSET_Y);
         }
 
     private:

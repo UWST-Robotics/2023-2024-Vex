@@ -45,7 +45,7 @@ namespace devils
          * Gets the current pose of the robot
          * @return The current pose of the robot
          */
-        const Pose getPose() override
+        Pose &getPose() override
         {
             return currentPose;
         }
@@ -55,7 +55,7 @@ namespace devils
          * @param pose The pose to set the robot to
          * @return The current pose of the robot
          */
-        void setPose(const Pose pose) override
+        void setPose(Pose &pose) override
         {
             int32_t status = gps.set_position(pose.x, pose.y, pose.rotation);
 
@@ -65,6 +65,6 @@ namespace devils
 
     private:
         pros::Gps gps;
-        Pose currentPose;
+        Pose currentPose = Pose(0, 0, 0);
     };
 }

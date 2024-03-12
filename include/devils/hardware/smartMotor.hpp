@@ -18,7 +18,7 @@ namespace devils
          * @param name The name of the motor (for logging purposes)
          * @param port The port of the motor (from 1 to 21)
          */
-        SmartMotor(std::string name, const int8_t port)
+        SmartMotor(std::string name, int8_t port)
             : name(name),
               motor(port),
               voltageRamp(100000)
@@ -31,7 +31,7 @@ namespace devils
          * Runs the motor in voltage mode.
          * @param voltage The voltage to run the motor at, from -1 to 1.
          */
-        void moveVoltage(const double voltage) override
+        void moveVoltage(double voltage) override
         {
             // Move Motor
             int32_t status = motor.move(voltageRamp.update(voltage) * 127);
@@ -44,7 +44,7 @@ namespace devils
          * Sets the ramp rate of the motor.
          * @param rampRate The ramp rate of the motor from 0 to 2.
          */
-        void setRampRate(const double rampRate)
+        void setRampRate(double rampRate)
         {
             voltageRamp.setRampRate(rampRate);
         }
@@ -67,7 +67,7 @@ namespace devils
          * + 300 ticks/rev with 6:1 gears (blue cartridge)
          * @return The current position of the motor in encoder ticks.
          */
-        const double getPosition() override
+        double getPosition() override
         {
             double position = motor.get_position();
             if (position == PROS_ERR_F && LOGGING_ENABLED)
@@ -78,7 +78,7 @@ namespace devils
         /**
          * Returns the current speed of the motor in RPM.
          */
-        const double getSpeed() override
+        double getSpeed() override
         {
             double velocity = motor.get_actual_velocity();
             if (velocity == PROS_ERR_F && LOGGING_ENABLED)

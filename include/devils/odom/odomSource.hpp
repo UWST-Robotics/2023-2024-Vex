@@ -12,12 +12,12 @@ namespace devils
          * Gets the current pose of the robot
          * @return The current pose of the robot
          */
-        virtual const Pose getPose() = 0;
+        virtual Pose &getPose() = 0;
 
         /**
          * Sets the current pose of the robot
          * @param pose The pose to set the robot to
          */
-        virtual void setPose(const Pose pose) = 0;
+        virtual void setPose(Pose &pose) = 0;
     };
 }

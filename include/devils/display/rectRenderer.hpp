@@ -15,6 +15,10 @@ namespace devils
     class RectRenderer : public Renderer
     {
     public:
+        /**
+         * Creates a new RectRenderer
+         * @param rectangle The rectangle to render
+         */
         RectRenderer(Rect *rectangle) : rect(rectangle)
         {
         }

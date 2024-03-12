@@ -21,7 +21,7 @@ namespace devils
         }
 
         /**
-         * Forces the robot to climb at the end of the match.
+         * Forces the robot to climb after the elapsed time.
          */
         void autoClimb()
         {
@@ -42,6 +42,7 @@ namespace devils
 
         /**
          * Retracts the blocker.
+         * @param climb Whether or not the robot should climb.
          */
         void retract(bool climb = false)
         {

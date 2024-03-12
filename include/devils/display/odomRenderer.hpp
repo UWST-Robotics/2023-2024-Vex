@@ -14,6 +14,10 @@ namespace devils
     class OdomRenderer : public Renderer
     {
     public:
+        /**
+         * Creates a new OdomRenderer
+         * @param odomSource The odometry source to render
+         */
         OdomRenderer(OdomSource *odomSource) : odomSource(odomSource)
         {
         }
@@ -71,7 +75,7 @@ namespace devils
         void update() override
         {
             // Pose
-            Pose pose = odomSource->getPose();
+            auto pose = odomSource->getPose();
 
             // Object
             lv_obj_set_pos(

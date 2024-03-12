@@ -16,7 +16,7 @@ namespace devils
          * @param name The name of the motor group (for logging purposes)
          * @param ports The ports of the motors in the group (from 1 to 21)
          */
-        SmartMotorGroup(const std::string name, const std::initializer_list<int8_t> ports)
+        SmartMotorGroup(std::string name, std::initializer_list<int8_t> ports)
             : name(name), motors()
         {
             motors.reserve(ports.size());
@@ -28,7 +28,7 @@ namespace devils
          * Runs all the motors in voltage mode.
          * @param voltage The voltage to run the motors at, from -1 to 1.
          */
-        void moveVoltage(const double voltage) override
+        void moveVoltage(double voltage) override
         {
             for (auto motor : motors)
                 motor->moveVoltage(voltage);
@@ -38,7 +38,7 @@ namespace devils
          * Sets the ramp rate of the motor group.
          * @param rampRate The max change in motor value per second.
          */
-        void setRampRate(const double rampRate)
+        void setRampRate(double rampRate)
         {
             for (auto motor : motors)
                 motor->setRampRate(rampRate);
@@ -57,7 +57,7 @@ namespace devils
          * Gets the average position of all the motors in encoder ticks.
          * @return The average position of all the motors in encoder ticks.
          */
-        const double getPosition() override
+        double getPosition() override
         {
             double position = 0;
             for (auto motor : motors)
@@ -69,7 +69,7 @@ namespace devils
          * Returns the average speed of all the motors in RPM.
          * @return The average speed of all the motors in RPM.
          */
-        const double getSpeed() override
+        double getSpeed() override
         {
             double speed = 0;
             for (auto motor : motors)
@@ -80,7 +80,7 @@ namespace devils
         /**
          * Gets the name of each motor in the motor group.
          */
-        const std::string _getMotorName(int32_t port)
+        std::string _getMotorName(int32_t port)
         {
             return name + "_" + std::to_string(port);
         }

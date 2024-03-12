@@ -22,19 +22,19 @@ namespace devils
         }
 
         /**
-         * Extends (if AUTO_EXTEND) and runs the intake wheels.
-         * Stops if the Optical Sensor detects a triball.
+         * Runs the intake wheels automatically using the Optical Sensor.
          */
         void autoIntake()
         {
             if (enableSensor && sensor->getProximity() > SENSOR_THRESHOLD)
                 intake(SENSOR_SPEED);
             else
-                stop();
+                intake();
         }
 
         /**
-         * Extends (if AUTO_EXTEND) and runs the intake, regardless of the Optical Sensor.
+         * Runs the intake wheels.
+         * @param value The speed of the intake wheels (-1 to 1)
          */
         void intake(double value = WHEEL_SPEED)
         {
@@ -44,7 +44,7 @@ namespace devils
         }
 
         /**
-         * Extends (if AUTO_EXTEND) and runs the intake in reverse.
+         * Runs the intake in reverse.
          */
         void outtake()
         {

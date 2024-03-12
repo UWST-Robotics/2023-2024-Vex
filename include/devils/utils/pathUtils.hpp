@@ -52,7 +52,7 @@ namespace devils
          * @param t The ratio between a and b. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose lerpPoints(Pose a, Pose b, double t)
+        static Pose lerpPoints(Pose &a, Pose &b, double t)
         {
             return Pose{
                 cubicLerp(a.x, b.x, t),
@@ -68,7 +68,7 @@ namespace devils
          * @param t The ratio between a and c. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose quadraticLerpPoints(Pose a, Pose b, Pose c, double t)
+        static Pose quadraticLerpPoints(Pose &a, Pose &b, Pose &c, double t)
         {
             Pose ab = lerpPoints(a, b, t);
             Pose bc = lerpPoints(b, c, t);
@@ -84,7 +84,7 @@ namespace devils
          * @param t The ratio between a and d. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose cubicLerpPoints(Pose a, Pose b, Pose c, Pose d, double t)
+        static Pose cubicLerpPoints(Pose &a, Pose &b, Pose &c, Pose &d, double t)
         {
             Pose abc = quadraticLerpPoints(a, b, c, t);
             Pose bcd = quadraticLerpPoints(b, c, d, t);

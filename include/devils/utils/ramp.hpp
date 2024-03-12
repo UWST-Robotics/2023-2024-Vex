@@ -15,7 +15,7 @@ namespace devils
          * @param maxPerSecond The maximum change in the ramp per second.
          * @param current The default value of the ramp.
          */
-        Ramp(const double maxPerSecond)
+        Ramp(double maxPerSecond)
             : lastTimestamp(1),
               maxPerSecond(maxPerSecond),
               current(0)
@@ -27,7 +27,7 @@ namespace devils
          * @param target The target value to ramp to.
          * @return The current value of the ramp.
          */
-        double update(const double target)
+        double update(double target)
         {
             // Update Timestamp
             uint32_t timestamp = pros::millis();

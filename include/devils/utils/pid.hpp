@@ -17,9 +17,9 @@ namespace devils
          * @param iGain The integral constant.
          * @param dGain The derivative constant.
          */
-        PID(const double pGain,
-            const double iGain,
-            const double dGain)
+        PID(double pGain,
+            double iGain,
+            double dGain)
             : pGain(pGain),
               iGain(iGain),
               dGain(dGain)
@@ -34,7 +34,7 @@ namespace devils
          * @param currentError The current distance from the goal.
          * @return The output of the PID controller.
          */
-        const double update(const double currentError)
+        double update(double currentError)
         {
             // Get Delta Time
             double currentTime = _getCurrentTime();
@@ -64,8 +64,6 @@ namespace devils
         }
 
     private:
-        // std::Timer timer;
-
         constexpr static double MIN_DELTA_TIME = 20;
 
         const double pGain;

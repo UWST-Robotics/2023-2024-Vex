@@ -17,6 +17,10 @@ namespace devils
     class GameObjectRenderer : public Renderer
     {
     public:
+        /**
+         * Creates a new GameObjectRenderer
+         * @param gameObjects The game objects to render
+         */
         GameObjectRenderer(std::vector<GameObject> *gameObjects) : gameObjects(gameObjects)
         {
         }

@@ -38,8 +38,8 @@ namespace devils
 
         /**
          * Runs the chassis in voltage mode with individual control of the left and right sides.
-         * @param left The voltage to run the left side of the chassis.
-         * @param right The voltage to run the right side of the chassis.
+         * @param left The speed to run the left side of the chassis from -1 to 1.
+         * @param right The speed to run the right side of the chassis from -1 to 1.
          */
         void moveTank(double left, double right)
         {
@@ -60,18 +60,18 @@ namespace devils
          * Gets the left motor group.
          * @return The left motor group.
          */
-        SmartMotorGroup *getLeftMotors()
+        SmartMotorGroup &getLeftMotors()
         {
-            return &leftMotors;
+            return leftMotors;
         }
 
         /**
          * Gets the right motor group.
          * @return The right motor group.
          */
-        SmartMotorGroup *getRightMotors()
+        SmartMotorGroup &getRightMotors()
         {
-            return &rightMotors;
+            return rightMotors;
         }
 
         /**

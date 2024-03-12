@@ -80,14 +80,14 @@ namespace devils
             // Auto Controller
             if (autoController != nullptr)
             {
-                auto events = autoController->getCurrentEvents();
+                auto &events = autoController->getControlPoint()->events;
                 stream << "\n";
                 stream << "Events: \n";
                 for (auto event : events)
                 {
                     stream << event.name;
                     if (event.params.size() > 0)
-                        stream << " #aaaaaa (" << event.params << ")#";
+                        stream << DisplayUtils::colorText(" (" + event.params + ")", "#aaaaaa");
                     stream << "\n";
                 }
             }

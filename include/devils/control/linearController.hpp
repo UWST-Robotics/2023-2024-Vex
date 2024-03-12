@@ -1,6 +1,6 @@
 #pragma once
 #include "../chassis/chassis.hpp"
-#include "../path/motionProfile.hpp"
+#include "../path/generatedPath.hpp"
 #include "autoController.hpp"
 #include "pros/rtos.hpp"
 #include "../utils/pid.hpp"
@@ -19,76 +19,40 @@ namespace devils
         /**
          * Constructs a new LinearController.
          * @param chassis The chassis to control.
-         * @param motionProfile The motion profile to follow.
+         * @param generatedPath The generated path to follow.
+         * @param odometry The odometry source to use.
          */
-        LinearController(BaseChassis &chassis, MotionProfile &motionProfile, OdomSource &odometry)
-            : chassis(chassis), motionProfile(motionProfile), odometry(odometry)
+        LinearController(BaseChassis &chassis, GeneratedPath &generatedPath, OdomSource &odometry)
+            : chassis(chassis), generatedPath(generatedPath), odometry(odometry)
         {
         }
 
-        /**
-         * Gets list of current events.
-         * @return List of current events.
-         */
-        const std::vector<PathEvent> getCurrentEvents()
+        PathPoint *getControlPoint() override
         {
-            auto controlPoints = motionProfile.getControlPoints();
-            if (currentIndex > controlPoints.size() || currentIndex <= 0)
-                return {};
-            return controlPoints[currentIndex - 1].events;
+            if (currentIndex > generatedPath.controlPoints.size() || currentIndex <= 0)
+                return nullptr;
+            return &generatedPath.controlPoints[currentIndex - 1];
         }
 
-        /**
-         * Gets the current index of the motion profile.
-         * @return The current index of the motion profile.
-         */
-        const int getCurrentIndex()
+        Pose *getTargetPose() override
         {
-            return currentIndex;
+            if (currentIndex >= generatedPath.controlPoints.size() || currentIndex < 0)
+                return nullptr;
+            return &generatedPath.controlPoints[currentIndex];
         }
 
-        /**
-         * Returns the current point of the motion profile.
-         * @return The current point of the motion profile.
-         */
-        const Pose getTargetPose() override
-        {
-            auto controlPoints = motionProfile.getControlPoints();
-            if (currentIndex >= controlPoints.size() || currentIndex < 0)
-                return Pose();
-            return controlPoints[currentIndex];
-        }
-
-        /**
-         * Resets the motion profile from the beginning.
-         */
-        void reset()
-        {
-            isReversed = false;
-            currentIndex = 1;
-            lastCheckpointTime = pros::millis();
-        }
-
-        /**
-         * Returns true if the controller has finished.
-         * @return True if the controller has finished.
-         */
         bool isFinished() override
         {
-            return currentIndex >= motionProfile.getControlPoints().size();
+            return currentIndex >= generatedPath.controlPoints.size();
         }
 
-        /**
-         * Updates the chassis based on the current point of the motion profile.
-         * Also updates the chassis input.
-         */
         void _run() override
         {
             // Reset
             reset();
 
             // Get Path
-            auto controlPoints = motionProfile.getControlPoints();
+            auto &controlPoints = generatedPath.controlPoints;
 
             // Loop
             while (true)
@@ -101,7 +65,7 @@ namespace devils
                 bool skipCheckpoint = timeSinceLastCheckpoint > CHECKPOINT_TIMEOUT && CHECKPOINT_TIMEOUT > 0;
 
                 // Calculate Point
-                auto point = controlPoints[currentIndex];
+                auto &point = controlPoints[currentIndex];
                 double distanceSquared = pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2);
 
                 // Check within trigger range
@@ -115,7 +79,7 @@ namespace devils
                 }
 
                 // Get Current Point
-                auto currentPoint = controlPoints[currentIndex % controlPoints.size()];
+                auto &currentPoint = controlPoints[currentIndex % controlPoints.size()];
 
                 // Calculate direction of travel
                 double deltaX = currentPoint.x - currentPose.x;
@@ -162,6 +126,16 @@ namespace devils
         }
 
         /**
+         * Resets the path from the beginning.
+         */
+        void reset()
+        {
+            isReversed = false;
+            currentIndex = 1;
+            lastCheckpointTime = pros::millis();
+        }
+
+        /**
          * Pauses the chassis movement
          */
         void pause()
@@ -187,7 +161,7 @@ namespace devils
 
         // Members
         BaseChassis &chassis;
-        MotionProfile &motionProfile;
+        GeneratedPath &generatedPath;
         OdomSource &odometry;
         int currentIndex = 1; // Current control point driving towards
         double lastCheckpointTime = 0;

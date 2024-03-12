@@ -1,11 +1,10 @@
 #pragma once
 #include "../chassis/chassis.hpp"
-#include "../path/motionProfile.hpp"
+#include "../path/generatedPath.hpp"
 #include "../path/pathFile.hpp"
 #include "../odom/odomSource.hpp"
 #include "../utils/logger.hpp"
 #include "../utils/curve.hpp"
-#include "../path/profilePose.hpp"
 #include "../utils/pid.hpp"
 #include "autoController.hpp"
 #include <cmath>
@@ -14,7 +13,7 @@
 namespace devils
 {
     /**
-     * Controller for follwing a motion profile with sensor feedback using Basic Pure Pursuit.
+     * Controller for follwing a path with sensor feedback using Basic Pure Pursuit.
      */
     class PursuitController : public AutoController
     {
@@ -22,11 +21,24 @@ namespace devils
         /**
          * Constructs a new PursuitController.
          * @param chassis The chassis to control.
-         * @param motionProfile The motion profile to follow.
+         * @param generatedPath The generated path to follow.
+         * @param odometry The odometry source to use.
          */
-        PursuitController(BaseChassis &chassis, MotionProfile &motionProfile, OdomSource &odometry)
-            : chassis(chassis), motionProfile(motionProfile), odometry(odometry)
+        PursuitController(BaseChassis &chassis, GeneratedPath &generatedPath, OdomSource &odometry)
+            : chassis(chassis), generatedPath(generatedPath), odometry(odometry)
         {
+        }
+
+        /**
+         * Gets list of current events.
+         * @return List of current events.
+         */
+        PathPoint *getControlPoint() override
+        {
+            auto &controlPoints = generatedPath.controlPoints;
+            if (controlPointIndex >= controlPoints.size() || controlPointIndex < 0)
+                return nullptr;
+            return &controlPoints[controlPointIndex];
         }
 
         /**
@@ -34,34 +46,13 @@ namespace devils
          * Controller tries to choose LOOKAHEAD_DISTANCE inches ahead of the robot.
          * @return The current target point of the motion profile.
          */
-        const Pose getTargetPose() override
+        Pose *getTargetPose() override
         {
-            if (!motionProfile.isGenerated())
-                return Pose();
+            if (!generatedPath.isGenerated())
+                return nullptr;
 
-            auto allPoints = motionProfile.getProfilePoints();
-            return allPoints[pathPointIndex];
-        }
-
-        /**
-         * Restarts the motion profile from the beginning.
-         */
-        void reset()
-        {
-            pathPointIndex = 0;
-            odometry.setPose(motionProfile.getStartingPose());
-        }
-
-        /**
-         * Gets list of current events.
-         * @return List of current events.
-         */
-        const std::vector<PathEvent> getCurrentEvents() override
-        {
-            auto controlPoints = motionProfile.getControlPoints();
-            if (controlPointIndex >= controlPoints.size() || controlPointIndex < 0)
-                return {};
-            return controlPoints[controlPointIndex].events;
+            auto &pathPoints = generatedPath.pathPoints;
+            return &pathPoints[pathPointIndex];
         }
 
         /**
@@ -71,9 +62,9 @@ namespace devils
         void _run() override
         {
             // Get Current Pose
-            auto controlPoints = motionProfile.getControlPoints();
-            auto profilePoints = motionProfile.getProfilePoints();
-            auto lastPoint = profilePoints.back();
+            auto &controlPoints = generatedPath.controlPoints;
+            auto &pathPoints = generatedPath.pathPoints;
+            auto &lastPoint = pathPoints.back();
 
             while (!hasFinished)
             {
@@ -90,9 +81,9 @@ namespace devils
 
                 // Update Path Point Index
                 double closestDistance = 100000;
-                for (int i = pathPointIndex; i < profilePoints.size(); i++)
+                for (int i = pathPointIndex; i < pathPoints.size(); i++)
                 {
-                    auto point = profilePoints[i];
+                    auto point = pathPoints[i];
                     double distance = abs(LOOKAHEAD_DISTANCE - sqrt(pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2)));
                     if (distance < closestDistance)
                     {
@@ -113,42 +104,23 @@ namespace devils
                 }
 
                 // Get Current Point
-                auto currentPathPoint = profilePoints[pathPointIndex];
+                auto targetPose = getTargetPose();
+                auto controlPoint = getControlPoint();
 
-                // Calculate Forward & Turn
-                double deltaX = currentPathPoint.x - currentPose.x;
-                double deltaY = currentPathPoint.y - currentPose.y;
-                double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
-                double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
-
-                // Handle Reversed
-                if (currentPathPoint.isReversed)
-                    deltaRotation = Units::diffRad(deltaRotation, M_PI);
-
-                // Calculate PID
-                double forward = translationPID.update(deltaForward);
-                double turn = rotationPID.update(deltaRotation);
-
-                // Clamp Values
-                forward = Curve::clamp(-1.0, 1.0, forward) * speed;
-                turn = Curve::clamp(-1.0, 1.0, turn) * speed;
-
-                // Prevent Sparatic Rotation
-                // if (abs(deltaForward) < DISABLE_ROTATION_RANGE)
-                //    turn = 0;
-                // else if (abs(deltaRotation) > DISABLE_ACCEL_RANGE)
-                //    forward = 0;
+                // Drive To Point
+                driveTowards(*targetPose, controlPoint->isReversed);
 
                 // Handle Finish
                 bool withinRangeOfLastPoint = pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2) < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE;
-                bool lookingAtLastPoint = pathPointIndex == profilePoints.size() - 1;
+                bool lookingAtLastPoint = pathPointIndex == pathPoints.size() - 1;
                 if (withinRangeOfLastPoint && lookingAtLastPoint)
                     hasFinished = true;
 
-                // Execute
-                chassis.move(forward, turn);
                 pros::delay(20);
             }
+
+            // Stop
+            chassis.stop();
         }
 
         /**
@@ -160,18 +132,63 @@ namespace devils
             return hasFinished;
         }
 
-    private:
-        static constexpr int LOOKAHEAD_MAX_INDICES = 10;
-        static constexpr double LOOKAHEAD_DISTANCE = 4.0;        // in
-        static constexpr double EVENT_TRIGGER_RANGE = 6;         // in
-        static constexpr double DISABLE_ROTATION_RANGE = 3.0;    // in
-        static constexpr double DISABLE_ACCEL_RANGE = M_PI / 10; // rads
+        /**
+         * Restarts the motion profile from the beginning.
+         */
+        void reset()
+        {
+            pathPointIndex = 0;
+            auto startingPose = generatedPath.getStartingPose();
+            if (startingPose != nullptr)
+                odometry.setPose(*startingPose);
+        }
 
-        PID translationPID = PID(0.1, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
+        /**
+         * Drives the robot towards the target point.
+         * @param targetPose The target point to drive towards.
+         * @param isReversed Whether the robot is driving in reverse.
+         */
+        void driveTowards(Pose &targetPose, bool isReversed = false)
+        {
+            // Get Current Pose
+            auto currentPose = odometry.getPose();
+
+            // Calculate Forward & Turn
+            double deltaX = (targetPose.x - currentPose.x) / LOOKAHEAD_DISTANCE;
+            double deltaY = (targetPose.y - currentPose.y) / LOOKAHEAD_DISTANCE;
+            double normal = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+            double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
+            double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
+
+            // Handle Reversed
+            if (isReversed)
+                deltaRotation = Units::diffRad(deltaRotation, M_PI);
+
+            // Calculate PID
+            double forward = translationPID.update(deltaForward);
+            double turn = rotationPID.update(deltaRotation);
+
+            // Clamp Values
+            if (isReversed)
+                forward = Curve::clamp(-1.0, 0.0, forward) * speed;
+            else
+                forward = Curve::clamp(0.0, 1.0, forward) * speed;
+            turn = Curve::clamp(-1.0, 1.0, turn) * speed * normal;
+
+            // Drive
+            chassis.move(forward, turn);
+        }
+
+    private:
+        static constexpr int LOOKAHEAD_MAX_INDICES = 15;
+        static constexpr double LOOKAHEAD_DISTANCE = 6.0; // in
+        static constexpr double EVENT_TRIGGER_RANGE = 6;  // in
+
+        PID translationPID = PID(5.0, 0, 0); // <-- Translation
+        PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
 
         BaseChassis &chassis;
-        MotionProfile &motionProfile;
+        GeneratedPath &generatedPath;
         OdomSource &odometry;
         int pathPointIndex = 0;    // Closest index of the lookahead point
         int controlPointIndex = 0; // Current index of the event

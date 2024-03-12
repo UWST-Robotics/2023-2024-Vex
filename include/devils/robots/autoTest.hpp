@@ -14,19 +14,15 @@ namespace devils
          */
         AutoTest()
             : controller(pros::E_CONTROLLER_MASTER),
-              linearGenerator(motionProfile),
-              autoController(chassis, motionProfile, odometry),
-              motionRenderer(&motionProfile),
+              generatedPath(PathGenerator::generateLinear()),
+              autoController(chassis, generatedPath, odometry),
+              pathRenderer(&generatedPath),
               odomRenderer(&odometry),
               rectRenderer(&autonomousArea),
               gameObjectRenderer(&knownGameObjects),
               controlRenderer(&autoController),
-              teleopDisplay({&motionRenderer, &fieldRenderer, &odomRenderer, &controlRenderer, &gameObjectRenderer, &rectRenderer, &statsRenderer})
+              teleopDisplay({&pathRenderer, &fieldRenderer, &odomRenderer, &controlRenderer, &gameObjectRenderer, &rectRenderer, &statsRenderer})
         {
-            // Motion Profile
-            auto generator = LinearGenerator();
-            generator.generate(&motionProfile);
-
             // Add Stats
             statsRenderer.useOdomSource(&odometry);
             statsRenderer.useController(&controller);
@@ -43,7 +39,7 @@ namespace devils
 
         void opcontrol() override
         {
-            chassis.setPose(motionProfile.getStartingPose());
+            chassis.setPose(*generatedPath.getStartingPose());
 
             // Generate random test objects
             knownGameObjects.clear();
@@ -59,14 +55,15 @@ namespace devils
             while (true)
             {
                 // Handle Events
-                auto currentEvents = autoController.getCurrentEvents();
+                auto controlPoint = autoController.getControlPoint();
+                auto &currentEvents = controlPoint->events;
                 for (int i = 0; i < currentEvents.size(); i++)
                 {
-                    auto currentEvent = currentEvents[i];
-                    Logger::info("Event: " + currentEvent.name);
+                    auto &currentEvent = currentEvents[i];
+                    // Logger::info("Event: " + currentEvent.name);
 
-                    if (currentEvent.name == "pause" || currentEvent.name == "wack")
-                        pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
+                    // if (currentEvent.name == "pause" || currentEvent.name == "wack")
+                    //     pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                 }
 
                 // Check For Fast/Slow
@@ -74,7 +71,7 @@ namespace devils
                 bool isSlow = false;
                 for (int i = 0; i < currentEvents.size(); i++)
                 {
-                    auto currentEvent = currentEvents[i];
+                    auto &currentEvent = currentEvents[i];
                     if (currentEvent.name == "fast")
                         isFast = true;
                     else if (currentEvent.name == "slow")
@@ -122,8 +119,7 @@ namespace devils
         OdomSource &odometry = (OdomSource &)chassis;
 
         // Autonomous
-        MotionProfile motionProfile;
-        LinearGenerator linearGenerator;
+        GeneratedPath generatedPath;
         PursuitController autoController;
         std::vector<GameObject> knownGameObjects;
 
@@ -131,7 +127,7 @@ namespace devils
         pros::Controller controller;
 
         // Display
-        MotionRenderer motionRenderer;
+        PathRenderer pathRenderer;
         FieldRenderer fieldRenderer;
         OdomRenderer odomRenderer;
         ControlRenderer controlRenderer;

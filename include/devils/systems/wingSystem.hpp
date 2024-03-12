@@ -20,6 +20,9 @@ namespace devils
         {
         }
 
+        /**
+         * Automatically extends and retracts the left wing on a timer.
+         */
         void autoExtendLeft()
         {
             // Arm
@@ -38,6 +41,9 @@ namespace devils
             }
         }
 
+        /**
+         * Automatically extends and retracts the right wing on a timer.
+         */
         void autoExtendRight()
         {
             // Arm

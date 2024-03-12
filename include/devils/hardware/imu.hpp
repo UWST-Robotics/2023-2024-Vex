@@ -21,7 +21,8 @@ namespace devils
             : name(name),
               imu(port)
         {
-            imu.reset(true);
+            if (CALIBRATE_ON_START)
+                imu.reset(true);
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": imu port is invalid");
         }
@@ -73,6 +74,7 @@ namespace devils
         }
 
     private:
+        static constexpr bool CALIBRATE_ON_START = false;
         static constexpr bool LOGGING_ENABLED = true;
 
         double headingOffset = 0;
