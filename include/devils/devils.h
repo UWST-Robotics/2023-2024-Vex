@@ -25,6 +25,7 @@
 #include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
 #include "display/rectRenderer.hpp"
+#include "display/polygonRenderer.hpp"
 #include "display/gameObjectRenderer.hpp"
 #include "display/statsRenderer.hpp"
 
@@ -43,7 +44,8 @@
 #include "path/pathGenerator.hpp"
 
 // Game Object
-#include "gameobject/gameobject.hpp"
+#include "gameobject/gameObject.hpp"
+#include "gameobject/gameObjectManager.hpp"
 
 // Pros
 #include "api.h"

@@ -3,9 +3,9 @@
 #include "../utils/logger.hpp"
 #include "../utils/units.hpp"
 #include "../control/autoController.hpp"
-#include "../gameobject/gameobject.hpp"
+#include "../gameobject/gameObjectManager.hpp"
 #include "../display/displayUtils.hpp"
-#include "../utils/rect.hpp"
+#include "../utils/polygon.hpp"
 #include <cmath>
 #include <string>
 
@@ -21,7 +21,7 @@ namespace devils
          * Creates a new GameObjectRenderer
          * @param gameObjects The game objects to render
          */
-        GameObjectRenderer(std::vector<GameObject> *gameObjects) : gameObjects(gameObjects)
+        GameObjectRenderer(GameObjectManager &gameObjectManager) : gameObjectManager(gameObjectManager)
         {
         }
 
@@ -32,12 +32,12 @@ namespace devils
         }
 
         /**
-         * Highlights all gameobjects within the rectangle
-         * @param rect The rectangle to highlight
+         * Highlights all gameobjects within the area
+         * @param polygon The area to highlight
          */
-        void useRect(Rect *rect)
+        void useArea(Polygon *polygon)
         {
-            highlightRect = rect;
+            highlightArea = polygon;
         }
 
         void create(lv_obj_t *root) override
@@ -58,6 +58,7 @@ namespace devils
             gameObjectDisabledStyle.body.radius = 1;
 
             // Create game object renderers
+            auto gameObjects = gameObjectManager.getGameObjects();
             for (int i = 0; i < gameObjects->size(); i++)
             {
                 lv_obj_t *objectRenderer = lv_obj_create(root, NULL);
@@ -69,7 +70,7 @@ namespace devils
                     lv_obj_set_pos(objectRenderer, x, y);
 
                     // Conditional Style
-                    bool outsideRectangle = highlightRect != nullptr && !highlightRect->contains(gameObjects->at(i));
+                    bool outsideRectangle = highlightArea != nullptr && !highlightArea->contains(gameObjects->at(i));
                     if (outsideRectangle)
                         lv_obj_set_style(objectRenderer, &gameObjectDisabledStyle);
                     else
@@ -82,6 +83,7 @@ namespace devils
 
         void update() override
         {
+            auto gameObjects = gameObjectManager.getGameObjects();
             if (gameObjects->size() != objectRenderers.size() && rootObject != nullptr)
             {
                 // Regenerate renderers
@@ -99,8 +101,8 @@ namespace devils
         static constexpr int OFFSET_Y = (DisplayUtils::DISPLAY_HEIGHT - OBJ_HEIGHT) / 2;
 
         lv_obj_t *rootObject = nullptr;
-        Rect *highlightRect = nullptr;
-        std::vector<GameObject> *gameObjects;
+        Polygon *highlightArea = nullptr;
+        GameObjectManager &gameObjectManager;
         std::vector<lv_obj_t *> objectRenderers;
     };
 }

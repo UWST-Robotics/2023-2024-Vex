@@ -2,12 +2,13 @@
 #include "../chassis/chassis.hpp"
 #include "../path/generatedPath.hpp"
 #include "autoController.hpp"
-#include "../gameobject/gameobject.hpp"
+#include "../gameobject/gameObjectManager.hpp"
 #include "pros/rtos.hpp"
 #include "../utils/pid.hpp"
 #include "../utils/curve.hpp"
 #include "../odom/odomSource.hpp"
 #include "../hardware/opticalSensor.hpp"
+#include "../utils/polygon.hpp"
 
 namespace devils
 {
@@ -34,10 +35,10 @@ namespace devils
          * @param gameObjects The game objects to collect.
          * @param goalPose The pose to return to after collecting the game objects.
          */
-        CollectionController(BaseChassis &chassis, OdomSource &odometry, std::vector<GameObject> &gameObjects)
+        CollectionController(BaseChassis &chassis, OdomSource &odometry, GameObjectManager &gameObjectManager)
             : chassis(chassis),
               odometry(odometry),
-              gameObjects(gameObjects)
+              gameObjectManager(gameObjectManager)
         {
         }
 
@@ -74,12 +75,21 @@ namespace devils
 
             // Get the closest object
             auto currentPose = odometry.getPose();
+            auto gameObjects = gameObjectManager.getGameObjects();
+
             double closestDistance = INT_MAX;
-            for (auto &object : gameObjects)
+            currentObject = nullptr;
+            for (auto &object : *gameObjects)
             {
+                // Calculate Distance
                 auto distance = object.distanceTo(currentPose);
                 if (distance < closestDistance)
                 {
+                    // Skip if object is not in the collection area
+                    if (collectionArea != nullptr && !collectionArea->contains(object))
+                        continue;
+
+                    // Mark the object as the closest
                     closestDistance = distance;
                     currentObject = &object;
                 }
@@ -103,6 +113,7 @@ namespace devils
             // If object is in proximity, return to the path
             if (hasObject)
             {
+                gameObjectManager.remove(*currentObject);
                 state = RETURN;
                 Logger::info("CollectionController: Object Collected");
             }
@@ -155,10 +166,19 @@ namespace devils
         }
 
         /**
+         * Uses a polygon to define the area where game objects can be collected.
+         * @param polygon The area to use.
+         */
+        void useCollectionArea(Polygon *polygon)
+        {
+            collectionArea = polygon;
+        }
+
+        /**
          * Sets the controller to initialize the collection process.
          * @param controller The controller to use.
          */
-        void setInitController(AutoController *controller)
+        void useInitController(AutoController *controller)
         {
             initializeController = controller;
         }
@@ -167,7 +187,7 @@ namespace devils
          * Sets the controller to return to a position after collecting the game objects.
          * @param controller The controller to use.
          */
-        void setReturnController(AutoController *controller)
+        void useReturnController(AutoController *controller)
         {
             returnController = controller;
         }
@@ -181,7 +201,7 @@ namespace devils
         }
 
     private:
-        static constexpr double COLLECTION_DISTANCE = 2.0; // in
+        static constexpr double COLLECTION_DISTANCE = 4.0; // in
         static constexpr double OPTICAL_PROXIMITY = 0.5;   // %
         std::vector<PathEvent> NO_EVENTS = {};
 
@@ -192,7 +212,7 @@ namespace devils
         // Required Components
         BaseChassis &chassis;
         OdomSource &odometry;
-        std::vector<GameObject> &gameObjects;
+        GameObjectManager &gameObjectManager;
 
         // State
         State state = INIT;
@@ -202,5 +222,6 @@ namespace devils
         AutoController *initializeController = nullptr;
         AutoController *returnController = nullptr;
         OpticalSensor *collectionSensor = nullptr;
+        Polygon *collectionArea = nullptr;
     };
 }

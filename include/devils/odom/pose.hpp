@@ -22,6 +22,13 @@ namespace devils
         Pose() : x(0), y(0), rotation(0) {}
 
         /**
+         * Constructs a pose with the given x and y
+         * @param x The x position of the robot in inches
+         * @param y The y position of the robot in inches
+         */
+        Pose(double x, double y) : x(x), y(y), rotation(0) {}
+
+        /**
          * Constructs a pose with the given x, y, and rotation
          * @param x The x position of the robot in inches
          * @param y The y position of the robot in inches

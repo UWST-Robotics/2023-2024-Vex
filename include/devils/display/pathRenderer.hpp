@@ -41,7 +41,6 @@ namespace devils
             robotPath = lv_line_create(root, NULL);
             {
                 // Convert path to vector of points
-                static std::vector<lv_point_t> linePointVector;
                 linePointVector.clear();
                 for (int i = 0; i < pathPoints->size(); i++)
                 {
@@ -50,7 +49,6 @@ namespace devils
                 }
 
                 // Create Line
-                static lv_point_t *linePoints;
                 linePoints = linePointVector.data();
                 lv_line_set_points(robotPath, linePoints, linePointVector.size());
 
@@ -65,6 +63,9 @@ namespace devils
 
     private:
         static constexpr float DT = 0.1;
+
+        std::vector<lv_point_t> linePointVector = {};
+        lv_point_t *linePoints = nullptr;
 
         GeneratedPath *generatedPath;
         lv_obj_t *robotPath;

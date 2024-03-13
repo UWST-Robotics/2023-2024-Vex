@@ -12,22 +12,9 @@ namespace devils
      * Represents a chassis that maintains a virtual position and orientation.
      * This is useful for testing autonomous routines without a physical robot.
      */
-    class DummyChassis : public BaseChassis, OdomSource
+    class DummyChassis : public BaseChassis, OdomSource, AutoRunnable
     {
     public:
-        /**
-         * Creates a new dummy chassis.
-         */
-        DummyChassis() : updateTask([=]
-                                    { _updateTask(); })
-        {
-        }
-
-        ~DummyChassis()
-        {
-            updateTask.remove();
-        }
-
         void move(double forward, double turn, double strafe = 0) override
         {
             forward = std::clamp(forward, -1.0, 1.0) * speed;
@@ -39,25 +26,16 @@ namespace devils
             lastStrafe = strafe;
         }
 
-        /**
-         * PROS Task to update the position of the robot.
-         */
-        void _updateTask()
+        void update() override
         {
-            while (true)
-            {
-                // Calculate Acceleration
-                currentAcceleration.x += (cos(currentPose.rotation) * lastForward + sin(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
-                currentAcceleration.y += (sin(currentPose.rotation) * lastForward + cos(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
-                currentAcceleration.rotation += lastTurn * ROTATION_ACCEL;
-                currentAcceleration = currentAcceleration * ACCEL_DECAY;
+            // Calculate Acceleration
+            currentAcceleration.x += (cos(currentPose.rotation) * lastForward + sin(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
+            currentAcceleration.y += (sin(currentPose.rotation) * lastForward + cos(currentPose.rotation) * lastStrafe) * TRANSLATION_ACCEL;
+            currentAcceleration.rotation += lastTurn * ROTATION_ACCEL;
+            currentAcceleration = currentAcceleration * ACCEL_DECAY;
 
-                // Update Pose
-                currentPose = currentPose + currentAcceleration;
-
-                // Delay
-                pros::delay(20);
-            }
+            // Update Pose
+            currentPose = currentPose + currentAcceleration;
         }
 
         void setPose(Pose &pose) override
@@ -75,7 +53,6 @@ namespace devils
         static constexpr double ROTATION_ACCEL = 0.1;
         static constexpr double ACCEL_DECAY = 0.8;
 
-        pros::Task updateTask;
         double lastForward = 0;
         double lastTurn = 0;
         double lastStrafe = 0;
