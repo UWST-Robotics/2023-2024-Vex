@@ -7,6 +7,7 @@
 #include "../utils/pid.hpp"
 #include "../utils/curve.hpp"
 #include "../odom/odomSource.hpp"
+#include "../hardware/opticalSensor.hpp"
 
 namespace devils
 {
@@ -17,25 +18,189 @@ namespace devils
     {
     public:
         /**
+         * Represents the state of the collection controller.
+         */
+        enum State
+        {
+            INIT,
+            COLLECT,
+            RETURN
+        };
+
+        /**
          * Constructs a new LinearController.
          * @param chassis The chassis to control.
          * @param odometry The odometry source to use.
          * @param gameObjects The game objects to collect.
          * @param goalPose The pose to return to after collecting the game objects.
          */
-        CollectionController(BaseChassis &chassis, OdomSource &odometry, std::vector<GameObject> &gameObjects, Pose goalPose)
+        CollectionController(BaseChassis &chassis, OdomSource &odometry, std::vector<GameObject> &gameObjects)
             : chassis(chassis),
               odometry(odometry),
-              gameObjects(gameObjects),
-              goalPose(goalPose)
+              gameObjects(gameObjects)
         {
-            // TODO: Implement
+        }
+
+        std::vector<PathEvent> *getCurrentEvents() override
+        {
+            if (state != COLLECT)
+                return _getCurrentController()->getCurrentEvents();
+            return &NO_EVENTS;
+        }
+
+        Pose *getTargetPose() override
+        {
+            if (state != COLLECT)
+                return _getCurrentController()->getTargetPose();
+            if (currentObject != nullptr)
+                return currentObject;
+            return nullptr;
+        }
+
+        void update() override
+        {
+            if (state == RETURN)
+            {
+                if (returnController != nullptr)
+                    returnController->runSync();
+                state = COLLECT;
+            }
+            if (state == INIT)
+            {
+                if (initializeController != nullptr)
+                    initializeController->runSync();
+                state = COLLECT;
+            }
+
+            // Get the closest object
+            auto currentPose = odometry.getPose();
+            double closestDistance = INT_MAX;
+            for (auto &object : gameObjects)
+            {
+                auto distance = object.distanceTo(currentPose);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    currentObject = &object;
+                }
+            }
+
+            // Abort if no object is found
+            if (currentObject == nullptr)
+                return;
+
+            // Check if object is in proximity
+            bool hasObject = false;
+            if (collectionSensor != nullptr)
+                hasObject = collectionSensor->getProximity() < OPTICAL_PROXIMITY;
+            else if (currentObject != nullptr)
+            {
+                auto distance = currentObject->distanceTo(currentPose);
+                if (distance < COLLECTION_DISTANCE)
+                    hasObject = true;
+            }
+
+            // If object is in proximity, return to the path
+            if (hasObject)
+            {
+                state = RETURN;
+                Logger::info("CollectionController: Object Collected");
+            }
+
+            // Move to the object
+            double deltaX = currentObject->x - currentPose.x;
+            double deltaY = currentObject->y - currentPose.y;
+            double normal = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+            double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
+            double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
+            double forward = translationPID.update(deltaForward);
+            double turn = rotationPID.update(deltaRotation);
+
+            // Clamp Values
+            forward = Curve::clamp(0.0, 1.0, forward);
+            turn = Curve::clamp(-1.0, 1.0, turn) * normal;
+
+            // Drive
+            chassis.move(forward, turn);
+        }
+
+        void reset() override
+        {
+            state = INIT;
+            currentObject = nullptr;
+        }
+
+        bool getFinished() override
+        {
+            return false;
+        }
+
+        AutoController *_getCurrentController()
+        {
+            if (state == INIT)
+                return initializeController;
+            else if (state == RETURN)
+                return returnController;
+            else
+                return nullptr;
+        }
+
+        /**
+         * Uses an optical sensor to detect game objects in the robot's collection.
+         * @param sensor The optical sensor to use.
+         */
+        void useCollectionSensor(OpticalSensor *sensor)
+        {
+            collectionSensor = sensor;
+        }
+
+        /**
+         * Sets the controller to initialize the collection process.
+         * @param controller The controller to use.
+         */
+        void setInitController(AutoController *controller)
+        {
+            initializeController = controller;
+        }
+
+        /**
+         * Sets the controller to return to a position after collecting the game objects.
+         * @param controller The controller to use.
+         */
+        void setReturnController(AutoController *controller)
+        {
+            returnController = controller;
+        }
+
+        /**
+         * Gets the state of the controller.
+         */
+        State getState()
+        {
+            return state;
         }
 
     private:
+        static constexpr double COLLECTION_DISTANCE = 2.0; // in
+        static constexpr double OPTICAL_PROXIMITY = 0.5;   // %
+        std::vector<PathEvent> NO_EVENTS = {};
+
+        // PID
+        PID translationPID = PID(5.0, 0, 0); // <-- Translation
+        PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
+
+        // Required Components
         BaseChassis &chassis;
         OdomSource &odometry;
         std::vector<GameObject> &gameObjects;
-        Pose &goalPose;
+
+        // State
+        State state = INIT;
+        GameObject *currentObject = nullptr;
+
+        // Optional Components
+        AutoController *initializeController = nullptr;
+        AutoController *returnController = nullptr;
+        OpticalSensor *collectionSensor = nullptr;
     };
 }

@@ -2,21 +2,31 @@
 
 namespace devils
 {
+    /**
+     * Represents a robot control system.
+     * Can be swapped out for different robots at compile time
+     * by modifying the type defined in `main.cpp` file.
+     */
     struct Robot
     {
         /**
+         * Ran when the FMS is connected.
+         */
+        virtual void competition() {}
+
+        /**
+         * Ran when the robot is disabled with the FMS connected.
+         */
+        virtual void disabled() {}
+
+        /**
          * Ran at the start of the Autonomous period.
          */
-        virtual void autonomous() = 0;
+        virtual void autonomous() {}
 
         /**
-         * Ran at the start of the Driver Control period.
+         * Ran at the start of the Teleoperated period.
          */
-        virtual void opcontrol() = 0;
-
-        /**
-         * Ran at the start of the Disabled period.
-         */
-        virtual void disabled() = 0;
+        virtual void opcontrol() {}
     };
 }

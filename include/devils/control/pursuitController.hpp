@@ -25,135 +25,105 @@ namespace devils
          * @param odometry The odometry source to use.
          */
         PursuitController(BaseChassis &chassis, GeneratedPath &generatedPath, OdomSource &odometry)
-            : chassis(chassis), generatedPath(generatedPath), odometry(odometry)
+            : chassis(chassis),
+              generatedPath(generatedPath),
+              odometry(odometry),
+              controlPoints(generatedPath.controlPoints),
+              pathPoints(generatedPath.pathPoints),
+              lastPoint(generatedPath.pathPoints.back())
         {
         }
 
-        /**
-         * Gets list of current events.
-         * @return List of current events.
-         */
-        PathPoint *getControlPoint() override
+        std::vector<PathEvent> *getCurrentEvents() override
         {
-            auto &controlPoints = generatedPath.controlPoints;
             if (controlPointIndex >= controlPoints.size() || controlPointIndex < 0)
                 return nullptr;
-            return &controlPoints[controlPointIndex];
+            return &controlPoints[controlPointIndex].events;
         }
 
-        /**
-         * Returns the current target point of the motion profile.
-         * Controller tries to choose LOOKAHEAD_DISTANCE inches ahead of the robot.
-         * @return The current target point of the motion profile.
-         */
         Pose *getTargetPose() override
         {
-            auto &pathPoints = generatedPath.pathPoints;
             if (lookaheadPointIndex >= pathPoints.size() || lookaheadPointIndex < 0)
                 return nullptr;
             return &pathPoints[lookaheadPointIndex];
         }
 
-        /**
-         * Updates the chassis based on the current point of the motion profile.
-         * Also updates the chassis input.
-         */
-        void _run() override
+        void update() override
         {
             // Get Current Pose
-            auto &controlPoints = generatedPath.controlPoints;
-            auto &pathPoints = generatedPath.pathPoints;
-            auto &lastPoint = pathPoints.back();
+            auto currentPose = odometry.getPose();
 
-            while (!hasFinished)
+            // Update Control Point Index
+            if (controlPointIndex < controlPoints.size() - 1)
             {
-                // Check if paused
-                if (isPaused)
+                auto controlPoint = controlPoints[controlPointIndex + 1];
+                double distance = controlPoint.distanceTo(currentPose);
+                if (distance < LOOKAHEAD_DISTANCE)
+                    controlPointIndex++;
+            }
+            int maxPathPointIndex = (this->controlPointIndex + 1) / generatedPath.dt;
+
+            // Update Path Point Index
+            double closestDistance = INT_MAX;
+            for (int i = robotPointIndex; i < pathPoints.size(); i++)
+            {
+                auto point = pathPoints[i];
+                double distance = point.distanceTo(currentPose);
+
+                // Check if closest
+                if (distance < closestDistance)
                 {
-                    chassis.move(0, 0);
-                    pros::delay(20);
-                    continue;
+                    closestDistance = distance;
+                    robotPointIndex = i;
                 }
 
-                // Get Current Pose
-                auto currentPose = odometry.getPose();
-
-                // Update Control Point Index
-                if (controlPointIndex < controlPoints.size() - 1)
-                {
-                    auto controlPoint = controlPoints[controlPointIndex + 1];
-                    double distance = controlPoint.distanceTo(currentPose);
-                    if (distance < LOOKAHEAD_DISTANCE)
-                        controlPointIndex++;
-                }
-                int maxPathPointIndex = (this->controlPointIndex + 1) / generatedPath.dt;
-
-                // Update Path Point Index
-                double closestDistance = INT_MAX;
-                for (int i = robotPointIndex; i < pathPoints.size(); i++)
-                {
-                    auto point = pathPoints[i];
-                    double distance = point.distanceTo(currentPose);
-
-                    // Check if closest
-                    if (distance < closestDistance)
-                    {
-                        closestDistance = distance;
-                        robotPointIndex = i;
-                    }
-
-                    if (i > maxPathPointIndex)
-                        break;
-                }
-
-                // Update Lookahead Point Index
-                for (int i = lookaheadPointIndex; i < pathPoints.size(); i++)
-                {
-                    auto targetPose = getTargetPose();
-                    if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
-                        break;
-                    lookaheadPointIndex = i;
-                }
-
-                // Get Current Point
-                auto targetPose = getTargetPose();
-                auto controlPoint = getControlPoint();
-
-                // Drive To Point
-                driveTowards(*targetPose, controlPoint->isReversed);
-
-                // Handle Finish
-                bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
-                bool lookingAtLastPoint = robotPointIndex == pathPoints.size() - 1;
-                if (withinRangeOfLastPoint && lookingAtLastPoint)
-                    hasFinished = true;
-
-                pros::delay(20);
+                if (i > maxPathPointIndex)
+                    break;
             }
 
-            // Stop
-            chassis.stop();
+            // Update Lookahead Point Index
+            for (int i = lookaheadPointIndex; i < pathPoints.size(); i++)
+            {
+                auto targetPose = getTargetPose();
+                if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
+                    break;
+                lookaheadPointIndex = i;
+            }
+
+            // Get Current Point
+            auto targetPose = getTargetPose();
+            bool isReversed = controlPoints[controlPointIndex].isReversed;
+
+            // Handle Finish
+            bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
+            bool lookingAtLastPoint = robotPointIndex == pathPoints.size() - 1;
+            if (withinRangeOfLastPoint && lookingAtLastPoint)
+            {
+                isFinished = true;
+                chassis.stop();
+            }
+
+            // Drive To Point
+            else
+            {
+                driveTowards(*targetPose, isReversed);
+            }
         }
 
-        /**
-         * Returns whether the controller has finished.
-         * @return Whether the controller has finished.
-         */
-        bool isFinished() override
+        bool getFinished() override
         {
-            return hasFinished;
+            return isFinished;
         }
 
-        /**
-         * Restarts the motion profile from the beginning.
-         */
-        void reset()
+        void reset() override
         {
             robotPointIndex = 0;
             lookaheadPointIndex = 0;
-            auto startingPose = generatedPath.getStartingPose();
-            if (startingPose != nullptr)
-                odometry.setPose(*startingPose);
+            controlPointIndex = 0;
+            isFinished = false;
+            // auto startingPose = generatedPath.getStartingPose();
+            // if (startingPose != nullptr)
+            //     odometry.setPose(*startingPose);
         }
 
         /**
@@ -183,10 +153,10 @@ namespace devils
 
             // Clamp Values
             if (isReversed)
-                forward = Curve::clamp(-1.0, 0.0, forward) * speed;
+                forward = Curve::clamp(-1.0, 0.0, forward);
             else
-                forward = Curve::clamp(0.0, 1.0, forward) * speed;
-            turn = Curve::clamp(-1.0, 1.0, turn) * speed * normal;
+                forward = Curve::clamp(0.0, 1.0, forward);
+            turn = Curve::clamp(-1.0, 1.0, turn) * normal;
 
             // Drive
             chassis.move(forward, turn);
@@ -198,14 +168,20 @@ namespace devils
         PID translationPID = PID(5.0, 0, 0); // <-- Translation
         PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
 
+        // Object Handles
         BaseChassis &chassis;
         GeneratedPath &generatedPath;
         OdomSource &odometry;
+
+        // Shorthands
+        std::vector<PathPoint> &controlPoints;
+        std::vector<Pose> &pathPoints;
+        Pose &lastPoint;
+
+        // Controller State
         int robotPointIndex = 0;     // Closest path index to the robot
         int lookaheadPointIndex = 0; // Closest path index to the lookahead
         int controlPointIndex = 0;   // Current control index of the event
-
-        bool isPaused = false;
-        bool hasFinished = false;
+        bool isFinished = false;
     };
 }

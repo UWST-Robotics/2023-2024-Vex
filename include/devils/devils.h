@@ -10,6 +10,7 @@
 // Autonomous
 #include "control/pursuitController.hpp"
 #include "control/linearController.hpp"
+#include "control/collectionController.hpp"
 
 // Chassis
 #include "chassis/chassis.hpp"
@@ -50,15 +51,8 @@
 // Robot
 #include "robots/robot.hpp"
 
-// Systems
-#include "systems/blockerSystem.hpp"
-#include "systems/intakeSystem.hpp"
-#include "systems/launcherSystem.hpp"
-#include "systems/wingSystem.hpp"
-#include "systems/climbSystem.hpp"
-
 // Utils
 #include "utils/curve.hpp"
 #include "utils/pid.hpp"
-#include "utils/autoTimer.hpp"
+#include "utils/eventTimer.hpp"
 #include "utils/rect.hpp"

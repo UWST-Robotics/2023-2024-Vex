@@ -20,8 +20,8 @@ namespace devils
          */
         TankChassis(
             const std::initializer_list<int8_t> leftMotorPorts,
-            const std::initializer_list<int8_t> rightMotorPorts) : leftMotors("TankChassis.Left Motors", leftMotorPorts),
-                                                                   rightMotors("TankChassis.Right Motors", rightMotorPorts)
+            const std::initializer_list<int8_t> rightMotorPorts) : leftMotors("TankChassis.LeftMotors", leftMotorPorts),
+                                                                   rightMotors("TankChassis.RightMotors", rightMotorPorts)
         {
         }
 
@@ -32,8 +32,7 @@ namespace devils
          */
         void move(double forward, double turn, double strafe = 0) override
         {
-            leftMotors.moveVoltage(forward + turn);
-            rightMotors.moveVoltage(forward - turn);
+            moveTank(forward + turn, forward - turn);
         }
 
         /**
@@ -43,17 +42,11 @@ namespace devils
          */
         void moveTank(double left, double right)
         {
-            leftMotors.moveVoltage(left);
-            rightMotors.moveVoltage(right);
-        }
+            double fixedLeft = std::clamp(left, -1.0, 1.0) * speed;
+            double fixedRight = std::clamp(right, -1.0, 1.0) * speed;
 
-        /**
-         * Returns whether or not the chassis is holonomic.
-         * @return false
-         */
-        bool isHolonomic() override
-        {
-            return false;
+            leftMotors.moveVoltage(fixedLeft);
+            rightMotors.moveVoltage(fixedRight);
         }
 
         /**

@@ -16,8 +16,8 @@
 #define PROS_USE_SIMPLE_NAMES // Allows us to use pros::Motor instead of pros::c::motor
 #define PROS_USE_LITERALS     // Allows us to use 200_ms instead of pros::c::millisecond_t(200)
 
-#include "api.h"           // Includes all the pros headers
-#include "devils/robots.h" // Includes all the devilbot robots
+// Add each robot definition here
+#include "devils/2024/autoTest.hpp"
 
 using namespace devils;
 

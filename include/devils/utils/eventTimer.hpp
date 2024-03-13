@@ -1,15 +1,16 @@
 #pragma once
 
 #include "pros/rtos.hpp"
+#include "logger.hpp"
 
 namespace devils
 {
-    class AutoTimer
+    class EventTimer
     {
     public:
         /**
          * Starts the timer if it is not already running.
-         * @param timerID The ID of the timer.
+         * @param timerID The ID of the timer or event.
          * @param duration The duration of the timer in milliseconds.
          */
         void start(int timerID, double duration)

@@ -36,6 +36,7 @@ void disabled()
 void competition_initialize()
 {
 	Logger::info("==== Competition Initialize ====");
+	robot->competition();
 }
 
 /**

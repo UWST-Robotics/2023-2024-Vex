@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 
 namespace devils
 {
@@ -7,7 +8,6 @@ namespace devils
      */
     struct BaseChassis
     {
-    public:
         /**
          * Moves the robot in a direction using voltage.
          * @param forward The forward speed of the robot from -1 to 1.
@@ -19,12 +19,30 @@ namespace devils
         /**
          * Stops the robot.
          */
-        virtual void stop() = 0;
+        virtual void stop()
+        {
+            move(0, 0, 0);
+        };
 
         /**
-         * Returns whether or not the chassis is holonomic.
-         * @return true if the chassis is holonomic, false otherwise.
+         * Sets the speed of the robot.
+         * @param speed The speed of the robot from 0 to 1.
          */
-        virtual bool isHolonomic() = 0;
+        virtual void setSpeed(double speed)
+        {
+            this->speed = std::clamp(speed, 0.0, 1.0);
+        }
+
+        /**
+         * Gets the speed of the robot.
+         * @return The speed of the robot from -1 to 1.
+         */
+        virtual double getSpeed()
+        {
+            return speed;
+        }
+
+    protected:
+        double speed = 1.0;
     };
 }

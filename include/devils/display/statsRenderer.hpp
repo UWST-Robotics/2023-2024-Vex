@@ -53,7 +53,7 @@ namespace devils
 
             // Create Text
             std::stringstream stream;
-            stream << "Battery: " << DisplayUtils::colorizeValue(batteryPercent / 100.0, std::to_string(batteryPercent) + "%");
+            stream << "Battery: " << DisplayUtils::colorizeValue(batteryPercent / 100.0, std::to_string((int)batteryPercent) + "%");
             stream << "Competition: " << DisplayUtils::colorizeValue(isCompetition, isCompetition ? "Yes" : "No");
             stream << "Mode: " << DisplayUtils::colorizeValue(!isAutonomous, isAutonomous ? "Auto" : "Driver");
             stream << "Status: " << DisplayUtils::colorizeValue(!isDisabled, isDisabled ? "Disabled" : "Enabled");
@@ -80,15 +80,18 @@ namespace devils
             // Auto Controller
             if (autoController != nullptr)
             {
-                auto &events = autoController->getControlPoint()->events;
-                stream << "\n";
-                stream << "Events: \n";
-                for (auto event : events)
+                auto events = autoController->getCurrentEvents();
+                if (events != nullptr && events->size() > 0)
                 {
-                    stream << event.name;
-                    if (event.params.size() > 0)
-                        stream << DisplayUtils::colorText(" (" + event.params + ")", "#aaaaaa");
                     stream << "\n";
+                    stream << "Events: \n";
+                    for (auto event : *events)
+                    {
+                        stream << event.name;
+                        if (event.params.size() > 0)
+                            stream << DisplayUtils::colorText(" (" + event.params + ")", "#aaaaaa");
+                        stream << "\n";
+                    }
                 }
             }
 

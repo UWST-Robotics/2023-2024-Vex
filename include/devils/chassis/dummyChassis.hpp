@@ -19,7 +19,7 @@ namespace devils
          * Creates a new dummy chassis.
          */
         DummyChassis() : updateTask([=]
-                                    { _update(); })
+                                    { _updateTask(); })
         {
         }
 
@@ -30,9 +30,9 @@ namespace devils
 
         void move(double forward, double turn, double strafe = 0) override
         {
-            forward = std::clamp(forward, -1.0, 1.0);
-            turn = std::clamp(turn, -1.0, 1.0);
-            strafe = std::clamp(strafe, -1.0, 1.0);
+            forward = std::clamp(forward, -1.0, 1.0) * speed;
+            turn = std::clamp(turn, -1.0, 1.0) * speed;
+            strafe = std::clamp(strafe, -1.0, 1.0) * speed;
 
             lastForward = forward;
             lastTurn = turn;
@@ -42,7 +42,7 @@ namespace devils
         /**
          * PROS Task to update the position of the robot.
          */
-        void _update()
+        void _updateTask()
         {
             while (true)
             {
@@ -58,16 +58,6 @@ namespace devils
                 // Delay
                 pros::delay(20);
             }
-        }
-
-        bool isHolonomic() override
-        {
-            return false;
-        }
-
-        void stop() override
-        {
-            move(0, 0);
         }
 
         void setPose(Pose &pose) override

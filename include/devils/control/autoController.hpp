@@ -2,19 +2,20 @@
 #include "squiggles.hpp"
 #include "pros/rtos.hpp"
 #include "../odom/pose.hpp"
+#include "../utils/runnable.hpp"
 
 namespace devils
 {
     /**
      * Represents a stateful system for controlling the robot chassis autonomously.
      */
-    struct AutoController
+    struct AutoController : public Runnable
     {
         /**
          * Gets the current control point of the controller.
          * @return The current control point of the controller.
          */
-        virtual PathPoint *getControlPoint() = 0;
+        virtual std::vector<PathEvent> *getCurrentEvents() { return nullptr; };
 
         /**
          * Gets the current target point of the controller, for debugging purposes.
@@ -26,40 +27,39 @@ namespace devils
          * Returns true if the controller has finished.
          * @return True if the controller has finished.
          */
-        virtual bool isFinished() = 0;
+        virtual bool getFinished() = 0;
 
         /**
-         * Sets the speed of the controller.
-         * @param speed The speed of the controller from 0 to 1.s
+         * Resets the controller.
          */
-        virtual void setSpeed(double speed)
+        virtual void reset() = 0;
+
+        /**
+         * Updates the controller.
+         */
+        virtual void update() override = 0;
+
+        /**
+         * Runs the controller synchronously.
+         */
+        void runSync() override
         {
-            this->speed = speed;
+            reset();
+            while (!getFinished())
+            {
+                update();
+                pros::delay(20);
+            }
         }
 
         /**
-         * Gets the speed of the controller.
-         * @return The speed of the controller from 0 to 1.
-         */
-        virtual double getSpeed()
-        {
-            return speed;
-        }
-
-        /**
-         * Runs the controller as a PROS task.
+         * Runs the controller as asyncronously
          * @return The PROS task that runs the controller.
          */
-        pros::Task run()
+        pros::Task runAsync()
         {
             return pros::Task([=]
-                              { _run(); });
+                              { runSync(); });
         }
-        virtual void _run() = 0;
-
-    protected:
-        static constexpr double DEFAULT_SPEED = 0.5;
-
-        float speed = DEFAULT_SPEED;
     };
 }

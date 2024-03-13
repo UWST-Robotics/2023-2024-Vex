@@ -59,7 +59,7 @@ namespace devils
 
         void update() override
         {
-            if (controller->isFinished())
+            if (controller->getFinished())
             {
                 lv_obj_set_hidden(pointObject, true);
                 lv_obj_set_hidden(lineObject, true);
@@ -69,6 +69,18 @@ namespace devils
             // Get Poses
             auto pose = odomSource->getPose();
             auto point = controller->getTargetPose();
+
+            // Abort if no point
+            if (point == nullptr)
+            {
+                lv_obj_set_hidden(pointObject, true);
+                lv_obj_set_hidden(lineObject, true);
+                return;
+            }
+
+            // Show Objects
+            lv_obj_set_hidden(pointObject, false);
+            lv_obj_set_hidden(lineObject, false);
 
             // Update Line to Target
             static lv_point_t linePoints[] = {{0, 0}, {0, 0}};

@@ -1,12 +1,13 @@
 #pragma once
 #include "renderer.hpp"
+#include "../utils/runnable.hpp"
 
 namespace devils
 {
     /**
      * A display that manages multiple sub-renderers.
      */
-    class Display
+    class Display : public Runnable
     {
     public:
         /**
@@ -21,7 +22,7 @@ namespace devils
             lv_scr_load(rootObject);
 
             // Init Renderers
-            for (Renderer *renderer : renderers)
+            for (Renderer *renderer : this->renderers)
                 renderer->create(rootObject);
         }
 
@@ -36,13 +37,13 @@ namespace devils
         /**
          * Updates all renderers.
          */
-        void update()
+        void update() override
         {
             for (Renderer *renderer : renderers)
                 renderer->update();
 
             // Uncomment to force a redraw every frame
-            // lv_obj_invalidate(rootObject);
+            lv_obj_invalidate(rootObject);
         }
 
     private:
