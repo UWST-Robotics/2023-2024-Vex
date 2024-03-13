@@ -11,16 +11,9 @@ namespace devils
          * Generates a path from a set of control points using linear interpolation.
          * @return The generated path.
          */
-        static GeneratedPath generateLinear()
+        static GeneratedPath generateLinear(PathFile pathFile)
         {
-            if (!PathFileReader::isSDInserted())
-            {
-                Logger::warn("PathGenerator: SD Card not inserted");
-                return GeneratedPath{};
-            }
-
             // Get path file
-            auto pathFile = PathFileReader::readFromSD();
             auto controlPoints = pathFile.points;
 
             // Initialize path points
@@ -50,16 +43,9 @@ namespace devils
          * Generates a path from a set of control points using cubic interpolation.
          * @return The generated path.
          */
-        static GeneratedPath generateSpline()
+        static GeneratedPath generateSpline(PathFile pathFile)
         {
-            if (!PathFileReader::isSDInserted())
-            {
-                Logger::warn("PathGenerator: SD Card not inserted");
-                return GeneratedPath{};
-            }
-
             // Get path file
-            auto pathFile = PathFileReader::readFromSD();
             auto controlPoints = pathFile.points;
 
             // Initialize path points

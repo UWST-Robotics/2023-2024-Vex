@@ -32,6 +32,11 @@ namespace devils
             return !(*this == other);
         }
 
+        double distanceTo(const Pose &other)
+        {
+            return std::sqrt(std::pow(other.x - x, 2) + std::pow(other.y - y, 2));
+        }
+
         /**
          * Prints the pose to a string
          * @return The pose as a string

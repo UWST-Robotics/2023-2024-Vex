@@ -48,11 +48,10 @@ namespace devils
          */
         Pose *getTargetPose() override
         {
-            if (!generatedPath.isGenerated())
-                return nullptr;
-
             auto &pathPoints = generatedPath.pathPoints;
-            return &pathPoints[pathPointIndex];
+            if (lookaheadPointIndex >= pathPoints.size() || lookaheadPointIndex < 0)
+                return nullptr;
+            return &pathPoints[lookaheadPointIndex];
         }
 
         /**
@@ -79,28 +78,41 @@ namespace devils
                 // Get Current Pose
                 auto currentPose = odometry.getPose();
 
-                // Update Path Point Index
-                double closestDistance = 100000;
-                for (int i = pathPointIndex; i < pathPoints.size(); i++)
-                {
-                    auto point = pathPoints[i];
-                    double distance = abs(LOOKAHEAD_DISTANCE - sqrt(pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2)));
-                    if (distance < closestDistance)
-                    {
-                        closestDistance = distance;
-                        pathPointIndex = i;
-                    }
-                    if (i - pathPointIndex > LOOKAHEAD_MAX_INDICES)
-                        break;
-                }
-
                 // Update Control Point Index
                 if (controlPointIndex < controlPoints.size() - 1)
                 {
                     auto controlPoint = controlPoints[controlPointIndex + 1];
-                    double distanceSq = pow(controlPoint.x - currentPose.x, 2) + pow(controlPoint.y - currentPose.y, 2);
-                    if (distanceSq < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE)
+                    double distance = controlPoint.distanceTo(currentPose);
+                    if (distance < LOOKAHEAD_DISTANCE)
                         controlPointIndex++;
+                }
+                int maxPathPointIndex = (this->controlPointIndex + 1) / generatedPath.dt;
+
+                // Update Path Point Index
+                double closestDistance = INT_MAX;
+                for (int i = robotPointIndex; i < pathPoints.size(); i++)
+                {
+                    auto point = pathPoints[i];
+                    double distance = point.distanceTo(currentPose);
+
+                    // Check if closest
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        robotPointIndex = i;
+                    }
+
+                    if (i > maxPathPointIndex)
+                        break;
+                }
+
+                // Update Lookahead Point Index
+                for (int i = lookaheadPointIndex; i < pathPoints.size(); i++)
+                {
+                    auto targetPose = getTargetPose();
+                    if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
+                        break;
+                    lookaheadPointIndex = i;
                 }
 
                 // Get Current Point
@@ -111,8 +123,8 @@ namespace devils
                 driveTowards(*targetPose, controlPoint->isReversed);
 
                 // Handle Finish
-                bool withinRangeOfLastPoint = pow(lastPoint.x - currentPose.x, 2) + pow(lastPoint.y - currentPose.y, 2) < EVENT_TRIGGER_RANGE * EVENT_TRIGGER_RANGE;
-                bool lookingAtLastPoint = pathPointIndex == pathPoints.size() - 1;
+                bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
+                bool lookingAtLastPoint = robotPointIndex == pathPoints.size() - 1;
                 if (withinRangeOfLastPoint && lookingAtLastPoint)
                     hasFinished = true;
 
@@ -137,7 +149,8 @@ namespace devils
          */
         void reset()
         {
-            pathPointIndex = 0;
+            robotPointIndex = 0;
+            lookaheadPointIndex = 0;
             auto startingPose = generatedPath.getStartingPose();
             if (startingPose != nullptr)
                 odometry.setPose(*startingPose);
@@ -154,8 +167,8 @@ namespace devils
             auto currentPose = odometry.getPose();
 
             // Calculate Forward & Turn
-            double deltaX = (targetPose.x - currentPose.x) / LOOKAHEAD_DISTANCE;
-            double deltaY = (targetPose.y - currentPose.y) / LOOKAHEAD_DISTANCE;
+            double deltaX = targetPose.x - currentPose.x;
+            double deltaY = targetPose.y - currentPose.y;
             double normal = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
             double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
             double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
@@ -180,9 +193,7 @@ namespace devils
         }
 
     private:
-        static constexpr int LOOKAHEAD_MAX_INDICES = 15;
         static constexpr double LOOKAHEAD_DISTANCE = 6.0; // in
-        static constexpr double EVENT_TRIGGER_RANGE = 6;  // in
 
         PID translationPID = PID(5.0, 0, 0); // <-- Translation
         PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
@@ -190,8 +201,9 @@ namespace devils
         BaseChassis &chassis;
         GeneratedPath &generatedPath;
         OdomSource &odometry;
-        int pathPointIndex = 0;    // Closest index of the lookahead point
-        int controlPointIndex = 0; // Current index of the event
+        int robotPointIndex = 0;     // Closest path index to the robot
+        int lookaheadPointIndex = 0; // Closest path index to the lookahead
+        int controlPointIndex = 0;   // Current control index of the event
 
         bool isPaused = false;
         bool hasFinished = false;

@@ -3,6 +3,7 @@
 #include "../utils/logger.hpp"
 #include "../utils/units.hpp"
 #include "../control/autoController.hpp"
+#include "../utils/perspective.hpp"
 #include <cmath>
 #include <string>
 
@@ -32,7 +33,7 @@ namespace devils
             static lv_point_t linePoints[FIELD_WIDTH + FIELD_HEIGHT][2];
 
             // Horizontal Lines
-            for (int i = 0; i < FIELD_WIDTH; i++)
+            for (int i = 1; i < FIELD_WIDTH; i++)
             {
                 lv_point_t *points = linePoints[i];
                 points[0].x = FIELD_OFFSET_X;
@@ -46,7 +47,7 @@ namespace devils
             }
 
             // Vertical Lines
-            for (int i = 0; i < FIELD_HEIGHT; i++)
+            for (int i = 1; i < FIELD_HEIGHT; i++)
             {
                 lv_point_t *points = linePoints[i + FIELD_WIDTH];
                 points[0].x = FIELD_OFFSET_X + i * TILE_SIZE;

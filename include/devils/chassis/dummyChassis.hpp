@@ -81,8 +81,8 @@ namespace devils
         }
 
     private:
-        static constexpr double TRANSLATION_ACCEL = 0.3;
-        static constexpr double ROTATION_ACCEL = 0.8;
+        static constexpr double TRANSLATION_ACCEL = 0.2;
+        static constexpr double ROTATION_ACCEL = 0.1;
         static constexpr double ACCEL_DECAY = 0.8;
 
         pros::Task updateTask;

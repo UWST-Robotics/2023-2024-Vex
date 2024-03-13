@@ -66,15 +66,13 @@ namespace devils
 
                 // Calculate Point
                 auto &point = controlPoints[currentIndex];
-                double distanceSquared = pow(point.x - currentPose.x, 2) + pow(point.y - currentPose.y, 2);
+                double distance = point.distanceTo(currentPose);
 
                 // Check within trigger range
-                if (distanceSquared < CHECKPOINT_RANGE_SQ || skipCheckpoint)
+                if (distance < CHECKPOINT_RANGE || skipCheckpoint)
                 {
                     currentIndex++;
                     lastCheckpointTime = pros::millis();
-                    if (point.isReversed)
-                        isReversed = !isReversed;
                     continue;
                 }
 
@@ -88,7 +86,7 @@ namespace devils
                 double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
 
                 // Handle Reversed
-                if (isReversed)
+                if (currentPoint.isReversed)
                     deltaRotation = Units::diffRad(deltaRotation, M_PI);
 
                 // Calculate Speeds
@@ -130,7 +128,6 @@ namespace devils
          */
         void reset()
         {
-            isReversed = false;
             currentIndex = 1;
             lastCheckpointTime = pros::millis();
         }
@@ -152,9 +149,6 @@ namespace devils
         static constexpr double ACCEL_DELAY = 200;               // ms
         static constexpr double CHECKPOINT_RANGE = 4;            // in
 
-        // Derived Constants
-        static constexpr double CHECKPOINT_RANGE_SQ = CHECKPOINT_RANGE * CHECKPOINT_RANGE; // sq in
-
         // PID
         PID translationPID = PID(0.1, 0, 0); // <-- Translation
         PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
@@ -166,6 +160,5 @@ namespace devils
         int currentIndex = 1; // Current control point driving towards
         double lastCheckpointTime = 0;
         double lastRotationTime = 0;
-        bool isReversed = false;
     };
 }

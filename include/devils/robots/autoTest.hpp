@@ -1,6 +1,11 @@
 #pragma once
-
 #include "../devils.h"
+
+#define __ARM_NEON
+#include "incbin/incbin.h"
+
+#define INCBIN_PREFIX g_
+INCTXT(pathFile, "paths/pj-auto.txt");
 
 namespace devils
 {
@@ -14,14 +19,15 @@ namespace devils
          */
         AutoTest()
             : controller(pros::E_CONTROLLER_MASTER),
-              generatedPath(PathGenerator::generateLinear()),
+              pathFile(PathFileReader::deserialize(g_pathFileData)),
+              generatedPath(PathGenerator::generateLinear(pathFile)),
               autoController(chassis, generatedPath, odometry),
               pathRenderer(&generatedPath),
               odomRenderer(&odometry),
               rectRenderer(&autonomousArea),
               gameObjectRenderer(&knownGameObjects),
-              controlRenderer(&autoController),
-              teleopDisplay({&pathRenderer, &fieldRenderer, &odomRenderer, &controlRenderer, &gameObjectRenderer, &rectRenderer, &statsRenderer})
+              controlRenderer(&autoController, &odometry),
+              teleopDisplay({&pathRenderer, &fieldRenderer, &gameObjectRenderer, &odomRenderer, &controlRenderer, &rectRenderer, &statsRenderer})
         {
             // Add Stats
             statsRenderer.useOdomSource(&odometry);
@@ -119,6 +125,7 @@ namespace devils
         OdomSource &odometry = (OdomSource &)chassis;
 
         // Autonomous
+        PathFile pathFile;
         GeneratedPath generatedPath;
         PursuitController autoController;
         std::vector<GameObject> knownGameObjects;

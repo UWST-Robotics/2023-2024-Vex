@@ -18,33 +18,66 @@ namespace devils
          * Checks if the SD card is inserted.
          * @return True if the SD card is inserted.
          */
-        static bool isSDInserted()
+        static bool _isSDInserted()
         {
-            return pros::usd::is_installed() == 1;
+            return pros::usd::is_installed();
         }
 
         /**
-         * Reads a path file from the SD card.
-         * @return The path file.
+         * Reads a raw file from the SD card and returns it as a string.
+         * @param fileName The name of the file to read.
+         * @return The raw file as a string.
+         */
+        static std::string _readFromSD(std::string fileName)
+        {
+            if (!_isSDInserted())
+            {
+                Logger::warn("PathFileReader: SD card is not installed!");
+                return "";
+            }
+
+            // Read from SD card
+            std::ifstream file("/usd/" + fileName);
+            std::string line;
+            std::string data = "";
+
+            // Iterate through each line
+            while (std::getline(file, line))
+                data += line + "\n";
+            file.close();
+
+            return data;
+        }
+
+        /**
+         * Deserializes a path file from the SD card.
+         * @return The deserialized path file.
          */
         static PathFile readFromSD()
         {
-            if (!pros::usd::is_installed())
-            {
-                Logger::warn("PathFileReader: SD card is not installed!");
-                return PathFile();
-            }
+            return deserialize(_readFromSD(PATH_FILE_PATH));
+        }
 
+        /**
+         * Deserializes a path file from a string.
+         * @param data The data to deserialize.
+         * @return The deserialized path file.
+         */
+        static PathFile deserialize(std::string data)
+        {
             // Create a new path file
             PathFile pathFile;
             pathFile.version = 1;
 
-            // Read from SD card
-            std::ifstream file(PATH_FILE_PATH);
+            // Read from string
             std::string line;
+            std::istringstream readStream(data);
+
+            // Handle reverse
+            bool isReversed = false;
 
             // Iterate through each line
-            while (std::getline(file, line))
+            while (std::getline(readStream, line))
             {
                 if (line.empty())
                     continue;
@@ -55,6 +88,7 @@ namespace devils
                 if (line.rfind("POINT") == 0)
                 {
                     PathPoint point = _parsePoint(line);
+                    point.isReversed = isReversed;
                     pathFile.points.push_back(point);
                 }
                 if (line.rfind("EVENT") == 0)
@@ -64,10 +98,10 @@ namespace devils
                 }
                 if (line.rfind("REVERSE") == 0)
                 {
-                    pathFile.points.back().isReversed = true;
+                    isReversed = !isReversed;
+                    pathFile.points.back().isReversed = isReversed;
                 }
             }
-            file.close();
 
             return pathFile;
         }
@@ -144,6 +178,6 @@ namespace devils
         }
 
     private:
-        inline static const std::string PATH_FILE_PATH = "/usd/path.txt";
+        inline static const std::string PATH_FILE_PATH = "path.txt";
     };
 }
