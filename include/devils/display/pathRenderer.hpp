@@ -29,6 +29,8 @@ namespace devils
 
         void create(lv_obj_t *root) override
         {
+            rootObject = root;
+
             // Get Path
             auto pathPoints = &generatedPath->pathPoints;
             auto controlPoints = &generatedPath->controlPoints;
@@ -61,12 +63,26 @@ namespace devils
             }
         }
 
+        /**
+         * Switches the path to render
+         * @param generatedPath The path to render
+         */
+        void setPath(GeneratedPath &generatedPath)
+        {
+            this->generatedPath = &generatedPath;
+
+            // Recreate path
+            lv_obj_del(robotPath);
+            create(rootObject);
+        }
+
     private:
         static constexpr float DT = 0.1;
 
         std::vector<lv_point_t> linePointVector = {};
         lv_point_t *linePoints = nullptr;
 
+        lv_obj_t *rootObject = nullptr;
         GeneratedPath *generatedPath;
         lv_obj_t *robotPath;
     };

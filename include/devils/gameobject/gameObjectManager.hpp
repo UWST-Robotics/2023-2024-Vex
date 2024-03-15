@@ -9,13 +9,22 @@ namespace devils
     /**
      * Manages the lifecycle of each game object
      */
-    class GameObjectManager : public Runnable
+    class GameObjectManager : public AutoRunnable
     {
     public:
         void update() override
         {
+            // Remove MIA game objects
+            for (auto &object : gameObjects)
+            {
+                if (object.getTimeSinceLastSeen() > MAX_AGE)
+                    remove(object);
+            }
         }
 
+        /**
+         * Clears all known game objects
+         */
         void reset()
         {
             gameObjects.clear();
@@ -32,9 +41,9 @@ namespace devils
 
         /**
          * Adds a game object to the manager
-         * @param object The game object to add
+         * @param object The game object to add. A copy of the object will be added.
          */
-        void add(GameObject object)
+        void add(GameObject &object)
         {
             // Group game objects that are close together
             for (auto &other : gameObjects)
@@ -43,6 +52,8 @@ namespace devils
                 {
                     object.x = (object.x + other.x) / 2;
                     object.y = (object.y + other.y) / 2;
+                    object.firstSeenTime = std::min(object.firstSeenTime, other.firstSeenTime);
+                    object.renew();
                     remove(other);
                 }
             }
@@ -63,6 +74,7 @@ namespace devils
     private:
         static constexpr double GROUP_RADIUS = 10.0;     // in
         static constexpr double COLLECTION_RADIUS = 3.0; // in
+        static constexpr double MAX_AGE = 4000;          // ms
 
         std::vector<GameObject> gameObjects = {};
     };

@@ -37,6 +37,12 @@ namespace devils
         Pose(double x, double y, double rotation) : x(x), y(y), rotation(rotation) {}
 
         /**
+         * Constructs a pose by copying another pose
+         * @param other The other pose
+         */
+        Pose(const Pose &other) : x(other.x), y(other.y), rotation(other.rotation) {}
+
+        /**
          * Adds two poses together
          * @param other The other pose
          * @return The sum of the two poses

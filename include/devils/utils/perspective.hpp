@@ -43,7 +43,6 @@ namespace devils
          */
         Eigen::Matrix3d _calculateTransformationMatrix(std::vector<DisplayPoint> startingPoints, std::vector<DisplayPoint> endingPoints)
         {
-            Logger::debug("Calculating transformation matrix");
             Eigen::Matrix<double, 8, 9> A;
             for (int i = 0; i < 4; i++)
             {

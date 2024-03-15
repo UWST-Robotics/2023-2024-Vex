@@ -37,6 +37,52 @@ namespace devils
             return c;
         }
 
+        /**
+         * Randomly sets the seed for the random number generator.
+         */
+        void _setRandomSeed()
+        {
+            srand(pros::millis());
+        }
+
+        /**
+         * Gets a random pose within the polygon.
+         * @return A random pose within the polygon.
+         */
+        Pose getRandomPose()
+        {
+            // If the polygon is empty, return an empty pose
+            if (points.size() == 0)
+                return Pose();
+
+            // Calculate the bounding box of the polygon
+            double minX = points[0].x;
+            double maxX = points[0].x;
+            double minY = points[0].y;
+            double maxY = points[0].y;
+            for (auto &point : points)
+            {
+                minX = std::min(minX, point.x);
+                maxX = std::max(maxX, point.x);
+                minY = std::min(minY, point.y);
+                maxY = std::max(maxY, point.y);
+            }
+
+            // Randomly select a point within the bounding box until it is within the polygon
+            Pose pose = Pose();
+            _setRandomSeed();
+            do
+            {
+                double rand1 = (rand() % 1000) / 1000.0;
+                double rand2 = (rand() % 1000) / 1000.0;
+                double x = minX + (maxX - minX) * rand1;
+                double y = minY + (maxY - minY) * rand2;
+                pose = Pose(x, y, 0);
+            } while (!contains(pose));
+
+            return pose;
+        }
+
         std::vector<Pose> points;
     };
 }

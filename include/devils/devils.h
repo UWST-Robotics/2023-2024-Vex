@@ -24,9 +24,9 @@
 #include "display/controlRenderer.hpp"
 #include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
-#include "display/rectRenderer.hpp"
 #include "display/polygonRenderer.hpp"
 #include "display/gameObjectRenderer.hpp"
+#include "display/pathPickerRenderer.hpp"
 #include "display/statsRenderer.hpp"
 
 // Hardware
@@ -36,7 +36,7 @@
 // Odom
 #include "odom/pose.hpp"
 #include "odom/odomSource.hpp"
-#include "odom/mergedOdom.hpp"
+#include "odom/complementaryFilterOdom.hpp"
 #include "odom/trackingWheelOdom.hpp"
 #include "odom/differentialWheelOdom.hpp"
 
@@ -57,4 +57,3 @@
 #include "utils/curve.hpp"
 #include "utils/pid.hpp"
 #include "utils/eventTimer.hpp"
-#include "utils/rect.hpp"

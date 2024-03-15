@@ -35,6 +35,7 @@ namespace devils
               odomRenderer(&odometry),
               controlRenderer(&collectionController, &odometry),
               polygonRenderer(&autonomousPolygon),
+              pathPickerRenderer(),
               statsRenderer(),
               displayStack({&pathRendererA,
                             &pathRendererB,
@@ -43,6 +44,7 @@ namespace devils
                             &odomRenderer,
                             &controlRenderer,
                             &polygonRenderer,
+                            //&pathPickerRenderer,
                             &statsRenderer})
         {
             // Auto Controllers
@@ -67,9 +69,6 @@ namespace devils
 
             // Generate random test objects
             gameObjectManager.reset();
-            for (int i = 0; i < 30; i++)
-                gameObjectManager.add(fieldArea.getRandomPose());
-            // gameObjectRenderer.useRect(&autonomousArea);
 
             EventTimer pauseTimer;
             auto pursuitTask = collectionController.runAsync();
@@ -120,6 +119,13 @@ namespace devils
                     pursuitTask.resume();
                 }
 
+                // Add Game Object
+                if (pros::millis() % 3000 <= 20)
+                {
+                    auto gameObject = GameObject(autonomousPolygon.getRandomPose());
+                    gameObjectManager.add(gameObject);
+                }
+
                 // Additional Stats
                 std::stringstream stream;
                 stream << "Pause Timer: " << DisplayUtils::colorizeValue(pauseTimer.getTimeRemaining() / 5000, std::to_string((int)pauseTimer.getTimeRemaining()) + "ms");
@@ -134,8 +140,10 @@ namespace devils
 
     private:
         // Field Area
-        Rect fieldArea = Rect(-72, -72, 144, 144);
-        Rect autonomousArea = Rect(-36, 0, 72, 48);
+        Polygon fieldArea = Polygon({Pose(-72, -72),
+                                     Pose(72, -72),
+                                     Pose(72, 72),
+                                     Pose(-72, 72)});
         Polygon autonomousPolygon = Polygon({Pose(6, 0),
                                              Pose(42, 0),
                                              Pose(42, 32),
@@ -169,6 +177,7 @@ namespace devils
         OdomRenderer odomRenderer;
         ControlRenderer controlRenderer;
         PolygonRenderer polygonRenderer;
+        PathPickerRenderer pathPickerRenderer;
         StatsRenderer statsRenderer;
         Display displayStack;
     };
