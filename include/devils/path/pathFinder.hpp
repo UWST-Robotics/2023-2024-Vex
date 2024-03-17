@@ -23,36 +23,48 @@ namespace devils
                                           Pose endPose,
                                           OccupancyGrid &occupancyGrid)
         {
+            Logger::info("Starting path finding...");
+
             // Get grid cells from pose
             GridPose startCell = _poseToGrid(startPose, occupancyGrid);
             GridPose endCell = _poseToGrid(endPose, occupancyGrid);
 
             // Init node stacks
-            std::vector<AStarNode> unprocessedNodes;
-            std::vector<AStarNode> processedNodes;
+            std::vector<AStarNode> allNodes;
+
+            // Reserve space for all nodes
+            // Also fixes bug where address of vector elements change
+            allNodes.reserve(occupancyGrid.width * occupancyGrid.height);
 
             // Starting Node
-            unprocessedNodes.push_back(startCell);
-            AStarNode &startingNode = unprocessedNodes.front();
+            allNodes.push_back(startCell);
+            auto startingNode = &allNodes.back();
+            startingNode->x = startCell.x;
+            startingNode->y = startCell.y;
+            startingNode->gCost = 0;
+            startingNode->fCost = startCell.getDistance(endCell);
 
             // Loop through unprocessed nodes
-            while (unprocessedNodes.size() > 0)
+            while (true)
             {
-                // Get Node w/ Lowest F-Cost
-                AStarNode currentNode = unprocessedNodes.front();
-                for (AStarNode node : unprocessedNodes)
-                    if (node.fCost < currentNode.fCost)
-                        currentNode = node;
+                // Get Unprocessed Node w/ Lowest F-Cost
+                AStarNode *_currentNode = nullptr;
+                for (AStarNode &node : allNodes)
+                    if (!node.isProcessed && (_currentNode == nullptr || node.fCost < _currentNode->fCost))
+                        _currentNode = &node;
 
-                // Move Node from `unprocessedNodes` >> `processedNodes`
-                unprocessedNodes.erase(
-                    std::remove(unprocessedNodes.begin(), unprocessedNodes.end(), currentNode),
-                    unprocessedNodes.end());
-                processedNodes.push_back(currentNode);
+                // Break if no nodes are left
+                if (_currentNode == nullptr)
+                    break;
+
+                // Mark node as processed
+                AStarNode &currentNode = *_currentNode;
+                currentNode.isProcessed = true;
 
                 // Generate Path from Nodes
                 if (currentNode == endCell)
                 {
+                    Logger::info("Found path!");
                     PathFile file = _nodeToPathFile(currentNode, occupancyGrid);
                     return PathGenerator::generateLinear(file);
                 }
@@ -61,35 +73,24 @@ namespace devils
                 auto neighbors = _getNeighborPoses(currentNode);
                 for (auto &neighbor : neighbors)
                 {
-                    // Skip occupied cells
+                    // Skip occupied cells & OOB cells
                     if (occupancyGrid.getOccupied(neighbor.x, neighbor.y))
                         continue;
 
-                    // Check if neighbor was already processed
-                    bool isProcessed = false;
-                    for (auto &processedNode : processedNodes)
+                    // Search for existing node
+                    AStarNode *existingNode = nullptr;
+                    for (auto &node : allNodes)
                     {
-                        if (processedNode == neighbor)
+                        if (node == neighbor)
                         {
-                            isProcessed = true;
+                            existingNode = &node;
                             break;
                         }
                     }
 
                     // Skip if processed
-                    if (isProcessed)
+                    if (existingNode != nullptr && existingNode->isProcessed)
                         continue;
-
-                    // Check if neighbor is unprocessed
-                    AStarNode *existingNode = nullptr;
-                    for (auto &unprocessedNode : unprocessedNodes)
-                    {
-                        if (unprocessedNode == neighbor)
-                        {
-                            existingNode = &unprocessedNode;
-                            break;
-                        }
-                    }
 
                     // Calculate distance to node
                     int pathDistance = currentNode.getDistance(neighbor) + currentNode.gCost;
@@ -97,17 +98,18 @@ namespace devils
                     // Check if node should be updated
                     if (existingNode == nullptr || existingNode->gCost > pathDistance)
                     {
+
                         // If node doesn't exist, make it
                         if (existingNode == nullptr)
                         {
-                            unprocessedNodes.push_back(neighbor);
-                            existingNode = &unprocessedNodes.back();
+                            allNodes.push_back(neighbor);
+                            existingNode = &allNodes.back();
                         }
 
                         // Update node target, gCost, and fCost
-                        existingNode->targetNode = &currentNode;
+                        existingNode->parentNode = &currentNode;
                         existingNode->gCost = pathDistance;
-                        existingNode->fCost = endCell.getDistance(*existingNode) + pathDistance;
+                        existingNode->fCost = endCell.getDistance(neighbor) + pathDistance;
                     }
                 }
             }
@@ -161,7 +163,11 @@ namespace devils
         /// @brief A container for each node for the A* algorithm
         struct AStarNode : public GridPose
         {
-            AStarNode(GridPose p) : GridPose(p) {}
+            AStarNode(GridPose p)
+            {
+                x = p.x;
+                y = p.y;
+            }
 
             /// @brief Distance from starting node
             int gCost = 0;
@@ -169,8 +175,11 @@ namespace devils
             /// @brief Sum of the starting distance and the ending distance
             int fCost = 0;
 
+            /// @brief Whether the node has been processed and its neighbors have been evaluated
+            bool isProcessed = false;
+
             /// @brief The node that this node originated from
-            AStarNode *targetNode = nullptr;
+            AStarNode *parentNode = nullptr;
 
             /**
              * Compares a node with a `GridPose` for equality
@@ -184,7 +193,7 @@ namespace devils
         };
 
         /**
-         * Calculates a path file to the orgin by following the `targetNode` of each `AStarNode`
+         * Calculates a path file to the orgin by following the `parentNode` of each `AStarNode`
          * @param finalNode - The final node in the path
          * @param sourceGrid - The grid used for converting `AStarNode` to `Pose`
          * @returns A Generated Path using the `LinearGenerator`
@@ -193,17 +202,20 @@ namespace devils
         static PathFile _nodeToPathFile(AStarNode &finalNode, Grid<T> sourceGrid)
         {
             // Initialize path file
-            PathFile pathFile;
+            PathFile pathFile = PathFile();
+            pathFile.version = 1;
+            pathFile.points = std::vector<PathPoint>();
 
             // Iterate through node parents
             AStarNode *currentNode = &finalNode;
             while (currentNode != nullptr)
             {
                 // Add pose to path
-                pathFile.points.push_back(_gridToPose(*currentNode, sourceGrid));
+                auto pose = _gridToPose(*currentNode, sourceGrid);
+                pathFile.points.insert(pathFile.points.begin(), PathPoint{pose});
 
                 // Point to node's parent
-                currentNode = currentNode->targetNode;
+                currentNode = currentNode->parentNode;
             }
 
             // Return path file
@@ -241,8 +253,8 @@ namespace devils
             double cellHeight = FIELD_HEIGHT / (double)grid.height;
 
             // Field Pose relative to top-left
-            double tlPoseX = pose.x - FIELD_WIDTH * 0.5;
-            double tlPoseY = pose.y - FIELD_HEIGHT * 0.5;
+            double tlPoseX = pose.x + FIELD_WIDTH * 0.5;
+            double tlPoseY = pose.y + FIELD_HEIGHT * 0.5;
 
             // Field Pose >> Cell Pose
             double xOrgin = tlPoseX / cellWidth;
@@ -258,6 +270,8 @@ namespace devils
             while (grid.getOccupied(x, y))
             {
                 // TODO: Calculate closest unoccupied cell. Prioritize poses closer to decimal value
+                Logger::error("Not yet implemented");
+                break;
             }
 
             return GridPose{x, y};

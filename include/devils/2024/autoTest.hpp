@@ -79,6 +79,13 @@ namespace devils
             EventTimer pauseTimer;
             auto autoTask = mainController.runAsync();
 
+            auto testPath = PathFinder::generatePath(
+                Pose{-27, -27, 0},
+                Pose{48, 48, 0},
+                occupancyGrid);
+            pathRendererA.setPath(testPath);
+            startPursuitController.setPath(testPath);
+
             // Loop
             while (true)
             {

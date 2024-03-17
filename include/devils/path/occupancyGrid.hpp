@@ -17,10 +17,7 @@ namespace devils
          */
         bool getOccupied(int x, int y)
         {
-            auto val = this->getCell(x, y);
-            if (val == nullptr)
-                return true;
-            return *val;
+            return this->getCell(x, y, true);
         }
     };
 }

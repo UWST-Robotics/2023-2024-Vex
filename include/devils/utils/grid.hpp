@@ -52,19 +52,24 @@ namespace devils
          * Gets the value of a cell at the given position
          * @param x - X position in cells
          * @param y - Y position in cells
-         * @returns True if the cell is occupied, false otherwise
+         * @param defaultValue - The default value if dimensions are out of bounds
+         * @returns The value at the given cell
          */
-        T *getCell(int x, int y)
+        T getCell(int x, int y, T defaultValue)
         {
             // Get the index of the vector
             int index = height * x + y;
 
-            // Default to occupied if oob
-            if (index < 0 || index >= occupancy.size())
-                return nullptr;
+            // Check for OOB
+            if (x < 0 || x >= width)
+                return defaultValue;
+            if (y < 0 || y >= height)
+                return defaultValue;
+            if (index < 0 || index >= values.size())
+                return defaultValue;
 
-            // Return the occupancy value
-            return *values.at(index);
+            // Return the cooresponding value
+            return values.at(index);
         }
     };
 }

@@ -44,6 +44,7 @@
 
 // Path
 #include "path/pathGenerator.hpp"
+#include "path/pathFinder.hpp"
 #include "path/occupancyGrid.hpp"
 #include "path/occupancyFileReader.hpp"
 

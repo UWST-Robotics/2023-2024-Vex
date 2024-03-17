@@ -53,7 +53,7 @@ namespace devils
                 grid.width++;
 
                 for (char v : line)
-                    grid.occupancy.push_back(v == '1');
+                    grid.values.push_back(v == '1');
             }
 
             return grid;
