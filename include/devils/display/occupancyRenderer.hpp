@@ -19,7 +19,7 @@ namespace devils
          * Creates a new OccupancyRenderer
          * @param grid The occupancy grid to render
          */
-        OccupancyRenderer(OccupancyGrid *grid) : grid(grid)
+        OccupancyRenderer(OccupancyGrid &grid) : grid(grid)
         {
         }
 
@@ -32,18 +32,17 @@ namespace devils
         void create(lv_obj_t *root) override
         {
             // Calculate Dimensions
-            double cellWidth = (FIELD_WIDTH / (double)grid->width) * DisplayUtils::PX_PER_IN;
-            double cellHeight = (FIELD_HEIGHT / (double)grid->height) * DisplayUtils::PX_PER_IN;
+            double cellWidth = (FIELD_WIDTH / (double)grid.width) * DisplayUtils::PX_PER_IN;
+            double cellHeight = (FIELD_HEIGHT / (double)grid.height) * DisplayUtils::PX_PER_IN;
 
             // Iterate Through Grid
-            for (int x = 0; x < grid->width; x++)
+            for (int x = 0; x < grid.width; x++)
             {
-                for (int y = 0; y < grid->height; y++)
+                for (int y = 0; y < grid.height; y++)
                 {
                     // Skip unoccupied cells
-                    if (!grid->getOccupied(x, y))
+                    if (!grid.getOccupied(x, y))
                         continue;
-                    Logger::debug(std::to_string(x) + "," + std::to_string(y));
 
                     // Create LVGL Object
                     lv_obj_t *cellObj = lv_obj_create(root, NULL);
@@ -82,7 +81,7 @@ namespace devils
         std::vector<lv_point_t> linePointVector;
         lv_point_t *linePoints;
 
-        OccupancyGrid *grid;
+        OccupancyGrid &grid;
         std::vector<lv_obj_t *> cellObjects;
     };
 }

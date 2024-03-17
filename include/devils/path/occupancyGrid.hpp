@@ -1,22 +1,14 @@
 #pragma once
 #include <vector>
+#include "../utils/grid.hpp"
 
 namespace devils
 {
     /**
      * A struct representing a grid of cells and whether or not each cell is occupied
      */
-    struct OccupancyGrid
+    struct OccupancyGrid : public Grid<bool>
     {
-        /// @brief Width of the grid in cells
-        int width = 0;
-
-        /// @brief Height of the grid in cells
-        int height = 0;
-
-        /// @brief 2D array of grid cells. Every `width` indices is a new row.
-        std::vector<bool> occupancy;
-
         /**
          * Gets whether or not a cell is occupied
          * @param x - X position in cells
@@ -25,15 +17,10 @@ namespace devils
          */
         bool getOccupied(int x, int y)
         {
-            // Get the index of the vector
-            int index = height * x + y;
-
-            // Default to occupied if oob
-            if (index < 0 || index >= occupancy.size())
+            auto val = this->getCell(x, y);
+            if (val == nullptr)
                 return true;
-
-            // Return the occupancy value
-            return occupancy.at(index);
+            return *val;
         }
     };
 }
