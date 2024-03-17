@@ -13,21 +13,11 @@
 namespace devils
 {
     /**
-     * Controller for grabbing a game object and returning to a path or position.
+     * Controller for retriving game object
      */
     class CollectionController : public AutoController
     {
     public:
-        /**
-         * Represents the state of the collection controller.
-         */
-        enum State
-        {
-            INIT,
-            COLLECT,
-            RETURN
-        };
-
         /**
          * Constructs a new LinearController.
          * @param chassis The chassis to control.
@@ -44,15 +34,11 @@ namespace devils
 
         std::vector<PathEvent> *getCurrentEvents() override
         {
-            if (state != COLLECT)
-                return _getCurrentController()->getCurrentEvents();
             return &NO_EVENTS;
         }
 
         Pose *getTargetPose() override
         {
-            if (state != COLLECT)
-                return _getCurrentController()->getTargetPose();
             if (currentObject != nullptr)
                 return currentObject;
             return nullptr;
@@ -60,20 +46,6 @@ namespace devils
 
         void update() override
         {
-            // Run Target States
-            if (state == RETURN)
-            {
-                if (returnController != nullptr)
-                    returnController->runSync();
-                state = COLLECT;
-            }
-            if (state == INIT)
-            {
-                if (initializeController != nullptr)
-                    initializeController->runSync();
-                state = COLLECT;
-            }
-
             // Get the closest object
             auto currentPose = odometry.getPose();
             auto gameObjects = gameObjectManager.getGameObjects();
@@ -115,7 +87,7 @@ namespace devils
             if (hasObject)
             {
                 gameObjectManager.remove(*currentObject);
-                state = RETURN;
+                isFinished = true;
                 Logger::info("CollectionController: Object Collected");
             }
 
@@ -138,23 +110,13 @@ namespace devils
 
         void reset() override
         {
-            state = INIT;
+            isFinished = false;
             currentObject = nullptr;
         }
 
         bool getFinished() override
         {
-            return false;
-        }
-
-        AutoController *_getCurrentController()
-        {
-            if (state == INIT)
-                return initializeController;
-            else if (state == RETURN)
-                return returnController;
-            else
-                return nullptr;
+            return isFinished;
         }
 
         /**
@@ -175,32 +137,6 @@ namespace devils
             collectionArea = polygon;
         }
 
-        /**
-         * Sets the controller to initialize the collection process.
-         * @param controller The controller to use.
-         */
-        void useInitController(AutoController *controller)
-        {
-            initializeController = controller;
-        }
-
-        /**
-         * Sets the controller to return to a position after collecting the game objects.
-         * @param controller The controller to use.
-         */
-        void useReturnController(AutoController *controller)
-        {
-            returnController = controller;
-        }
-
-        /**
-         * Gets the state of the controller.
-         */
-        State getState()
-        {
-            return state;
-        }
-
     private:
         static constexpr double COLLECTION_DISTANCE = 4.0; // in
         static constexpr double OPTICAL_PROXIMITY = 0.5;   // %
@@ -216,7 +152,7 @@ namespace devils
         GameObjectManager &gameObjectManager;
 
         // State
-        State state = INIT;
+        bool isFinished = false;
         GameObject *currentObject = nullptr;
 
         // Optional Components

@@ -32,15 +32,17 @@ namespace devils
               startPursuitController(chassis, startPath, odometry),
               scorePursuitController(chassis, scorePath, odometry),
               collectionController(chassis, odometry, gameObjectManager),
+              subController({&collectionController, &scorePursuitController}, true),
+              mainController({&startPursuitController, &subController}),
               pathRendererA(&startPath),
               pathRendererB(&scorePath),
               fieldRenderer(),
               gameObjectRenderer(gameObjectManager),
               odomRenderer(&odometry),
-              controlRenderer(&collectionController, &odometry),
+              controlRenderer(&mainController, &odometry),
               polygonRenderer(&autonomousPolygon),
               pathPickerRenderer(),
-              occupancyRenderer(&occupancyGrid),
+              occupancyRenderer(occupancyGrid),
               statsRenderer(),
               displayStack({&pathRendererA,
                             &pathRendererB,
@@ -55,8 +57,6 @@ namespace devils
         {
             // Auto Controllers
             collectionController.useCollectionArea(&autonomousPolygon);
-            collectionController.useInitController(&startPursuitController);
-            collectionController.useReturnController(&scorePursuitController);
 
             // Display Data
             statsRenderer.useOdomSource(&odometry);
@@ -77,7 +77,7 @@ namespace devils
             gameObjectManager.reset();
 
             EventTimer pauseTimer;
-            auto pursuitTask = collectionController.runAsync();
+            auto autoTask = mainController.runAsync();
 
             // Loop
             while (true)
@@ -118,11 +118,11 @@ namespace devils
                 if (pauseTimer.getRunning())
                 {
                     chassis.stop();
-                    pursuitTask.suspend();
+                    autoTask.suspend();
                 }
                 else
                 {
-                    pursuitTask.resume();
+                    autoTask.resume();
                 }
 
                 // Add Game Object
@@ -167,12 +167,16 @@ namespace devils
         PathFile scorePathFile;
         OccupancyGrid occupancyGrid;
 
-        // Autonomous
-        GeneratedPath startPath;
-        GeneratedPath scorePath;
+        // Auto Controller Stack
         PursuitController startPursuitController;
         PursuitController scorePursuitController;
         CollectionController collectionController;
+        ControllerList mainController;
+        ControllerList subController;
+
+        // Autonomous
+        GeneratedPath startPath;
+        GeneratedPath scorePath;
         GameObjectManager gameObjectManager;
 
         // Teleop Controller

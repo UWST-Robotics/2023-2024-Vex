@@ -11,6 +11,7 @@
 #include "control/pursuitController.hpp"
 #include "control/linearController.hpp"
 #include "control/collectionController.hpp"
+#include "control/controllerList.hpp"
 
 // Chassis
 #include "chassis/chassis.hpp"

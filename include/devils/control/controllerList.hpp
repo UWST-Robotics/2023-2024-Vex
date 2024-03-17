@@ -13,7 +13,7 @@
 namespace devils
 {
     /**
-     * Runs though a list of controllers.
+     * Runs though a list of controllers in sequential order
      */
     class ControllerList : public AutoController
     {
@@ -37,9 +37,9 @@ namespace devils
 
         void runSync() override
         {
-            while (controllerIndex < controllers.size())
+            while (!getFinished())
             {
-                controllers[controllerIndex]->runSync();
+                getCurrentController()->runSync();
                 controllerIndex++;
                 pros::delay(20);
             }
@@ -77,9 +77,7 @@ namespace devils
 
         AutoController *getCurrentController()
         {
-            if (controllerIndex >= controllers.size() || controllerIndex < 0)
-                return nullptr;
-            return controllers[controllerIndex];
+            return controllers[controllerIndex % controllers.size()];
         }
 
     private:
