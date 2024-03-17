@@ -8,6 +8,7 @@
 #define INCBIN_PREFIX g_
 INCTXT(startPath, "paths/testpath.txt");
 INCTXT(scorePath, "paths/score.txt");
+INCTXT(occupancyGrid, "paths/occupancy.txt");
 
 namespace devils
 {
@@ -21,8 +22,11 @@ namespace devils
          */
         AutoTest()
             : controller(pros::E_CONTROLLER_MASTER),
+
               startPathFile(PathFileReader::deserialize(g_startPathData)),
               scorePathFile(PathFileReader::deserialize(g_scorePathData)),
+              occupancyGrid(OccupancyFileReader::deserialize(g_occupancyGridData)),
+
               startPath(PathGenerator::generateLinear(startPathFile)),
               scorePath(PathGenerator::generateLinear(scorePathFile)),
               startPursuitController(chassis, startPath, odometry),
@@ -36,6 +40,7 @@ namespace devils
               controlRenderer(&collectionController, &odometry),
               polygonRenderer(&autonomousPolygon),
               pathPickerRenderer(),
+              occupancyRenderer(&occupancyGrid),
               statsRenderer(),
               displayStack({&pathRendererA,
                             &pathRendererB,
@@ -44,6 +49,7 @@ namespace devils
                             &odomRenderer,
                             &controlRenderer,
                             &polygonRenderer,
+                            &occupancyRenderer,
                             //&pathPickerRenderer,
                             &statsRenderer})
         {
@@ -156,9 +162,12 @@ namespace devils
         DummyChassis chassis;
         OdomSource &odometry = (OdomSource &)chassis;
 
-        // Autonomous
+        // Data Files
         PathFile startPathFile;
         PathFile scorePathFile;
+        OccupancyGrid occupancyGrid;
+
+        // Autonomous
         GeneratedPath startPath;
         GeneratedPath scorePath;
         PursuitController startPursuitController;
@@ -178,6 +187,7 @@ namespace devils
         ControlRenderer controlRenderer;
         PolygonRenderer polygonRenderer;
         PathPickerRenderer pathPickerRenderer;
+        OccupancyRenderer occupancyRenderer;
         StatsRenderer statsRenderer;
         Display displayStack;
     };

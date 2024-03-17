@@ -27,6 +27,7 @@
 #include "display/polygonRenderer.hpp"
 #include "display/gameObjectRenderer.hpp"
 #include "display/pathPickerRenderer.hpp"
+#include "display/occupancyRenderer.hpp"
 #include "display/statsRenderer.hpp"
 
 // Hardware
@@ -42,6 +43,8 @@
 
 // Path
 #include "path/pathGenerator.hpp"
+#include "path/occupancyGrid.hpp"
+#include "path/occupancyFileReader.hpp"
 
 // Game Object
 #include "gameobject/gameObject.hpp"

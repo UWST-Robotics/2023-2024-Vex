@@ -29,6 +29,8 @@ namespace devils
 
         void create(lv_obj_t *root) override
         {
+            // TODO: Design/implement a pack selection menu
+
             // Calculate Offset
             double offsetX = DisplayUtils::DISPLAY_WIDTH / 2;
             double offsetY = DisplayUtils::DISPLAY_HEIGHT / 2;
