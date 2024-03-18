@@ -1,8 +1,8 @@
 #pragma once
 #include "pathFileReader.hpp"
 #include "pathFile.hpp"
-#include "../odom/pose.hpp"
-#include "../utils/units.hpp"
+#include "../geometry/pose.hpp"
+#include "../geometry/units.hpp"
 #include <vector>
 
 namespace devils

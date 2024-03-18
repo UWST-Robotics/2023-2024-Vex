@@ -1,11 +1,11 @@
 #pragma once
-#include "../odom/pose.hpp"
+#include "pose.hpp"
 #include "units.hpp"
 #include <cmath>
 
 namespace devils
 {
-    class PathUtils
+    class Lerp
     {
     public:
         /**
@@ -15,7 +15,7 @@ namespace devils
          * @param t The ratio between a and b. Values between 0 and 1.
          * @return The interpolated value.
          */
-        static double cubicLerp(double a, double b, double t)
+        static double cubic(double a, double b, double t)
         {
             return a + (b - a) * t;
         }
@@ -26,7 +26,7 @@ namespace devils
          * @param b The maximum value in radians.
          * @param t The ratio between a and b. Values between 0 and 1.
          */
-        static double rotationLerp(double a, double b, double t)
+        static double rotation(double a, double b, double t)
         {
             double aMod = std::fmod(a, 2 * M_PI);
             double bMod = std::fmod(b, 2 * M_PI);
@@ -35,14 +35,14 @@ namespace devils
             {
                 if (aMod > bMod)
                 {
-                    return Units::normalizeRadians(cubicLerp(aMod, bMod + 2 * M_PI, t));
+                    return Units::normalizeRadians(cubic(aMod, bMod + 2 * M_PI, t));
                 }
                 else
                 {
-                    return Units::normalizeRadians(cubicLerp(aMod + 2 * M_PI, bMod, t));
+                    return Units::normalizeRadians(cubic(aMod + 2 * M_PI, bMod, t));
                 }
             }
-            return Units::normalizeRadians(cubicLerp(aMod, bMod, t));
+            return Units::normalizeRadians(cubic(aMod, bMod, t));
         }
 
         /**
@@ -52,12 +52,12 @@ namespace devils
          * @param t The ratio between a and b. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose lerpPoints(Pose &a, Pose &b, double t)
+        static Pose linearPoints(Pose &a, Pose &b, double t)
         {
             return Pose{
-                cubicLerp(a.x, b.x, t),
-                cubicLerp(a.y, b.y, t),
-                rotationLerp(a.rotation, b.rotation, t)};
+                cubic(a.x, b.x, t),
+                cubic(a.y, b.y, t),
+                rotation(a.rotation, b.rotation, t)};
         }
 
         /**
@@ -68,11 +68,11 @@ namespace devils
          * @param t The ratio between a and c. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose quadraticLerpPoints(Pose &a, Pose &b, Pose &c, double t)
+        static Pose quadraticPoints(Pose &a, Pose &b, Pose &c, double t)
         {
-            Pose ab = lerpPoints(a, b, t);
-            Pose bc = lerpPoints(b, c, t);
-            return lerpPoints(ab, bc, t);
+            Pose ab = linearPoints(a, b, t);
+            Pose bc = linearPoints(b, c, t);
+            return linearPoints(ab, bc, t);
         }
 
         /**
@@ -84,11 +84,11 @@ namespace devils
          * @param t The ratio between a and d. Values between 0 and 1.
          * @return The interpolated point.
          */
-        static Pose cubicLerpPoints(Pose &a, Pose &b, Pose &c, Pose &d, double t)
+        static Pose cubicPoints(Pose &a, Pose &b, Pose &c, Pose &d, double t)
         {
-            Pose abc = quadraticLerpPoints(a, b, c, t);
-            Pose bcd = quadraticLerpPoints(b, c, d, t);
-            return lerpPoints(abc, bcd, t);
+            Pose abc = quadraticPoints(a, b, c, t);
+            Pose bcd = quadraticPoints(b, c, d, t);
+            return linearPoints(abc, bcd, t);
         }
     };
 }

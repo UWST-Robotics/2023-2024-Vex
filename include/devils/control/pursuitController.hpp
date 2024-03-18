@@ -4,8 +4,8 @@
 #include "../path/pathFile.hpp"
 #include "../odom/odomSource.hpp"
 #include "../utils/logger.hpp"
-#include "../utils/curve.hpp"
 #include "../utils/pid.hpp"
+#include "../geometry/lerp.hpp"
 #include "autoController.hpp"
 #include <cmath>
 #include <vector>
@@ -173,10 +173,10 @@ namespace devils
 
             // Clamp Values
             if (isReversed)
-                forward = Curve::clamp(-1.0, 0.0, forward);
+                forward = std::clamp(forward, -1.0, 0.0);
             else
-                forward = Curve::clamp(0.0, 1.0, forward);
-            turn = Curve::clamp(-1.0, 1.0, turn) * normal;
+                forward = std::clamp(forward, 0.0, 1.0);
+            turn = std::clamp(turn, -1.0, 1.0) * normal;
 
             // Drive
             chassis.move(forward, turn);

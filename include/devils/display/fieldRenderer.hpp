@@ -1,9 +1,9 @@
 #pragma once
 #include "renderer.hpp"
 #include "../utils/logger.hpp"
-#include "../utils/units.hpp"
 #include "../control/autoController.hpp"
-#include "../utils/perspective.hpp"
+#include "../geometry/perspective.hpp"
+#include "../geometry/units.hpp"
 #include <cmath>
 #include <string>
 

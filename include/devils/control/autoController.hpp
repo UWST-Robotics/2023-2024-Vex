@@ -1,7 +1,7 @@
 #pragma once
 #include "squiggles.hpp"
 #include "pros/rtos.hpp"
-#include "../odom/pose.hpp"
+#include "../geometry/pose.hpp"
 #include "../utils/runnable.hpp"
 
 namespace devils

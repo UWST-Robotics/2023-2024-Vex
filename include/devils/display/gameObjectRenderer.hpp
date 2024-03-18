@@ -1,11 +1,11 @@
 #pragma once
 #include "renderer.hpp"
 #include "../utils/logger.hpp"
-#include "../utils/units.hpp"
+#include "../geometry/units.hpp"
+#include "../geometry/polygon.hpp"
 #include "../control/autoController.hpp"
 #include "../gameobject/gameObjectManager.hpp"
 #include "../display/displayUtils.hpp"
-#include "../utils/polygon.hpp"
 #include <cmath>
 #include <string>
 #include <map>

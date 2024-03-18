@@ -1,5 +1,6 @@
 #pragma once
 #include "../hardware/smartMotor.hpp"
+#include "../hardware/scuffPneumatic.hpp"
 
 namespace devils
 {

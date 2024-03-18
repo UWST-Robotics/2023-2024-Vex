@@ -1,6 +1,6 @@
 #pragma once
 #include "../path/generatedPath.hpp"
-#include "../odom/pose.hpp"
+#include "../geometry/pose.hpp"
 #include "../path/occupancyGrid.hpp"
 #include "../path/pathGenerator.hpp"
 

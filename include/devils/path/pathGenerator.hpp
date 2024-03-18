@@ -1,6 +1,6 @@
 #pragma once
 #include "generatedPath.hpp"
-#include "../utils/pathUtils.hpp"
+#include "../geometry/lerp.hpp"
 #include <vector>
 
 namespace devils
@@ -29,7 +29,7 @@ namespace devils
 
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)
-                    pathPoints.push_back(PathUtils::lerpPoints(p1, p2, t));
+                    pathPoints.push_back(Lerp::linearPoints(p1, p2, t));
             }
 
             // Return the generated path
@@ -72,7 +72,7 @@ namespace devils
 
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)
-                    pathPoints.push_back(PathUtils::cubicLerpPoints(p1, a1, a2, p2, t));
+                    pathPoints.push_back(Lerp::cubicPoints(p1, a1, a2, p2, t));
 
                 // Reverse Anchor Points
                 if (p2.isReversed)

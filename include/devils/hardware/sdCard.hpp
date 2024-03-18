@@ -4,7 +4,7 @@
 
 namespace devils
 {
-    struct SDUtils
+    struct SDCard
     {
         /**
          * Checks if the SD card is inserted into the brain.
@@ -24,7 +24,7 @@ namespace devils
         {
             if (!isInserted())
             {
-                Logger::error("SDUtils.readFromSD: SD card is not installed!");
+                Logger::error("SDCard::readFromSD: SD card is not installed!");
                 return "";
             }
 

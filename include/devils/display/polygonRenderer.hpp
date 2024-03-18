@@ -1,8 +1,8 @@
 #pragma once
 #include "renderer.hpp"
 #include "../utils/logger.hpp"
-#include "../utils/units.hpp"
-#include "../utils/polygon.hpp"
+#include "../geometry/units.hpp"
+#include "../geometry/polygon.hpp"
 #include "displayUtils.hpp"
 #include <cmath>
 #include <string>

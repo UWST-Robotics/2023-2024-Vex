@@ -1,5 +1,5 @@
 #pragma once
-#include "../odom/pose.hpp"
+#include "../geometry/pose.hpp"
 #include "../odom/odomSource.hpp"
 #include "../../pros/misc.hpp"
 #include "displayUtils.hpp"

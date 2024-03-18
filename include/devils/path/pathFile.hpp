@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "../odom/pose.hpp"
+#include "../geometry/pose.hpp"
 
 namespace devils
 {

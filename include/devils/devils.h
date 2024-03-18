@@ -36,7 +36,6 @@
 #include "hardware/opticalSensor.hpp"
 
 // Odom
-#include "odom/pose.hpp"
 #include "odom/odomSource.hpp"
 #include "odom/complementaryFilterOdom.hpp"
 #include "odom/trackingWheelOdom.hpp"
@@ -56,9 +55,9 @@
 #include "api.h"
 
 // Robot
-#include "robots/robot.hpp"
+#include "utils/robot.hpp"
 
 // Utils
-#include "utils/curve.hpp"
+#include "utils/joystickCurve.hpp"
 #include "utils/pid.hpp"
 #include "utils/eventTimer.hpp"

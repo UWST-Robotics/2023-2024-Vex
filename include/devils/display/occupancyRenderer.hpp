@@ -1,9 +1,9 @@
 #pragma once
 #include "renderer.hpp"
-#include "../utils/logger.hpp"
-#include "../utils/units.hpp"
-#include "../path/occupancyGrid.hpp"
 #include "displayUtils.hpp"
+#include "../utils/logger.hpp"
+#include "../geometry/units.hpp"
+#include "../path/occupancyGrid.hpp"
 #include <cmath>
 #include <string>
 

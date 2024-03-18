@@ -3,7 +3,7 @@
 #include "pathFile.hpp"
 #include "generatedPath.hpp"
 #include "okapi/squiggles/squiggles.hpp"
-#include "../utils/units.hpp"
+#include "../geometry/units.hpp"
 #include "../utils/logger.hpp"
 #include <vector>
 

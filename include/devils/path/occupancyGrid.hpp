@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "../utils/grid.hpp"
+#include "../geometry/grid.hpp"
 
 namespace devils
 {

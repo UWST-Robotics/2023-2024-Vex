@@ -1,5 +1,5 @@
 #pragma once
-#include "../odom/pose.hpp"
+#include "../geometry/pose.hpp"
 
 namespace devils
 {

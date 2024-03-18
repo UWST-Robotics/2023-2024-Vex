@@ -1,8 +1,7 @@
 #pragma once
-#include "../odom/pose.hpp"
 #include "../utils/logger.hpp"
 #include "units.hpp"
-#include "displayPoint.hpp"
+#include "pose.hpp"
 #include <cmath>
 
 // https://www.vexforum.com/t/eigen-integration-issue/61474/7
@@ -19,6 +18,26 @@ namespace devils
     class Perspective
     {
     public:
+        /**
+         * Container for a point on the display.
+         */
+        struct DisplayPoint
+        {
+            /// @brief The x position of the point
+            double x = 0;
+            /// @brief The y position of the point
+            double y = 0;
+
+            /**
+             * Prints the pose to a string
+             * @return The pose as a string
+             */
+            const std::string toString()
+            {
+                return "Point(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+            }
+        };
+
         /**
          * Generates a new Perspective transform.
          * @param from The starting points of the transform, in clockwise order from the top-left.

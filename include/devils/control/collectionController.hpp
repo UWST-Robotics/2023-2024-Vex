@@ -1,23 +1,19 @@
 #pragma once
-#include "../chassis/chassis.hpp"
-#include "../path/generatedPath.hpp"
 #include "autoController.hpp"
-#include "directController.hpp"
-#include "../gameobject/gameObjectManager.hpp"
-#include "pros/rtos.hpp"
-#include "../utils/pid.hpp"
-#include "../utils/curve.hpp"
-#include "../odom/odomSource.hpp"
-#include "../hardware/opticalSensor.hpp"
-#include "../utils/polygon.hpp"
+#include "../geometry/pose.hpp"
+#include "../geometry/polygon.hpp"
 #include "../path/occupancyGrid.hpp"
+#include "../odom/odomSource.hpp"
+#include "../gameobject/gameObjectManager.hpp"
+#include "../control/pursuitController.hpp"
+#include "../control/directController.hpp"
 #include "../display/pathRenderer.hpp"
-#include "../path/pathFinder.hpp"
+#include "../hardware/opticalSensor.hpp"
 
 namespace devils
 {
     /**
-     * Controller for retriving game object
+     * Controller for retriving game objects from the field.
      */
     class CollectionController : public AutoController
     {
@@ -92,13 +88,12 @@ namespace devils
                     hasObject = true;
             }
 
-            // If object is in proximity, return to the path
+            // Mark object as collected
             if (hasObject)
             {
                 gameObjectManager.remove(*targetObject);
                 isFinished = true;
                 chassis.stop();
-                Logger::info("CollectionController: Object Collected");
                 return;
             }
 

@@ -9,7 +9,7 @@ namespace devils
     /**
      * Represents a joystick curve.
      */
-    class Curve
+    class JoystickCurve
     {
     public:
         /**
@@ -59,22 +59,6 @@ namespace devils
         static double cubic(double val)
         {
             return val * val * val;
-        }
-
-        /**
-         * Clamps a value between a minimum and maximum.
-         * @param min The minimum value.
-         * @param max The maximum value.
-         * @param val The value to clamp.
-         * @return The clamped value.
-         */
-        static double clamp(double min, double max, double val)
-        {
-            if (val < min)
-                return min;
-            if (val > max)
-                return max;
-            return val;
         }
     };
 }

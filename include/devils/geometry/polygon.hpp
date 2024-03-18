@@ -1,7 +1,7 @@
 #pragma once
 #include "pros/rtos.hpp"
 #include "../utils/logger.hpp"
-#include "../odom/pose.hpp"
+#include "pose.hpp"
 
 namespace devils
 {

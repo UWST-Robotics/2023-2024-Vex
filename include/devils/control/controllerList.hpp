@@ -1,14 +1,13 @@
 #pragma once
-#include "../chassis/chassis.hpp"
-#include "../path/generatedPath.hpp"
-#include "autoController.hpp"
-#include "../gameobject/gameObjectManager.hpp"
 #include "pros/rtos.hpp"
-#include "../utils/pid.hpp"
-#include "../utils/curve.hpp"
+#include "../path/generatedPath.hpp"
+#include "../gameobject/gameObjectManager.hpp"
+#include "../chassis/chassis.hpp"
 #include "../odom/odomSource.hpp"
 #include "../hardware/opticalSensor.hpp"
-#include "../utils/polygon.hpp"
+#include "../geometry/polygon.hpp"
+#include "../utils/pid.hpp"
+#include "autoController.hpp"
 
 namespace devils
 {
@@ -21,6 +20,7 @@ namespace devils
         /**
          * Constructs a new ControllerList.
          * @param controllers The controllers to run.
+         * @param loop Whether to loop the controllers. `isFinished` will always return false if this is true.
          */
         ControllerList(std::initializer_list<AutoController *> controllers, bool loop = false)
             : controllers(controllers),

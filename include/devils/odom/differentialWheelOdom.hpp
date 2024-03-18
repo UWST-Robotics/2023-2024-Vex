@@ -1,9 +1,9 @@
 #pragma once
 #include "../chassis/tankChassis.hpp"
 #include "../hardware/imu.hpp"
-#include "../utils/logger.hpp"
 #include "../hardware/rotationSensor.hpp"
-#include "pose.hpp"
+#include "../utils/logger.hpp"
+#include "../geometry/pose.hpp"
 #include "odomSource.hpp"
 #include "pros/rtos.hpp"
 #include "pros/error.h"

@@ -1,9 +1,9 @@
 #pragma once
 #include "pros/gps.hpp"
-#include "pose.hpp"
-#include "../utils/logger.hpp"
 #include "odomSource.hpp"
-#include "../utils/units.hpp"
+#include "../geometry/pose.hpp"
+#include "../geometry/units.hpp"
+#include "../utils/logger.hpp"
 #include "../utils/runnable.hpp"
 
 namespace devils

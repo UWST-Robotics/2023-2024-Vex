@@ -2,8 +2,8 @@
 #include "occupancyGrid.hpp"
 #include "../utils/logger.hpp"
 #include "../utils/stringUtils.hpp"
-#include "../utils/units.hpp"
-#include "../utils/sdUtils.hpp"
+#include "../geometry/units.hpp"
+#include "../hardware/sdCard.hpp"
 #include <fstream>
 #include <iostream>
 
@@ -21,7 +21,7 @@ namespace devils
          */
         static OccupancyGrid readFromSD()
         {
-            return deserialize(SDUtils::readToString(OCCUPANCY_FILE_PATH));
+            return deserialize(SDCard::readToString(OCCUPANCY_FILE_PATH));
         }
 
         /**
