@@ -119,10 +119,7 @@ namespace devils
             // Split the line into properties
             auto split = StringUtils::split(line, ' ');
             int index = 0;
-            PathEvent event;
-
-            // Randomize ID
-            event.id = std::rand();
+            PathEvent event = PathEvent("", "");
 
             // Iterate through each property
             for (int i = 0; i < split.size(); i++)

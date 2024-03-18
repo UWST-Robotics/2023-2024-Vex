@@ -23,7 +23,8 @@ namespace devils
                                           Pose endPose,
                                           OccupancyGrid &occupancyGrid)
         {
-            Logger::info("Starting path finding...");
+            // Get Start Time
+            int startTime = pros::millis();
 
             // Get grid cells from pose
             GridPose startCell = _poseToGrid(startPose, occupancyGrid);
@@ -47,6 +48,13 @@ namespace devils
             // Loop through unprocessed nodes
             while (true)
             {
+                // Check Timeout
+                if (pros::millis() - startTime > TIMEOUT)
+                {
+                    Logger::error("PathFinder: Timeout");
+                    break;
+                }
+
                 // Get Unprocessed Node w/ Lowest F-Cost
                 AStarNode *_currentNode = nullptr;
                 for (AStarNode &node : allNodes)
@@ -262,19 +270,34 @@ namespace devils
 
             // Keep within bounds
             xOrgin = std::clamp((int)xOrgin, 0, grid.width);
-            yOrgin = std::clamp((int)xOrgin, 0, grid.height);
+            yOrgin = std::clamp((int)yOrgin, 0, grid.height);
 
-            // Floor Index
-            int x = xOrgin;
-            int y = yOrgin;
-            while (grid.getOccupied(x, y))
+            GridPose orginCell = GridPose{(int)xOrgin, (int)yOrgin};
+            if (!grid.getOccupied(xOrgin, yOrgin))
+                return orginCell;
+
+            // Get all unoccupied cells
+            std::vector<GridPose> allCells = {};
+            for (int x = 0; x < grid.width; x++)
+                for (int y = 0; y < grid.height; y++)
+                    if (!grid.getOccupied(x, y))
+                        allCells.push_back(GridPose{x, y});
+
+            // Find the closest cell
+            // TODO: Replace brute-force w/ more efficient algorithm
+            GridPose &closestCell = allCells[0];
+            double closestDistance = closestCell.getDistance(orginCell);
+            for (auto &cell : allCells)
             {
-                // TODO: Calculate closest unoccupied cell. Prioritize poses closer to decimal value
-                Logger::error("Not yet implemented");
-                break;
+                double distance = cell.getDistance(orginCell);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestCell = cell;
+                }
             }
 
-            return GridPose{x, y};
+            return closestCell;
         }
 
         /**
@@ -310,5 +333,6 @@ namespace devils
         static constexpr int FIELD_HEIGHT = 144; // in
         static constexpr int STRAIGHT_COST = 10;
         static constexpr int DIAGONAL_COST = 14;
+        static constexpr int TIMEOUT = 1000; // ms
     };
 }

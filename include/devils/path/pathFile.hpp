@@ -11,6 +11,13 @@ namespace devils
      */
     struct PathEvent
     {
+        PathEvent(std::string name, std::string params)
+            : id(std::rand()),
+              name(name),
+              params(params)
+        {
+        }
+
         /// @brief Random ID created at runtime
         int id = 0;
         /// @brief The name of the event

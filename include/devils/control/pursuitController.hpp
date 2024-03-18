@@ -21,54 +21,57 @@ namespace devils
         /**
          * Constructs a new PursuitController.
          * @param chassis The chassis to control.
-         * @param generatedPath The generated path to follow.
          * @param odometry The odometry source to use.
+         * @param path The generated path to follow.
          * @param skipCheckpoints Whether the controller can skip checkpoints.
          */
-        PursuitController(BaseChassis &chassis, GeneratedPath &generatedPath, OdomSource &odometry, bool skipCheckpoints = false)
+        PursuitController(BaseChassis &chassis, OdomSource &odometry, GeneratedPath *path = nullptr, bool skipCheckpoints = false)
             : chassis(chassis),
-              generatedPath(generatedPath),
               odometry(odometry),
               skipCheckpoints(skipCheckpoints),
-              controlPoints(generatedPath.controlPoints),
-              pathPoints(generatedPath.pathPoints)
+              currentPath(path)
         {
+            setPath(path);
         }
 
         std::vector<PathEvent> *getCurrentEvents() override
         {
-            if (controlPointIndex >= controlPoints.size() || controlPointIndex < 0)
+            if (controlPoints == nullptr || controlPointIndex >= controlPoints->size() || controlPointIndex < 0)
                 return nullptr;
-            return &controlPoints[controlPointIndex].events;
+            return &controlPoints->at(controlPointIndex).events;
         }
 
         Pose *getTargetPose() override
         {
-            if (lookaheadPointIndex >= pathPoints.size() || lookaheadPointIndex < 0)
+            if (pathPoints == nullptr || lookaheadPointIndex >= pathPoints->size() || lookaheadPointIndex < 0)
                 return nullptr;
-            return &pathPoints[lookaheadPointIndex];
+            return &pathPoints->at(lookaheadPointIndex);
         }
 
         void update() override
         {
+            // Abort if path is missing
+            if (currentPath == nullptr)
+                return;
+
             // Get Current Pose
             auto currentPose = odometry.getPose();
 
             // Update Control Point Index
-            if (controlPointIndex < controlPoints.size() - 1)
+            if (controlPointIndex < controlPoints->size() - 1)
             {
-                auto controlPoint = controlPoints[controlPointIndex + 1];
+                auto controlPoint = controlPoints->at(controlPointIndex + 1);
                 double distance = controlPoint.distanceTo(currentPose);
                 if (distance < LOOKAHEAD_DISTANCE)
                     controlPointIndex++;
             }
-            int checkpointPathIndex = (this->controlPointIndex + 1) / generatedPath.dt;
+            int checkpointPathIndex = (this->controlPointIndex + 1) / currentPath->dt;
 
             // Update Path Point Index
             double closestDistance = INT_MAX;
-            for (int i = robotPointIndex; i < pathPoints.size(); i++)
+            for (int i = robotPointIndex; i < pathPoints->size(); i++)
             {
-                auto point = pathPoints[i];
+                auto point = pathPoints->at(i);
                 double distance = point.distanceTo(currentPose);
 
                 // Check if closest
@@ -83,7 +86,7 @@ namespace devils
             }
 
             // Update Lookahead Point Index
-            for (int i = lookaheadPointIndex; i < pathPoints.size(); i++)
+            for (int i = lookaheadPointIndex; i < pathPoints->size(); i++)
             {
                 auto targetPose = getTargetPose();
                 if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
@@ -93,12 +96,12 @@ namespace devils
 
             // Get Current Point
             auto targetPose = getTargetPose();
-            bool isReversed = controlPoints[controlPointIndex].isReversed;
+            bool isReversed = controlPoints->at(controlPointIndex).isReversed;
 
             // Handle Finish
-            auto lastPoint = pathPoints.back();
+            auto lastPoint = pathPoints->back();
             bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
-            bool lookingAtLastPoint = robotPointIndex == pathPoints.size() - 1;
+            bool lookingAtLastPoint = robotPointIndex == pathPoints->size() - 1;
             if (withinRangeOfLastPoint && lookingAtLastPoint)
             {
                 isFinished = true;
@@ -132,11 +135,14 @@ namespace devils
          * Changes the path and resets the controller.
          * @param path The new path to follow.
          */
-        void setPath(GeneratedPath &path)
+        void setPath(GeneratedPath *path)
         {
-            generatedPath = path;
-            controlPoints = generatedPath.controlPoints;
-            pathPoints = generatedPath.pathPoints;
+            currentPath = path;
+            if (path != nullptr)
+            {
+                controlPoints = &currentPath->controlPoints;
+                pathPoints = &currentPath->pathPoints;
+            }
             reset();
         }
 
@@ -184,12 +190,12 @@ namespace devils
 
         // Object Handles
         BaseChassis &chassis;
-        GeneratedPath &generatedPath;
         OdomSource &odometry;
 
         // Shorthands
-        std::vector<PathPoint> &controlPoints;
-        std::vector<Pose> &pathPoints;
+        GeneratedPath *currentPath;
+        std::vector<PathPoint> *controlPoints;
+        std::vector<Pose> *pathPoints;
 
         // Controller State
         int robotPointIndex = 0;      // Closest path index to the robot

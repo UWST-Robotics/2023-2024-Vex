@@ -6,8 +6,6 @@
 #include "incbin/incbin.h"
 
 #define INCBIN_PREFIX g_
-INCTXT(startPath, "paths/testpath.txt");
-INCTXT(scorePath, "paths/score.txt");
 INCTXT(occupancyGrid, "paths/occupancy.txt");
 
 namespace devils
@@ -22,53 +20,42 @@ namespace devils
          */
         AutoTest()
             : controller(pros::E_CONTROLLER_MASTER),
-
-              startPathFile(PathFileReader::deserialize(g_startPathData)),
-              scorePathFile(PathFileReader::deserialize(g_scorePathData)),
               occupancyGrid(OccupancyFileReader::deserialize(g_occupancyGridData)),
-
-              startPath(PathGenerator::generateLinear(startPathFile)),
-              scorePath(PathGenerator::generateLinear(scorePathFile)),
-              startPursuitController(chassis, startPath, odometry),
-              scorePursuitController(chassis, scorePath, odometry),
-              collectionController(chassis, odometry, gameObjectManager),
-              subController({&collectionController, &scorePursuitController}, true),
-              mainController({&startPursuitController, &subController}),
-              pathRendererA(&startPath),
-              pathRendererB(&scorePath),
+              collectionController(chassis, odometry, gameObjectManager, occupancyGrid),
+              controllerStack({&collectionController}, true),
+              pathRenderer(nullptr),
               fieldRenderer(),
               gameObjectRenderer(gameObjectManager),
               odomRenderer(&odometry),
-              controlRenderer(&mainController, &odometry),
+              controlRenderer(&controllerStack, &odometry),
               polygonRenderer(&autonomousPolygon),
               pathPickerRenderer(),
               occupancyRenderer(occupancyGrid),
               statsRenderer(),
-              displayStack({&pathRendererA,
-                            &pathRendererB,
+              displayStack({&pathRenderer,
                             &fieldRenderer,
                             &gameObjectRenderer,
                             &odomRenderer,
                             &controlRenderer,
-                            &polygonRenderer,
+                            //&polygonRenderer,
                             &occupancyRenderer,
                             //&pathPickerRenderer,
                             &statsRenderer})
         {
             // Auto Controllers
-            collectionController.useCollectionArea(&autonomousPolygon);
+            collectionController.usePathRenderer(&pathRenderer);
 
             // Display Data
             statsRenderer.useOdomSource(&odometry);
             statsRenderer.useController(&controller);
             statsRenderer.useAutoController(&collectionController);
-            gameObjectRenderer.useArea(&autonomousPolygon);
+            // gameObjectRenderer.useArea(&autonomousPolygon);
             displayStack.runAsync();
         }
 
         void opcontrol() override
         {
-            chassis.setPose(*startPath.getStartingPose());
+            // chassis.setPose(*startPath.getStartingPose());
 
             // Set Seed
             srand(10);
@@ -77,20 +64,13 @@ namespace devils
             gameObjectManager.reset();
 
             EventTimer pauseTimer;
-            auto autoTask = mainController.runAsync();
-
-            auto testPath = PathFinder::generatePath(
-                Pose{-27, -27, 0},
-                Pose{48, 48, 0},
-                occupancyGrid);
-            pathRendererA.setPath(testPath);
-            startPursuitController.setPath(testPath);
+            auto autoTask = controllerStack.runAsync();
 
             // Loop
             while (true)
             {
                 // Handle Events
-                auto currentEvents = collectionController.getCurrentEvents();
+                auto currentEvents = controllerStack.getCurrentEvents();
                 if (currentEvents != nullptr)
                 {
                     for (int i = 0; i < currentEvents->size(); i++)
@@ -133,11 +113,12 @@ namespace devils
                 }
 
                 // Add Game Object
+                /*
                 if (pros::millis() % 3000 <= 20)
                 {
-                    auto gameObject = GameObject(autonomousPolygon.getRandomPose());
+                    auto gameObject = GameObject(fieldArea.getRandomPose());
                     gameObjectManager.add(gameObject);
-                }
+                }*/
 
                 // Additional Stats
                 std::stringstream stream;
@@ -170,16 +151,11 @@ namespace devils
         OdomSource &odometry = (OdomSource &)chassis;
 
         // Data Files
-        PathFile startPathFile;
-        PathFile scorePathFile;
         OccupancyGrid occupancyGrid;
 
         // Auto Controller Stack
-        PursuitController startPursuitController;
-        PursuitController scorePursuitController;
         CollectionController collectionController;
-        ControllerList mainController;
-        ControllerList subController;
+        ControllerList controllerStack;
 
         // Autonomous
         GeneratedPath startPath;
@@ -190,8 +166,7 @@ namespace devils
         pros::Controller controller;
 
         // Display
-        PathRenderer pathRendererA;
-        PathRenderer pathRendererB;
+        PathRenderer pathRenderer;
         FieldRenderer fieldRenderer;
         GameObjectRenderer gameObjectRenderer;
         OdomRenderer odomRenderer;

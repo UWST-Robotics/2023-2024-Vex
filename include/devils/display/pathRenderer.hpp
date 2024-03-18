@@ -31,6 +31,9 @@ namespace devils
         {
             rootObject = root;
 
+            if (generatedPath == nullptr)
+                return;
+
             // Get Path
             auto pathPoints = &generatedPath->pathPoints;
             auto controlPoints = &generatedPath->controlPoints;
@@ -72,7 +75,8 @@ namespace devils
             this->generatedPath = &generatedPath;
 
             // Recreate path
-            lv_obj_del(robotPath);
+            if (robotPath != nullptr)
+                lv_obj_del(robotPath);
             create(rootObject);
         }
 
@@ -83,7 +87,7 @@ namespace devils
         lv_point_t *linePoints = nullptr;
 
         lv_obj_t *rootObject = nullptr;
-        GeneratedPath *generatedPath;
-        lv_obj_t *robotPath;
+        GeneratedPath *generatedPath = nullptr;
+        lv_obj_t *robotPath = nullptr;
     };
 }

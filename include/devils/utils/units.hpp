@@ -41,9 +41,7 @@ namespace devils
          */
         static double diffRad(double radiansA, double radiansB)
         {
-            double diff = radiansA - radiansB;
-            diff += (diff > M_PI) ? -2 * M_PI : ((diff < -M_PI) ? 2 * M_PI : 0);
-            return diff;
+            return std::atan2(std::sin(radiansA - radiansB), std::cos(radiansA - radiansB));
         }
 
         /**
@@ -67,6 +65,17 @@ namespace devils
         }
 
         /**
+         * Modulus function that also works with negative numbers.
+         * @param a The number to mod.
+         * @param b The modulus.
+         * @return The result of the modulus. Always positive.
+         */
+        static double mod(double a, double b)
+        {
+            return a - std::floor(a / b) * b;
+        }
+
+        /**
          * Converts radians to degrees.
          * @param radians The radians to convert.
          */
@@ -82,7 +91,7 @@ namespace devils
          */
         static double normalizeRadians(double radians)
         {
-            return std::fmod(radians + 2 * M_PI, 2 * M_PI);
+            return mod(radians, 2 * M_PI);
         }
 
         /**
