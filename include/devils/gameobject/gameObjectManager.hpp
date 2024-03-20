@@ -73,7 +73,7 @@ namespace devils
 
     private:
         static constexpr double GROUP_RADIUS = 10.0; // in
-        static constexpr double MAX_AGE = 10000;     // ms
+        static constexpr double MAX_AGE = 1000000;   // ms
 
         std::vector<GameObject> gameObjects = {};
     };

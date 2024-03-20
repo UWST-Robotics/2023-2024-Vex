@@ -17,75 +17,111 @@ namespace devils
     public:
         ~FieldRenderer()
         {
-            lv_obj_del(boundingRect);
-            for (int i = 0; i < FIELD_WIDTH + FIELD_HEIGHT; i++)
-                lv_obj_del(fieldLines[i]);
+            lv_obj_del(redGoalBox);
+            lv_obj_del(blueGoalBox);
+            lv_obj_del(centerBar);
+            lv_obj_del(topBar);
+            lv_obj_del(bottomBar);
         }
 
         void create(lv_obj_t *root) override
         {
-            // Line Style
-            static lv_style_t lineStyle;
-            lv_style_copy(&lineStyle, &lv_style_plain);
-            lineStyle.line.color = LV_COLOR_MAKE(0x55, 0x55, 0x55);
-            lineStyle.line.width = 1;
+            // Bar Style
+            static lv_style_t barStyle;
+            lv_style_copy(&barStyle, &lv_style_plain);
+            barStyle.line.color = LV_COLOR_MAKE(0xff, 0xff, 0xff);
+            barStyle.line.width = 3 * DisplayUtils::PX_PER_IN;
 
-            static lv_point_t linePoints[FIELD_WIDTH + FIELD_HEIGHT][2];
+            // Red Style
+            static lv_style_t redStyle;
+            lv_style_copy(&redStyle, &lv_style_plain);
+            redStyle.line.color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
+            redStyle.body.main_color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
+            redStyle.body.grad_color = LV_COLOR_MAKE(0xff, 0x00, 0x00);
+            redStyle.body.opa = 128;
 
-            // Horizontal Lines
-            for (int i = 1; i < FIELD_WIDTH; i++)
-            {
-                lv_point_t *points = linePoints[i];
-                points[0].x = FIELD_OFFSET_X;
-                points[0].y = FIELD_OFFSET_Y + i * TILE_SIZE;
-                points[1].x = FIELD_OFFSET_X + FIELD_HEIGHT * TILE_SIZE;
-                points[1].y = FIELD_OFFSET_Y + i * TILE_SIZE;
+            // Blue Style
+            static lv_style_t blueStyle;
+            lv_style_copy(&blueStyle, &lv_style_plain);
+            blueStyle.line.color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
+            blueStyle.body.main_color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
+            blueStyle.body.grad_color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
+            blueStyle.body.opa = 128;
 
-                fieldLines[i] = lv_line_create(root, NULL);
-                lv_line_set_points(fieldLines[i], points, 2);
-                lv_obj_set_style(fieldLines[i], &lineStyle);
-            }
+            // Red Goal Box
+            redGoalBox = lv_obj_create(root, NULL);
+            lv_obj_set_size(
+                redGoalBox,
+                GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_HEIGHT * DisplayUtils::PX_PER_IN);
+            lv_obj_set_pos(
+                redGoalBox,
+                GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X,
+                GOAL_BOX_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y);
+            lv_obj_set_style(redGoalBox, &redStyle);
 
-            // Vertical Lines
-            for (int i = 1; i < FIELD_HEIGHT; i++)
-            {
-                lv_point_t *points = linePoints[i + FIELD_WIDTH];
-                points[0].x = FIELD_OFFSET_X + i * TILE_SIZE;
-                points[0].y = FIELD_OFFSET_Y;
-                points[1].x = FIELD_OFFSET_X + i * TILE_SIZE;
-                points[1].y = FIELD_OFFSET_Y + FIELD_WIDTH * TILE_SIZE;
+            // Blue Goal Box
+            blueGoalBox = lv_obj_create(root, NULL);
+            lv_obj_set_size(
+                blueGoalBox,
+                GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_HEIGHT * DisplayUtils::PX_PER_IN);
+            lv_obj_set_pos(
+                blueGoalBox,
+                -GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X - GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y);
+            lv_obj_set_style(blueGoalBox, &blueStyle);
 
-                fieldLines[i + FIELD_WIDTH] = lv_line_create(root, NULL);
-                lv_line_set_points(fieldLines[i + FIELD_WIDTH], points, 2);
-                lv_obj_set_style(fieldLines[i + FIELD_WIDTH], &lineStyle);
-            }
+            // Center Bar
+            centerBar = lv_line_create(root, NULL);
+            static lv_point_t centerBarPoints[2];
+            centerBarPoints[0].x = CENTER_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            centerBarPoints[0].y = CENTER_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            centerBarPoints[1].x = CENTER_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            centerBarPoints[1].y = -CENTER_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            lv_line_set_points(centerBar, centerBarPoints, 2);
+            lv_obj_set_style(centerBar, &barStyle);
 
-            // Bounding Rect
-            boundingRect = lv_obj_create(root, NULL);
-            {
-                lv_obj_set_size(boundingRect, FIELD_WIDTH * TILE_SIZE, FIELD_HEIGHT * TILE_SIZE);
-                lv_obj_set_pos(boundingRect, FIELD_OFFSET_X, FIELD_OFFSET_Y);
+            // Top Bar
+            topBar = lv_line_create(root, NULL);
+            static lv_point_t topBarPoints[2];
+            topBarPoints[0].x = TOP_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            topBarPoints[0].y = TOP_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            topBarPoints[1].x = -TOP_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            topBarPoints[1].y = TOP_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            lv_line_set_points(topBar, topBarPoints, 2);
+            lv_obj_set_style(topBar, &barStyle);
 
-                static lv_style_t rectStyle;
-                lv_style_copy(&rectStyle, &lv_style_plain);
-                rectStyle.body.empty = 1;
-                rectStyle.body.border.width = 2;
-                rectStyle.body.border.color = LV_COLOR_MAKE(0x55, 0x55, 0x55);
-                lv_obj_set_style(boundingRect, &rectStyle);
-            }
+            // Bottom Bar
+            bottomBar = lv_line_create(root, NULL);
+            static lv_point_t bottomBarPoints[2];
+            bottomBarPoints[0].x = TOP_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            bottomBarPoints[0].y = -TOP_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            bottomBarPoints[1].x = -TOP_BAR_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X;
+            bottomBarPoints[1].y = -TOP_BAR_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y;
+            lv_line_set_points(bottomBar, bottomBarPoints, 2);
+            lv_obj_set_style(bottomBar, &barStyle);
         }
 
     private:
-        static constexpr int FIELD_WIDTH = 6;                          // tiles
-        static constexpr int FIELD_HEIGHT = 6;                         // tiles
-        static constexpr int TILE_SIZE = 24 * DisplayUtils::PX_PER_IN; // inches
+        static constexpr int FIELD_OFFSET_X = DisplayUtils::DISPLAY_WIDTH / 2;
+        static constexpr int FIELD_OFFSET_Y = DisplayUtils::DISPLAY_HEIGHT / 2;
 
-        static constexpr int FIELD_WIDTH_PX = FIELD_WIDTH * TILE_SIZE;
-        static constexpr int FIELD_HEIGHT_PX = FIELD_HEIGHT * TILE_SIZE;
-        static constexpr int FIELD_OFFSET_X = (DisplayUtils::DISPLAY_WIDTH - FIELD_WIDTH_PX) / 2;
-        static constexpr int FIELD_OFFSET_Y = (DisplayUtils::DISPLAY_HEIGHT - FIELD_HEIGHT_PX) / 2;
+        static constexpr int GOAL_BOX_X = -72;
+        static constexpr int GOAL_BOX_Y = -24;
+        static constexpr int GOAL_BOX_WIDTH = 24;
+        static constexpr int GOAL_BOX_HEIGHT = 48;
 
-        lv_obj_t *fieldLines[FIELD_WIDTH + FIELD_HEIGHT];
-        lv_obj_t *boundingRect;
+        static constexpr int CENTER_BAR_X = 0;
+        static constexpr int CENTER_BAR_Y = -48;
+
+        static constexpr int TOP_BAR_X = -24;
+        static constexpr int TOP_BAR_Y = -48;
+
+        lv_obj_t *redGoalBox;
+        lv_obj_t *blueGoalBox;
+        lv_obj_t *centerBar;
+        lv_obj_t *topBar;
+        lv_obj_t *bottomBar;
     };
 }

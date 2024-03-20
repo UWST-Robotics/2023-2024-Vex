@@ -25,6 +25,7 @@
 #include "display/controlRenderer.hpp"
 #include "display/displayUtils.hpp"
 #include "display/fieldRenderer.hpp"
+#include "display/gridRenderer.hpp"
 #include "display/polygonRenderer.hpp"
 #include "display/gameObjectRenderer.hpp"
 #include "display/pathPickerRenderer.hpp"

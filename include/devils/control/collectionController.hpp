@@ -3,6 +3,7 @@
 #include "../geometry/pose.hpp"
 #include "../geometry/polygon.hpp"
 #include "../path/occupancyGrid.hpp"
+#include "../path/pathFinder.hpp"
 #include "../odom/odomSource.hpp"
 #include "../gameobject/gameObjectManager.hpp"
 #include "../control/pursuitController.hpp"

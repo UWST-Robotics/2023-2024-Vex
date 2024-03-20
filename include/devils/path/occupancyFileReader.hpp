@@ -49,11 +49,17 @@ namespace devils
                     continue;
 
                 // Update Dimensions
-                grid.height = line.length();
+                grid.height = 0;
                 grid.width++;
 
                 for (char v : line)
+                {
+                    // Skip carriage returns
+                    if (v == '\r' || v == '\n')
+                        continue;
+                    grid.height++;
                     grid.values.push_back(v == '1');
+                }
             }
 
             return grid;
