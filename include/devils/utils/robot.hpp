@@ -28,5 +28,11 @@ namespace devils
          * Ran at the start of the Teleoperated period.
          */
         virtual void opcontrol() {}
+
+        /// @brief The main game controller.
+        pros::Controller mainController = pros::Controller(pros::E_CONTROLLER_MASTER);
+
+        /// @brief The partner game controller.
+        pros::Controller partnerController = pros::Controller(pros::E_CONTROLLER_PARTNER);
     };
 }

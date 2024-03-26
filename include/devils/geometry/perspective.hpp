@@ -1,5 +1,6 @@
 #pragma once
 #include "../utils/logger.hpp"
+#include "displayPoint.hpp"
 #include "units.hpp"
 #include "pose.hpp"
 #include <cmath>
@@ -13,115 +14,121 @@ namespace devils
 {
 
     /**
-     * A class representing a 4-point perspective transform.
+     * A class representing a perspective transformation from a camera to a flat plane.
      */
     class Perspective
     {
     public:
         /**
-         * Container for a point on the display.
+         * Generates a new perspective transform from camera calibration parameters.
+         * @param verticalFOV The vertical field of view of the camera in degrees.
+         * @param nearClip The distance to the near clipping plane in inches.
+         * @param farClip The distance to the far clipping plane in inches.
+         * @param width The width of the camera in pixels.
+         * @param height The height of the camera in pixels.
+         * @param cameraHeight The height of the camera above the ground in inches.
+         * @param cameraPitch The pitch of the camera in degrees.
          */
-        struct DisplayPoint
+        Perspective(double verticalFOV, double nearClip, double farClip, double width, double height, double cameraHeight, double cameraPitch)
         {
-            /// @brief The x position of the point
-            double x = 0;
-            /// @brief The y position of the point
-            double y = 0;
+            // TODO: Implement perspective transform
+            auto viewMat = _createViewTransformMatrix(cameraHeight, Units::degToRad(cameraPitch));
+            auto projectionMat = _calculateProjectionMatrix(Units::degToRad(verticalFOV), nearClip, farClip, width / height);
 
-            /**
-             * Prints the pose to a string
-             * @return The pose as a string
-             */
-            const std::string toString()
-            {
-                return "Point(" + std::to_string(x) + ", " + std::to_string(y) + ")";
-            }
-        };
-
-        /**
-         * Generates a new Perspective transform.
-         * @param from The starting points of the transform, in clockwise order from the top-left.
-         * @param to The ending points of the transform, in clockwise order from the top-left.
-         */
-        Perspective(std::vector<DisplayPoint> from, std::vector<DisplayPoint> to)
-        {
-            if (from.size() != 4 || to.size() != 4)
-            {
-                Logger::error("Invalid number of points for perspective transform");
-                return;
-            }
-            transformationMatrix = _calculateTransformationMatrix(from, to);
+            transformationMatrix = projectionMat * viewMat;
         }
-        Perspective(Perspective &other)
+        Perspective(const Perspective &other)
         {
             transformationMatrix = other.transformationMatrix;
         }
 
         /**
-         * Calculates the transformation matrix for the perspective transform.
+         * Calculate the view transformation matrix from camera position and pitch.
+         * @param height The height of the camera above the ground in inches.
+         * @param pitch The pitch of the camera in radians.
          */
-        Eigen::Matrix3d _calculateTransformationMatrix(std::vector<DisplayPoint> startingPoints, std::vector<DisplayPoint> endingPoints)
+        Eigen::Matrix4d _createViewTransformMatrix(double height, double pitch)
         {
-            Eigen::Matrix<double, 8, 9> A;
-            for (int i = 0; i < 4; i++)
-            {
-                A(i * 2, 0) = -startingPoints[i].x;
-                A(i * 2, 1) = -startingPoints[i].y;
-                A(i * 2, 2) = -1;
-                A(i * 2, 3) = 0;
-                A(i * 2, 4) = 0;
-                A(i * 2, 5) = 0;
-                A(i * 2, 6) = startingPoints[i].x * endingPoints[i].x;
-                A(i * 2, 7) = startingPoints[i].y * endingPoints[i].x;
-                A(i * 2, 8) = endingPoints[i].x;
-
-                A(i * 2 + 1, 0) = 0;
-                A(i * 2 + 1, 1) = 0;
-                A(i * 2 + 1, 2) = 0;
-                A(i * 2 + 1, 3) = -startingPoints[i].x;
-                A(i * 2 + 1, 4) = -startingPoints[i].y;
-                A(i * 2 + 1, 5) = -1;
-                A(i * 2 + 1, 6) = startingPoints[i].x * endingPoints[i].y;
-                A(i * 2 + 1, 7) = startingPoints[i].y * endingPoints[i].y;
-                A(i * 2 + 1, 8) = endingPoints[i].y;
-            }
-
-            Eigen::JacobiSVD<Eigen::Matrix<double, 8, 9>> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-            Eigen::Matrix<double, 9, 1> h = svd.matrixV().col(8);
-            Eigen::Matrix3d H;
-            H << h(0), h(1), h(2),
-                h(3), h(4), h(5),
-                h(6), h(7), h(8);
-            return H;
+            Eigen::Matrix4d viewTransform = Eigen::Matrix4d::Identity();
+            viewTransform(1, 3) = -height;
+            viewTransform(0, 0) = cos(pitch);
+            viewTransform(0, 2) = sin(pitch);
+            viewTransform(2, 0) = -sin(pitch);
+            viewTransform(2, 2) = cos(pitch);
+            return viewTransform;
         }
 
         /**
-         * Processes a point through the perspective transform.
+         * Calculates the projection transformation matrix from camera calibration parameters.
+         * @param verticalFOV The vertical field of view of the camera in radians.
+         * @param nearClip The distance to the near clipping plane in inches.
+         * @param farClip The distance to the far clipping plane in inches.
+         * @param aspectRatio The aspect ratio of the camera.
+         * @return The transformation matrix.
+         */
+        Eigen::Matrix4d _calculateProjectionMatrix(
+            double verticalFOV,
+            double nearClip,
+            double farClip,
+            double aspectRatio)
+        {
+            // Calculate Frustum Planes
+            double halfFOV = verticalFOV / 2;
+            double top = nearClip * tan(halfFOV);
+            double bottom = -top;
+            double right = top * aspectRatio;
+            double left = -right;
+
+            // Calculate Frustum Points
+            double sx = 2 * nearClip / (right - left);
+            double sy = 2 * nearClip / (top - bottom);
+
+            double c2 = -(farClip + nearClip) / (farClip - nearClip);
+            double c1 = 2 * farClip * nearClip / (nearClip - farClip);
+
+            double tx = -nearClip * (left + right) / (right - left);
+            double ty = -nearClip * (top + bottom) / (top - bottom);
+
+            // Create Projection Matrix
+            Eigen::Matrix4d projectionMatrix = Eigen::Matrix4d::Zero();
+            projectionMatrix(0, 0) = sx;
+            projectionMatrix(1, 1) = sy;
+            projectionMatrix(2, 2) = c2;
+            projectionMatrix(2, 3) = -1;
+            projectionMatrix(3, 2) = c1;
+            projectionMatrix(0, 3) = tx;
+            projectionMatrix(1, 3) = ty;
+
+            return projectionMatrix;
+        }
+
+        /**
+         * Transforms a point from screen space to world space.
          * @param point The point to transform.
          * @return The transformed point.
          */
-        DisplayPoint pointToScreen(DisplayPoint &point)
+        DisplayPoint screenToWorld(DisplayPoint point)
         {
-            Eigen::Vector3d p;
-            p << point.x, point.y, 1;
-            Eigen::Vector3d result = transformationMatrix * p;
-            return {result(0) / result(2), result(1) / result(2)};
+            Eigen::Vector4d screenPoint(point.x, point.y, 0, 1);
+            Eigen::Vector4d worldPoint = transformationMatrix.inverse() * screenPoint;
+            return DisplayPoint{worldPoint(0) / worldPoint(3), worldPoint(1) / worldPoint(3)};
         }
 
         /**
-         * Processes a point through the inverse perspective transform.
-         * @param p The point to transform.
+         * Transforms a point from world space to screen space.
+         * @param point The point to transform.
          * @return The transformed point.
          */
-        DisplayPoint pointFromScreen(DisplayPoint &p)
+        DisplayPoint worldToScreen(DisplayPoint point)
         {
-            Eigen::Vector3d point;
-            point << p.x, p.y, 1;
-            Eigen::Vector3d result = transformationMatrix.inverse() * point;
-            return {result(0) / result(2), result(1) / result(2)};
+            Eigen::Vector4d worldPoint(point.x, point.y, 0, 1);
+            Eigen::Vector4d screenPoint = transformationMatrix * worldPoint;
+            return DisplayPoint{screenPoint(0) / screenPoint(3), screenPoint(1) / screenPoint(3)};
         }
 
     private:
-        Eigen::Matrix3d transformationMatrix;
+        static constexpr double CLIPPING_PLANE = 0.1;
+
+        Eigen::Matrix4d transformationMatrix;
     };
 }

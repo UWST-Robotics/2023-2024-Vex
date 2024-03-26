@@ -10,6 +10,9 @@
 // Autonomous
 #include "control/pursuitController.hpp"
 #include "control/linearController.hpp"
+#include "control/findController.hpp"
+#include "control/directController.hpp"
+#include "control/timeController.hpp"
 #include "control/collectionController.hpp"
 #include "control/controllerList.hpp"
 
@@ -31,10 +34,12 @@
 #include "display/pathPickerRenderer.hpp"
 #include "display/occupancyRenderer.hpp"
 #include "display/statsRenderer.hpp"
+#include "display/displayPointRenderer.hpp"
 
 // Hardware
 #include "hardware/imu.hpp"
 #include "hardware/opticalSensor.hpp"
+#include "hardware/visionSensor.hpp"
 
 // Odom
 #include "odom/odomSource.hpp"
@@ -51,6 +56,9 @@
 // Game Object
 #include "gameobject/gameObject.hpp"
 #include "gameobject/gameObjectManager.hpp"
+
+// Geometry
+#include "geometry/perspectiveFactory.hpp"
 
 // Pros
 #include "api.h"

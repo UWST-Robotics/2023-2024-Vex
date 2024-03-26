@@ -53,7 +53,8 @@ namespace devils
                 // Style
                 static lv_style_t pathStyle;
                 lv_style_copy(&pathStyle, &lv_style_plain);
-                pathStyle.line.color = LV_COLOR_MAKE(0x44, 0x44, 0xff);
+                pathStyle.line.color = LV_COLOR_MAKE(0xff, 0xff, 0xff);
+                pathStyle.line.opa = 100;
                 pathStyle.line.width = 4;
                 lv_obj_set_style(lineObject, &pathStyle);
             }

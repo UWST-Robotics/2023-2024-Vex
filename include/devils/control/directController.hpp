@@ -29,9 +29,9 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> *getCurrentEvents() override
+        std::vector<PathEvent> &getCurrentEvents() override
         {
-            return &NO_EVENTS;
+            return NO_EVENTS;
         }
 
         Pose *getTargetPose() override
@@ -96,7 +96,7 @@ namespace devils
 
     private:
         PID translationPID = PID(5.0, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
+        PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
         std::vector<PathEvent> NO_EVENTS = {};
 
         // Object Handles

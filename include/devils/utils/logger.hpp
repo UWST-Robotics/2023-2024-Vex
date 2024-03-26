@@ -159,8 +159,9 @@ namespace devils
         }
 
     private:
-        inline static const std::string LOG_TERMINAL = "/ser/sout";
+        Logger() = delete;
 
+        inline static const std::string LOG_TERMINAL = "/ser/sout";
         static constexpr bool LOG_TO_DISPLAY = false;
         static constexpr bool LOG_TO_SD = false;
 

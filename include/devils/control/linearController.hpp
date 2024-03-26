@@ -27,11 +27,11 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> *getCurrentEvents() override
+        std::vector<PathEvent> &getCurrentEvents() override
         {
             if (currentIndex > generatedPath.controlPoints.size() || currentIndex <= 0)
-                return nullptr;
-            return &generatedPath.controlPoints[currentIndex - 1].events;
+                return NO_EVENTS;
+            return generatedPath.controlPoints[currentIndex - 1].events;
         }
 
         Pose *getTargetPose() override

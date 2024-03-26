@@ -80,12 +80,12 @@ namespace devils
             // Auto Controller
             if (autoController != nullptr)
             {
-                auto events = autoController->getCurrentEvents();
-                if (events != nullptr && events->size() > 0)
+                auto &events = autoController->getCurrentEvents();
+                if (events.size() > 0)
                 {
                     stream << "\n";
                     stream << "Events: \n";
-                    for (auto event : *events)
+                    for (auto &event : events)
                     {
                         stream << event.name;
                         if (event.params.size() > 0)

@@ -87,6 +87,8 @@ namespace devils
         }
 
     private:
+        PathGenerator() = delete;
+
         static constexpr double DT = 0.025; // indices between each point in the path
     };
 }

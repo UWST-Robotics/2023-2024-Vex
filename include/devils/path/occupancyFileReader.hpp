@@ -66,6 +66,8 @@ namespace devils
         }
 
     private:
+        OccupancyFileReader() = delete;
+
         inline static const std::string OCCUPANCY_FILE_PATH = "occupancy.txt";
     };
 }

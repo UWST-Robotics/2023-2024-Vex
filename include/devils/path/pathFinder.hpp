@@ -329,6 +329,8 @@ namespace devils
         }
 
     private:
+        PathFinder() = delete;
+
         static constexpr int FIELD_WIDTH = 144;  // in
         static constexpr int FIELD_HEIGHT = 144; // in
         static constexpr int STRAIGHT_COST = 10;

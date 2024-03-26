@@ -15,7 +15,7 @@ namespace devils
          * Gets the current control point of the controller.
          * @return The current control point of the controller.
          */
-        virtual std::vector<PathEvent> *getCurrentEvents() { return nullptr; };
+        virtual std::vector<PathEvent> &getCurrentEvents() { return NO_EVENTS; };
 
         /**
          * Gets the current target point of the controller, for debugging purposes.
@@ -61,5 +61,8 @@ namespace devils
             return pros::Task([=]
                               { runSync(); });
         }
+
+    protected:
+        std::vector<PathEvent> NO_EVENTS = {};
     };
 }

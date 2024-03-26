@@ -34,11 +34,11 @@ namespace devils
             setPath(path);
         }
 
-        std::vector<PathEvent> *getCurrentEvents() override
+        std::vector<PathEvent> &getCurrentEvents() override
         {
             if (controlPoints == nullptr || controlPointIndex >= controlPoints->size() || controlPointIndex < 0)
-                return nullptr;
-            return &controlPoints->at(controlPointIndex).events;
+                return NO_EVENTS;
+            return controlPoints->at(controlPointIndex).events;
         }
 
         Pose *getTargetPose() override
@@ -104,6 +104,7 @@ namespace devils
             bool lookingAtLastPoint = robotPointIndex == pathPoints->size() - 1;
             if (withinRangeOfLastPoint && lookingAtLastPoint)
             {
+                Logger::debug("Finished path");
                 isFinished = true;
                 chassis.stop();
             }

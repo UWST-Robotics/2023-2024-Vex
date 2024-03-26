@@ -34,7 +34,7 @@ namespace devils
             std::int32_t proximity = sensor.get_proximity();
             if (proximity == PROS_ERR && LOGGING_ENABLED)
                 Logger::error(name + ": optical sensor get proximity failed");
-            return proximity == PROS_ERR ? 1.0 : proximity / 255.0;
+            return proximity == PROS_ERR ? 0.0 : proximity / 255.0;
         }
 
     private:

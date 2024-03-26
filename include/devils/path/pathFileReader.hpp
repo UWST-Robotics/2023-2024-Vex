@@ -141,6 +141,8 @@ namespace devils
         }
 
     private:
+        PathFileReader() = delete;
+
         inline static const std::string PATH_FILE_PATH = "path.txt";
     };
 }

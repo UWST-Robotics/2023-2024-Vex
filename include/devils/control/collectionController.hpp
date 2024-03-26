@@ -6,15 +6,16 @@
 #include "../path/pathFinder.hpp"
 #include "../odom/odomSource.hpp"
 #include "../gameobject/gameObjectManager.hpp"
-#include "../control/pursuitController.hpp"
+#include "../control/findController.hpp"
 #include "../control/directController.hpp"
 #include "../display/pathRenderer.hpp"
 #include "../hardware/opticalSensor.hpp"
+#include "../hardware/visionSensor.hpp"
 
 namespace devils
 {
     /**
-     * Controller for retriving game objects from the field.
+     * Controller drives to the closest game object and collects it.
      */
     class CollectionController : public AutoController
     {
@@ -30,16 +31,17 @@ namespace devils
             : chassis(chassis),
               odometry(odometry),
               gameObjectManager(gameObjectManager),
-              pursuitController(chassis, odometry, nullptr, true),
-              directController(chassis, odometry),
-              occupancyGrid(occupancyGrid),
-              targetLocation(odometry.getPose())
+              findController(chassis, odometry, occupancyGrid),
+              directController(chassis, odometry)
         {
         }
 
-        std::vector<PathEvent> *getCurrentEvents() override
+        std::vector<PathEvent> &getCurrentEvents() override
         {
-            return &DEFAULT_EVENTS;
+            if (isChasing)
+                return CHASE_EVENTS;
+            else
+                return COLLECTION_EVENTS;
         }
 
         Pose *getTargetPose() override
@@ -54,66 +56,53 @@ namespace devils
             auto gameObjects = gameObjectManager.getGameObjects();
 
             // Get the closest object
-            auto closestObject = _getClosestObject();
+            targetObject = _getClosestObject();
 
             // Abort if no objects on field
-            if (closestObject == nullptr)
+            if (targetObject == nullptr)
             {
                 chassis.stop();
                 return;
             }
 
-            // Compare to the current pose
-            // Recalculate path if the object location changes
-            if (targetObject == nullptr || SWITCH_OBJECT_DISTANCE < closestObject->distanceTo(targetLocation))
-            {
-                // Set Target
-                targetObject = closestObject;
-                targetLocation = *targetObject;
-
-                // Regenerate the path
-                currentPath = PathFinder::generatePath(currentPose, *targetObject, occupancyGrid);
-                pursuitController.setPath(&currentPath);
-                if (pathRenderer != nullptr)
-                    pathRenderer->setPath(currentPath);
-            }
+            // Set the target object
+            findController.setTargetPose(*targetObject);
 
             // Check if object is picked up
             bool hasObject = false;
             auto objectDistance = targetObject->distanceTo(currentPose);
             if (collectionSensor != nullptr)
-                hasObject = collectionSensor->getProximity() < OPTICAL_PROXIMITY;
+                hasObject = collectionSensor->getProximity() > OPTICAL_PROXIMITY;
             else
-            {
-                if (objectDistance < COLLECTION_DISTANCE)
-                    hasObject = true;
-            }
+                hasObject = objectDistance < COLLECTION_DISTANCE;
 
             // Mark object as collected
             if (hasObject)
             {
-                gameObjectManager.remove(*targetObject);
                 isFinished = true;
+                gameObjectManager.remove(*targetObject);
                 chassis.stop();
                 return;
             }
 
             // If object is in proximity, chase it
-            if (objectDistance < CHASE_DISTANCE || pursuitController.getFinished())
+            isChasing = objectDistance < CHASE_DISTANCE || findController.getFinished();
+            if (isChasing)
             {
                 directController.setTargetPose(*targetObject);
                 directController.update();
             }
             else
             {
-                pursuitController.update();
+                findController.update();
             }
         }
 
         void reset() override
         {
             isFinished = false;
-            pursuitController.reset();
+            findController.reset();
+            directController.reset();
         }
 
         bool getFinished() override
@@ -149,6 +138,15 @@ namespace devils
         }
 
         /**
+         * Uses a vision sensor to chase game objects.
+         * @param sensor The vision sensor to use.
+         */
+        void useVisionSensor(VisionSensor *sensor)
+        {
+            // TODO: Implement
+        }
+
+        /**
          * Gets the closest object to the robot.
          */
         GameObject *_getClosestObject()
@@ -180,29 +178,25 @@ namespace devils
         }
 
     private:
-        static constexpr double SWITCH_OBJECT_DISTANCE = 12.0; // in
-        static constexpr double CHASE_DISTANCE = 12.0;         // in
-        static constexpr double COLLECTION_DISTANCE = 4.0;     // in
-        static constexpr double OPTICAL_PROXIMITY = 0.5;       // %
-        std::vector<PathEvent> DEFAULT_EVENTS = {PathEvent("collection", "")};
-
-        // PID
-        PID translationPID = PID(5.0, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
+        // Constants
+        static constexpr double CHASE_DISTANCE = 18.0;     // in
+        static constexpr double COLLECTION_DISTANCE = 4.0; // in
+        static constexpr double OPTICAL_PROXIMITY = 0.5;   // %
+        std::vector<PathEvent> COLLECTION_EVENTS = {PathEvent("collection", "")};
+        std::vector<PathEvent> CHASE_EVENTS = {PathEvent("chase", "")};
 
         // Required Components
         BaseChassis &chassis;
         OdomSource &odometry;
         GameObjectManager &gameObjectManager;
-        OccupancyGrid &occupancyGrid;
 
         // State
         GeneratedPath currentPath;
-        PursuitController pursuitController;
+        FindController findController;
         DirectController directController;
-        Pose targetLocation;
         GameObject *targetObject = nullptr;
         bool isFinished = false;
+        bool isChasing = false;
 
         // Optional Components
         OpticalSensor *collectionSensor = nullptr;

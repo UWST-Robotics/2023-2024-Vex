@@ -32,6 +32,9 @@ namespace devils
         ~Display()
         {
             lv_obj_del(rootObject);
+
+            for (Renderer *renderer : renderers)
+                delete renderer;
         }
 
         /**
@@ -44,6 +47,34 @@ namespace devils
 
             // Uncomment to force a redraw every frame
             lv_obj_invalidate(rootObject);
+        }
+
+        /**
+         * Adds a renderer to the display.
+         * @param renderer The renderer to add.
+         */
+        void addRenderer(Renderer *renderer)
+        {
+            renderers.push_back(renderer);
+            renderer->create(rootObject);
+        }
+
+        /**
+         * Gets a renderer of the given type.
+         * @return The renderer or nullptr if not found.
+         * @tparam T The type of renderer to get.
+         */
+        template <typename T>
+        T *getRenderer()
+        {
+            for (Renderer *renderer : renderers)
+            {
+                T *casted = dynamic_cast<T *>(renderer);
+                if (casted != nullptr)
+                    return casted;
+            }
+
+            return nullptr;
         }
 
     private:

@@ -60,5 +60,8 @@ namespace devils
         {
             return val * val * val;
         }
+
+    private:
+        JoystickCurve() = delete;
     };
 }

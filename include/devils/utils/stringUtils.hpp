@@ -38,5 +38,8 @@ namespace devils
             result.push_back(buffer);
             return result;
         }
+
+    private:
+        StringUtils() = delete;
     };
 }
