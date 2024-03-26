@@ -72,9 +72,14 @@ namespace devils
          */
         void setPath(GeneratedPath &generatedPath)
         {
+            // Check if path is the same
+            if (this->generatedPath == &generatedPath)
+                return;
+
+            // Update path
             this->generatedPath = &generatedPath;
 
-            // Recreate path
+            // Recreate path renderer
             if (robotPath != nullptr)
                 lv_obj_del(robotPath);
             create(rootObject);
@@ -86,8 +91,8 @@ namespace devils
         std::vector<lv_point_t> linePointVector = {};
         lv_point_t *linePoints = nullptr;
 
-        lv_obj_t *rootObject = nullptr;
         GeneratedPath *generatedPath = nullptr;
+        lv_obj_t *rootObject = nullptr;
         lv_obj_t *robotPath = nullptr;
     };
 }

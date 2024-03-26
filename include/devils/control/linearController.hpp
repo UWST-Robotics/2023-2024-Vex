@@ -48,6 +48,10 @@ namespace devils
 
         void update() override
         {
+            // Reset if not already
+            if (lastCheckpointTime < 0)
+                reset();
+
             // Get Current Pose
             auto currentPose = odometry.getPose();
 
@@ -150,7 +154,7 @@ namespace devils
         // State
         bool isFinished = false;
         int currentIndex = 1; // Current control point driving towards
-        double lastCheckpointTime = 0;
-        double lastRotationTime = 0;
+        double lastCheckpointTime = -1;
+        double lastRotationTime = -1;
     };
 }

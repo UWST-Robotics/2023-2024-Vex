@@ -39,7 +39,6 @@ namespace devils
               strafe(strafe),
               targetPose(forward, strafe, turn)
         {
-            reset();
         }
 
         std::vector<PathEvent> &getCurrentEvents() override
@@ -55,7 +54,7 @@ namespace devils
         void update() override
         {
             if (startTime < 0)
-                startTime = pros::millis();
+                reset();
             if (getFinished())
                 chassis.stop();
             else
@@ -69,7 +68,7 @@ namespace devils
 
         void reset() override
         {
-            startTime = -1;
+            startTime = pros::millis();
         }
 
     private:

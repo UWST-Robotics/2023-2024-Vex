@@ -28,7 +28,6 @@ namespace devils
               loop(loop),
               timeout(timeout)
         {
-            reset();
         }
 
         void update() override
@@ -49,6 +48,7 @@ namespace devils
             reset();
             while (!getFinished())
             {
+                getCurrentController()->reset();
                 getCurrentController()->runSync();
                 controllerIndex++;
                 pros::delay(20);
@@ -73,7 +73,7 @@ namespace devils
 
         void reset() override
         {
-            startTime = -1;
+            startTime = pros::millis();
             controllerIndex = 0;
             for (auto controller : controllers)
                 controller->reset();
@@ -119,9 +119,13 @@ namespace devils
          */
         void skip()
         {
+            // Increment the controller index
             controllerIndex++;
-            if (controllerIndex >= controllers.size() && loop)
-                reset();
+
+            // Reset the next controller
+            auto currentController = getCurrentController();
+            if (currentController != nullptr)
+                currentController->reset();
         }
 
     private:

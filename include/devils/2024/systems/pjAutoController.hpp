@@ -46,6 +46,10 @@ namespace devils
                 goalController.setTargetPose(_getClosestGoalPose());
             if (currentController == &returnController)
                 returnController.setTargetPose(*finishPath.getStartingPose());
+            if (currentController == &initialController && pathRenderer != nullptr)
+                pathRenderer->setPath(initialPath);
+            if (currentController == &autoPointController && pathRenderer != nullptr)
+                pathRenderer->setPath(finishPath);
             mainStack.update();
         }
 
@@ -84,8 +88,10 @@ namespace devils
          */
         void usePathRenderer(PathRenderer *renderer)
         {
+            pathRenderer = renderer;
             collectionController.usePathRenderer(renderer);
             goalController.usePathRenderer(renderer);
+            returnController.usePathRenderer(renderer);
         }
 
         /**
@@ -159,8 +165,11 @@ namespace devils
         PursuitController autoPointController;     // Auto Point
 
         // Controller Stacks
-        ControllerList loopStack = ControllerList({&collectionController, &reverseControllerA, &goalController, &pushController, &reverseControllerB}, true);
+        ControllerList loopStack = ControllerList({&collectionController, &reverseControllerA, &goalController, /*&pushController,*/ &reverseControllerB}, true);
         ControllerList timeoutStack = ControllerList({&initialController, &loopStack}, false, AUTO_POINT_TIMEOUT);
         ControllerList mainStack = ControllerList({&timeoutStack, &returnController, &autoPointController});
+
+        // Optional Components
+        PathRenderer *pathRenderer = nullptr;
     };
 }

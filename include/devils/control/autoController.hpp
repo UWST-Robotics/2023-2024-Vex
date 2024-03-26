@@ -24,13 +24,8 @@ namespace devils
         virtual Pose *getTargetPose() = 0;
 
         /**
-         * Returns true if the controller has finished.
-         * @return True if the controller has finished.
-         */
-        virtual bool getFinished() = 0;
-
-        /**
          * Resets the controller.
+         * Should be called right before the controller is run for timing purposes.
          */
         virtual void reset() = 0;
 
@@ -38,6 +33,12 @@ namespace devils
          * Updates the controller.
          */
         virtual void update() override = 0;
+
+        /**
+         * Returns true if the controller has finished.
+         * @return True if the controller has finished.
+         */
+        virtual bool getFinished() = 0;
 
         /**
          * Runs the controller synchronously.

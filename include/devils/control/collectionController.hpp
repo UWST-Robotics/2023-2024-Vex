@@ -71,8 +71,8 @@ namespace devils
             // Check if object is picked up
             bool hasObject = false;
             auto objectDistance = targetObject->distanceTo(currentPose);
-            if (collectionSensor != nullptr)
-                hasObject = collectionSensor->getProximity() > OPTICAL_PROXIMITY;
+            if (storageSensor != nullptr)
+                hasObject = storageSensor->getProximity() > OPTICAL_PROXIMITY;
             else
                 hasObject = objectDistance < COLLECTION_DISTANCE;
 
@@ -89,6 +89,7 @@ namespace devils
             isChasing = objectDistance < CHASE_DISTANCE || findController.getFinished();
             if (isChasing)
             {
+                // TODO: Use Vision Sensor
                 directController.setTargetPose(*targetObject);
                 directController.update();
             }
@@ -116,7 +117,7 @@ namespace devils
          */
         void useCollectionSensor(OpticalSensor *sensor)
         {
-            collectionSensor = sensor;
+            storageSensor = sensor;
         }
 
         /**
@@ -134,7 +135,7 @@ namespace devils
          */
         void usePathRenderer(PathRenderer *renderer)
         {
-            pathRenderer = renderer;
+            findController.usePathRenderer(renderer);
         }
 
         /**
@@ -143,7 +144,7 @@ namespace devils
          */
         void useVisionSensor(VisionSensor *sensor)
         {
-            // TODO: Implement
+            visionSensor = sensor;
         }
 
         /**
@@ -185,6 +186,9 @@ namespace devils
         std::vector<PathEvent> COLLECTION_EVENTS = {PathEvent("collection", "")};
         std::vector<PathEvent> CHASE_EVENTS = {PathEvent("chase", "")};
 
+        // PID
+        PID rotationPID = PID(0.1, 0.0, 0.0);
+
         // Required Components
         BaseChassis &chassis;
         OdomSource &odometry;
@@ -199,7 +203,8 @@ namespace devils
         bool isChasing = false;
 
         // Optional Components
-        OpticalSensor *collectionSensor = nullptr;
+        OpticalSensor *storageSensor = nullptr;
+        VisionSensor *visionSensor = nullptr;
         Polygon *collectionArea = nullptr;
         PathRenderer *pathRenderer = nullptr;
     };
