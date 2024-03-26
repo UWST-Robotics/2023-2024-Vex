@@ -29,16 +29,6 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
-        {
-            return NO_EVENTS;
-        }
-
-        Pose *getTargetPose() override
-        {
-            return targetPose;
-        }
-
         void update() override
         {
             // Get Current Pose
@@ -70,13 +60,6 @@ namespace devils
             chassis.move(forward, turn);
         }
 
-        bool getFinished() override
-        {
-            return isFinished;
-        }
-
-        void reset() override {}
-
         /**
          * Reverse the robot's direction.
          * @param isReversed Whether the robot is driving in reverse.
@@ -92,6 +75,7 @@ namespace devils
         void setTargetPose(Pose &targetPose)
         {
             this->targetPose = &targetPose;
+            currentState.target = &targetPose;
         }
 
     private:
@@ -106,6 +90,5 @@ namespace devils
         // State
         Pose *targetPose;
         bool isReversed = false;
-        bool isFinished = false;
     };
 }

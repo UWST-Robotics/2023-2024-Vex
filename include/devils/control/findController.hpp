@@ -34,30 +34,21 @@ namespace devils
         {
         }
 
+        void reset() override
+        {
+            AutoController::reset();
+            controller.reset();
+            isPathGenerated = false;
+        }
+
         void update() override
         {
             controller.update();
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
+        AutoController::State &getState() override
         {
-            return NO_EVENTS;
-        }
-
-        Pose *getTargetPose() override
-        {
-            return &targetPose;
-        }
-
-        void reset() override
-        {
-            controller.reset();
-            isPathGenerated = false;
-        }
-
-        bool getFinished() override
-        {
-            return controller.getFinished();
+            return controller.getState();
         }
 
         /**
@@ -77,6 +68,7 @@ namespace devils
         void setTargetPose(Pose targetPose)
         {
             this->targetPose = targetPose;
+            currentState.target = &targetPose;
 
             // Recalculate path if the target is too far away
             if (REGENERATE_DISTANCE < targetPose.distanceTo(originalTargetPose) || !isPathGenerated)

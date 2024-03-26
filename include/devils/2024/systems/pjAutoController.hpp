@@ -36,31 +36,8 @@ namespace devils
               returnController(chassis, odometry, occupancyGrid),
               autoPointController(chassis, odometry, &finishPath)
         {
+            returnController.setTargetPose(*finishPath.getStartingPose());
             reset();
-        }
-
-        void update() override
-        {
-            auto currentController = mainStack.getCurrentController(true);
-            if (currentController == &goalController)
-                goalController.setTargetPose(_getClosestGoalPose());
-            if (currentController == &returnController)
-                returnController.setTargetPose(*finishPath.getStartingPose());
-            if (currentController == &initialController && pathRenderer != nullptr)
-                pathRenderer->setPath(initialPath);
-            if (currentController == &autoPointController && pathRenderer != nullptr)
-                pathRenderer->setPath(finishPath);
-            mainStack.update();
-        }
-
-        Pose *getTargetPose() override
-        {
-            return mainStack.getTargetPose();
-        }
-
-        std::vector<PathEvent> &getCurrentEvents() override
-        {
-            return mainStack.getCurrentEvents();
         }
 
         void reset() override
@@ -68,9 +45,22 @@ namespace devils
             mainStack.reset();
         }
 
-        bool getFinished() override
+        void update() override
         {
-            return mainStack.getFinished();
+            auto currentController = mainStack.getCurrentController(true);
+
+            // Update w/ Closest Goal Pose
+            if (currentController == &goalController)
+                goalController.setTargetPose(_getClosestGoalPose());
+
+            // Update Path Renderer
+            if (currentController == &initialController && pathRenderer != nullptr)
+                pathRenderer->setPath(initialPath);
+            if (currentController == &autoPointController && pathRenderer != nullptr)
+                pathRenderer->setPath(finishPath);
+
+            // TODO: Update Event State
+            mainStack.update();
         }
 
         /**

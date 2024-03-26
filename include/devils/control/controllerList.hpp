@@ -30,10 +30,26 @@ namespace devils
         {
         }
 
+        void reset() override
+        {
+            AutoController::reset();
+            startTime = pros::millis();
+            controllerIndex = 0;
+            for (auto controller : controllers)
+                controller->reset();
+        }
+
         void update() override
         {
+            // Start the timeout timer
             if (startTime < 0)
                 startTime = pros::millis();
+
+            // Check if the controller is finished
+            if (getFinished())
+                return;
+
+            // Update the current controller
             auto controller = getCurrentController();
             if (controller != nullptr)
             {
@@ -50,42 +66,32 @@ namespace devils
             {
                 getCurrentController()->reset();
                 getCurrentController()->runSync();
-                controllerIndex++;
+                skip();
                 pros::delay(20);
             }
         }
 
-        Pose *getTargetPose() override
+        AutoController::State &getState() override
         {
+            // Update State
             auto controller = getCurrentController();
             if (controller != nullptr)
-                return controller->getTargetPose();
-            return nullptr;
-        }
+            {
+                auto &currentControllerState = controller->getState();
+                currentState.target = currentControllerState.target;
+                currentState.events = currentControllerState.events;
+            }
+            else
+            {
+                currentState.target = nullptr;
+                currentState.events = NO_EVENTS;
+            }
 
-        std::vector<PathEvent> &getCurrentEvents() override
-        {
-            auto controller = getCurrentController();
-            if (controller != nullptr)
-                return controller->getCurrentEvents();
-            return NO_EVENTS;
-        }
-
-        void reset() override
-        {
-            startTime = pros::millis();
-            controllerIndex = 0;
-            for (auto controller : controllers)
-                controller->reset();
-        }
-
-        bool getFinished() override
-        {
+            // Check for Timeout
             if (timeout > 0 && pros::millis() - startTime > timeout)
-                return true;
-            if (loop)
-                return false;
-            return controllerIndex >= controllers.size();
+                currentState.isFinished = true;
+
+            return currentState;
         }
 
         /**
@@ -121,6 +127,10 @@ namespace devils
         {
             // Increment the controller index
             controllerIndex++;
+
+            // Update State
+            if (!loop)
+                currentState.isFinished = controllerIndex >= controllers.size();
 
             // Reset the next controller
             auto currentController = getCurrentController();

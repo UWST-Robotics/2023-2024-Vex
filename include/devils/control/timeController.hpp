@@ -41,34 +41,26 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
+        void reset() override
         {
-            return NO_EVENTS;
-        }
-
-        Pose *getTargetPose() override
-        {
-            return nullptr;
+            AutoController::reset();
+            startTime = pros::millis();
         }
 
         void update() override
         {
+            // Check if not already reset
             if (startTime < 0)
                 reset();
+
+            // Update State
+            currentState.isFinished = startTime > 0 && pros::millis() - startTime > duration;
+
+            // Drive
             if (getFinished())
                 chassis.stop();
             else
                 chassis.move(forward, turn, strafe);
-        }
-
-        bool getFinished() override
-        {
-            return startTime > 0 && pros::millis() - startTime > duration;
-        }
-
-        void reset() override
-        {
-            startTime = pros::millis();
         }
 
     private:

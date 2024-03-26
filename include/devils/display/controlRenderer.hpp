@@ -67,11 +67,11 @@ namespace devils
             }
 
             // Get Poses
-            auto pose = odomSource->getPose();
-            auto point = controller->getTargetPose();
+            auto &currentPose = odomSource->getPose();
+            auto targetPose = controller->getState().target;
 
             // Abort if no point
-            if (point == nullptr)
+            if (targetPose == nullptr)
             {
                 lv_obj_set_hidden(pointObject, true);
                 lv_obj_set_hidden(lineObject, true);
@@ -84,17 +84,17 @@ namespace devils
 
             // Update Line to Target
             static lv_point_t linePoints[] = {{0, 0}, {0, 0}};
-            linePoints[0].x = pose.x * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_X;
-            linePoints[0].y = pose.y * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_Y;
-            linePoints[1].x = point->x * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_X;
-            linePoints[1].y = point->y * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_Y;
+            linePoints[0].x = currentPose.x * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_X;
+            linePoints[0].y = currentPose.y * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_Y;
+            linePoints[1].x = targetPose->x * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_X;
+            linePoints[1].y = targetPose->y * DisplayUtils::PX_PER_IN + DISPLAY_OFFSET_Y;
             lv_line_set_points(lineObject, linePoints, 2);
 
             // Update Target
             lv_obj_set_pos(
                 pointObject,
-                point->x * DisplayUtils::PX_PER_IN + POINT_OFFSET_X,
-                point->y * DisplayUtils::PX_PER_IN + POINT_OFFSET_Y);
+                targetPose->x * DisplayUtils::PX_PER_IN + POINT_OFFSET_X,
+                targetPose->y * DisplayUtils::PX_PER_IN + POINT_OFFSET_Y);
         }
 
     private:

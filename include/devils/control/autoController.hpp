@@ -3,6 +3,7 @@
 #include "pros/rtos.hpp"
 #include "../geometry/pose.hpp"
 #include "../utils/runnable.hpp"
+#include "../path/pathFile.hpp"
 
 namespace devils
 {
@@ -12,36 +13,55 @@ namespace devils
     struct AutoController : public Runnable
     {
         /**
-         * Gets the current control point of the controller.
-         * @return The current control point of the controller.
+         * Represents the current state of the controller.
          */
-        virtual std::vector<PathEvent> &getCurrentEvents() { return NO_EVENTS; };
-
-        /**
-         * Gets the current target point of the controller, for debugging purposes.
-         * @return The current target point of the controller.
-         */
-        virtual Pose *getTargetPose() = 0;
+        struct State
+        {
+            Pose *target = nullptr;
+            std::vector<PathEvent> &events = NO_EVENTS;
+            bool isFinished = false;
+        };
 
         /**
          * Resets the controller.
          * Should be called right before the controller is run for timing purposes.
          */
-        virtual void reset() = 0;
+        virtual void reset()
+        {
+            currentState.isFinished = false;
+            currentState.target = nullptr;
+            currentState.events = NO_EVENTS;
+        }
 
         /**
          * Updates the controller.
+         * Should be called in a loop to run the controller. This is a direct alternative to `runSync` and `runAsync`.
          */
         virtual void update() override = 0;
 
         /**
-         * Returns true if the controller has finished.
-         * @return True if the controller has finished.
+         * Gets the current state of the controller.
+         * Includes active events, targetPose, and any additional state information.
+         * @return The current state of the controller as a `AutoController::State`.
          */
-        virtual bool getFinished() = 0;
+        virtual State &getState()
+        {
+            return currentState;
+        }
+
+        /**
+         * Gets whether the controller is finished.
+         * Alias for `getState().finished`.
+         * @return True if the controller is finished, false otherwise.
+         */
+        bool getFinished()
+        {
+            return getState().isFinished;
+        }
 
         /**
          * Runs the controller synchronously.
+         * This will block the current thread until the controller is marked as finished.
          */
         void runSync() override
         {
@@ -64,6 +84,11 @@ namespace devils
         }
 
     protected:
-        std::vector<PathEvent> NO_EVENTS = {};
+        static std::vector<PathEvent> NO_EVENTS;
+
+        State currentState;
     };
 }
+
+// Define an empty vector of PathEvents
+std::vector<devils::PathEvent> devils::AutoController::NO_EVENTS = {};

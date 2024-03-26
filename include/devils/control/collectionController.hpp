@@ -36,17 +36,11 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
+        void reset() override
         {
-            if (isChasing)
-                return CHASE_EVENTS;
-            else
-                return COLLECTION_EVENTS;
-        }
-
-        Pose *getTargetPose() override
-        {
-            return targetObject;
+            AutoController::reset();
+            findController.reset();
+            directController.reset();
         }
 
         void update() override
@@ -57,6 +51,7 @@ namespace devils
 
             // Get the closest object
             targetObject = _getClosestObject();
+            currentState.target = targetObject;
 
             // Abort if no objects on field
             if (targetObject == nullptr)
@@ -79,7 +74,7 @@ namespace devils
             // Mark object as collected
             if (hasObject)
             {
-                isFinished = true;
+                currentState.isFinished = true;
                 gameObjectManager.remove(*targetObject);
                 chassis.stop();
                 return;
@@ -92,23 +87,17 @@ namespace devils
                 // TODO: Use Vision Sensor
                 directController.setTargetPose(*targetObject);
                 directController.update();
+
+                // Update State
+                currentState.events = CHASE_EVENTS;
             }
             else
             {
                 findController.update();
+
+                // Update State
+                currentState.events = COLLECTION_EVENTS;
             }
-        }
-
-        void reset() override
-        {
-            isFinished = false;
-            findController.reset();
-            directController.reset();
-        }
-
-        bool getFinished() override
-        {
-            return isFinished;
         }
 
         /**
@@ -199,7 +188,6 @@ namespace devils
         FindController findController;
         DirectController directController;
         GameObject *targetObject = nullptr;
-        bool isFinished = false;
         bool isChasing = false;
 
         // Optional Components

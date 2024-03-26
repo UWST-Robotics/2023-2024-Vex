@@ -27,23 +27,14 @@ namespace devils
         {
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
+        /**
+         * Resets the path from the beginning.
+         */
+        void reset() override
         {
-            if (currentIndex > generatedPath.controlPoints.size() || currentIndex <= 0)
-                return NO_EVENTS;
-            return generatedPath.controlPoints[currentIndex - 1].events;
-        }
-
-        Pose *getTargetPose() override
-        {
-            if (currentIndex >= generatedPath.controlPoints.size() || currentIndex < 0)
-                return nullptr;
-            return &generatedPath.controlPoints[currentIndex];
-        }
-
-        bool getFinished() override
-        {
-            return currentIndex >= generatedPath.controlPoints.size();
+            AutoController::reset();
+            currentIndex = 1;
+            lastCheckpointTime = pros::millis();
         }
 
         void update() override
@@ -59,18 +50,14 @@ namespace devils
             double timeSinceLastCheckpoint = pros::millis() - lastCheckpointTime;
             bool skipCheckpoint = timeSinceLastCheckpoint > CHECKPOINT_TIMEOUT && CHECKPOINT_TIMEOUT > 0;
 
-            // Calculate Point
+            // Calculate Control Point Distance
             auto &controlPoints = generatedPath.controlPoints;
             auto &point = controlPoints[currentIndex];
             double distance = point.distanceTo(currentPose);
 
             // Check within trigger range
             if (distance < CHECKPOINT_RANGE || skipCheckpoint)
-            {
-                currentIndex++;
-                lastCheckpointTime = pros::millis();
-                // continue;
-            }
+                _nextControlPoint();
 
             // Get Current Point
             auto &currentPoint = controlPoints[currentIndex % controlPoints.size()];
@@ -116,13 +103,20 @@ namespace devils
         }
 
         /**
-         * Resets the path from the beginning.
+         * Jumps to the next control point index in the path.
          */
-        void reset() override
+        void _nextControlPoint()
         {
-            isFinished = false;
-            currentIndex = 1;
+            currentIndex++;
             lastCheckpointTime = pros::millis();
+
+            // Update State
+            if (currentIndex < generatedPath.controlPoints.size() && currentIndex > 0)
+            {
+                currentState.events = generatedPath.controlPoints[currentIndex - 1].events;
+                currentState.target = &generatedPath.controlPoints[currentIndex];
+                currentState.isFinished = currentIndex >= generatedPath.controlPoints.size();
+            }
         }
 
         /**

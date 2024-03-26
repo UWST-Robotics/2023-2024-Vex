@@ -51,11 +51,10 @@ namespace devils
             while (true)
             {
                 // Handle Events
-                auto &currentEvents = autoController.getCurrentEvents();
+                auto &autoState = autoController.getState();
                 chassis.setSpeed(0.7);
-                for (int i = 0; i < currentEvents.size(); i++)
+                for (PathEvent &currentEvent : autoState.events)
                 {
-                    auto currentEvent = currentEvents.at(i);
                     if (currentEvent.name == "pause" || currentEvent.name == "wack")
                         pauseTimer.start(currentEvent.id, std::stoi(currentEvent.params));
                     else if (currentEvent.name == "fast")

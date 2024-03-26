@@ -34,24 +34,18 @@ namespace devils
             setPath(path);
         }
 
-        std::vector<PathEvent> &getCurrentEvents() override
+        void reset() override
         {
-            if (controlPoints == nullptr || controlPointIndex >= controlPoints->size() || controlPointIndex < 0)
-                return NO_EVENTS;
-            return controlPoints->at(controlPointIndex).events;
-        }
-
-        Pose *getTargetPose() override
-        {
-            if (pathPoints == nullptr || lookaheadPointIndex >= pathPoints->size() || lookaheadPointIndex < 0)
-                return nullptr;
-            return &pathPoints->at(lookaheadPointIndex);
+            AutoController::reset();
+            robotPointIndex = 0;
+            lookaheadPointIndex = 0;
+            controlPointIndex = 0;
         }
 
         void update() override
         {
             // Abort if path is missing
-            if (currentPath == nullptr)
+            if (currentPath == nullptr || pathPoints == nullptr || controlPoints == nullptr)
                 return;
 
             // Get Current Pose
@@ -60,11 +54,12 @@ namespace devils
             // Update Control Point Index
             if (controlPointIndex < controlPoints->size() - 1)
             {
-                auto controlPoint = controlPoints->at(controlPointIndex + 1);
+                auto &controlPoint = controlPoints->at(controlPointIndex + 1);
                 double distance = controlPoint.distanceTo(currentPose);
                 if (distance < LOOKAHEAD_DISTANCE)
                     controlPointIndex++;
             }
+            PathPoint *controlPoint = &controlPoints->at(controlPointIndex);
             int checkpointPathIndex = (this->controlPointIndex + 1) / currentPath->dt;
 
             // Update Path Point Index
@@ -86,17 +81,21 @@ namespace devils
             }
 
             // Update Lookahead Point Index
+            Pose *targetPose = nullptr;
             for (int i = lookaheadPointIndex; i < pathPoints->size(); i++)
             {
-                auto targetPose = getTargetPose();
+                targetPose = &pathPoints->at(i);
                 if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
                     break;
                 lookaheadPointIndex = i;
             }
 
+            // Update State
+            currentState.target = targetPose;
+            currentState.events = controlPoint->events;
+
             // Get Current Point
-            auto targetPose = getTargetPose();
-            bool isReversed = controlPoints->at(controlPointIndex).isReversed;
+            bool isReversed = controlPoint->isReversed;
 
             // Handle Finish
             auto lastPoint = pathPoints->back();
@@ -105,31 +104,14 @@ namespace devils
             if (withinRangeOfLastPoint && lookingAtLastPoint)
             {
                 Logger::debug("Finished path");
-                isFinished = true;
+                currentState.isFinished = true;
                 chassis.stop();
             }
-
             // Drive To Point
             else
             {
                 driveTowards(*targetPose, isReversed);
             }
-        }
-
-        bool getFinished() override
-        {
-            return isFinished;
-        }
-
-        void reset() override
-        {
-            robotPointIndex = 0;
-            lookaheadPointIndex = 0;
-            controlPointIndex = 0;
-            isFinished = false;
-            // auto startingPose = generatedPath.getStartingPose();
-            // if (startingPose != nullptr)
-            //     odometry.setPose(*startingPose);
         }
 
         /**
@@ -202,7 +184,6 @@ namespace devils
         int robotPointIndex = 0;      // Closest path index to the robot
         int lookaheadPointIndex = 0;  // Closest path index to the lookahead
         int controlPointIndex = 0;    // Current control index of the event
-        bool isFinished = false;      // Whether the controller is finished
         bool skipCheckpoints = false; // Whether the controller can skip checkpoints
     };
 }
