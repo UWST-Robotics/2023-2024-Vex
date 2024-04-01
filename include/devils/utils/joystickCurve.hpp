@@ -9,9 +9,8 @@ namespace devils
     /**
      * Represents a joystick curve.
      */
-    class JoystickCurve
+    struct JoystickCurve
     {
-    public:
         /**
          * Linearly interpolates a value with a deadzone
          * @param deadzone The deadzone of the joystick.
@@ -39,6 +38,31 @@ namespace devils
             if (val < 0)
                 return ((1 + val) * a - val * b) * -1;
             return (1 - val) * a + val * b;
+        }
+
+        /**
+         * Curves on an arbitrary power curve.
+         * @param val The value to curve.
+         * @param power The power to curve by.
+         * @return The curved value.
+         */
+        static double pow(double val, double power)
+        {
+            return std::pow(std::abs(val), power) * (val < 0 ? -1 : 1);
+        }
+
+        /**
+         * Curves on an arbitrary curve with a deadzone.
+         * @param val The value to curve.
+         * @param power The power to curve by.
+         * @param deadzone The range of which the joystick is considered 0.
+         * @return The curved value.
+         */
+        static double curve(double val, double power, double deadzone)
+        {
+            if (val > -deadzone && val < deadzone)
+                return 0;
+            return pow(val, power);
         }
 
         /**

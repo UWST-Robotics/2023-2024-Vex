@@ -37,6 +37,7 @@
 #include "display/displayPointRenderer.hpp"
 
 // Hardware
+#include "hardware/gps.hpp"
 #include "hardware/imu.hpp"
 #include "hardware/opticalSensor.hpp"
 #include "hardware/visionSensor.hpp"

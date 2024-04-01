@@ -9,46 +9,25 @@
 namespace devils
 {
     /**
-     * Represents a set of odometry sources merged into one using the complementary filter.
+     * Represents a set of odometry sources fused together using the complementary filter.
      */
     class ComplementaryFilterOdom : public OdomSource
     {
     public:
         /**
-         * Creates a new merged odometry source
-         * @param odomSources The odometry sources to merge
-         * @param weights The weights to apply to each odometry source. Values should be between 0 and 1 and sum to 1.
+         * Creates a new fused odometry source using the complementary filter.
+         * @param absoltueOdom The absolute odometry source
+         * @param relativeOdom The relative odometry source
+         * @param absoluteWeight The weight of the absolute odometry source
          */
-        ComplementaryFilterOdom(std::initializer_list<OdomSource *> odomSources,
-                                std::initializer_list<double> weights)
-            : odomSources(odomSources),
-              weights(weights)
+        ComplementaryFilterOdom(OdomSource *absoluteOdom, OdomSource *relativeOdom, double absoluteWeight)
+            : absoluteOdom(absoluteOdom),
+              relativeOdom(relativeOdom),
+              absoluteWeight(absoluteWeight),
+              relativeWeight(1 - absoluteWeight)
         {
-            // Compare Weight and Source Sizes
-            if (odomSources.size() != weights.size())
-                throw std::invalid_argument("The number of odometry sources and weights must be the same");
-
-            // Check Sum of Weights
-            double sum = _getSumOfWeights();
-            if (sum != 1)
-                throw std::invalid_argument("Weights must sum to 1, currently sum to " + std::to_string(sum));
-
-            // Check each weight
-            for (int i = 0; i < weights.size(); i++)
-                if (this->weights[i] < 0 || this->weights[i] > 1)
-                    throw std::invalid_argument("Weight " + std::to_string(i) + " is not between 0 and 1");
-        }
-
-        /**
-         * Gets the sum of the weights of each odometry source
-         * @return The sum of all the weights
-         */
-        double _getSumOfWeights()
-        {
-            double sum = 0;
-            for (int i = 0; i < weights.size(); i++)
-                sum += weights[i];
-            return sum;
+            if (absoluteWeight < 0 || absoluteWeight > 1)
+                throw std::invalid_argument("Absolute weight must be between 0 and 1");
         }
 
         /**
@@ -57,18 +36,21 @@ namespace devils
         void update()
         {
             // Get the current pose from each source
-            std::vector<Pose> poses;
-            for (int i = 0; i < odomSources.size(); i++)
-                poses.push_back(odomSources[i]->getPose());
+            Pose absolutePose = absoluteOdom->getPose();
+            Pose relativePose = relativeOdom->getPose();
 
-            // Merge the poses
-            currentPose = Pose(0, 0, 0);
-            for (int i = 0; i < poses.size(); i++)
-                currentPose = currentPose + (poses[i] * weights[i]);
-
-            // Reset the sources
-            for (int i = 0; i < odomSources.size(); i++)
-                odomSources[i]->setPose(currentPose);
+            // Check if the absolute pose has changed
+            if (absolutePose != lastAbsolutePose)
+            {
+                // Weight the absolute and relative poses
+                currentPose = absolutePose * absoluteWeight + relativePose * relativeWeight;
+                relativeOdom->setPose(currentPose);
+            }
+            else
+            {
+                // Apply the relative pose
+                currentPose = relativePose;
+            }
         }
 
         /**
@@ -87,13 +69,17 @@ namespace devils
         void setPose(Pose &pose) override
         {
             currentPose = pose;
-            for (int i = 0; i < odomSources.size(); i++)
-                odomSources[i]->setPose(pose);
+            absoluteOdom->setPose(pose);
+            relativeOdom->setPose(pose);
         }
 
     private:
-        std::vector<OdomSource *> odomSources;
-        std::vector<double> weights;
+        OdomSource *absoluteOdom;
+        OdomSource *relativeOdom;
+        double absoluteWeight;
+        double relativeWeight;
+
+        Pose lastAbsolutePose = Pose(0, 0, 0);
         Pose currentPose = Pose(0, 0, 0);
     };
 }

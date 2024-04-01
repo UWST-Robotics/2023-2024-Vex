@@ -1,8 +1,8 @@
 #pragma once
-#include "../utils/logger.hpp"
-#include "../hardware/smartMotor.hpp"
-#include "../hardware/opticalSensor.hpp"
-#include "../hardware/scuffPneumatic.hpp"
+#include "devils/utils/logger.hpp"
+#include "devils/hardware/smartMotor.hpp"
+#include "devils/hardware/opticalSensor.hpp"
+#include "devils/hardware/scuffPneumatic.hpp"
 
 namespace devils
 {
@@ -26,7 +26,7 @@ namespace devils
          */
         void autoIntake()
         {
-            if (enableSensor && sensor->getProximity() > SENSOR_THRESHOLD)
+            if (sensor != nullptr && sensor->getProximity() > SENSOR_THRESHOLD)
                 intake(SENSOR_SPEED);
             else
                 intake();
@@ -34,13 +34,11 @@ namespace devils
 
         /**
          * Runs the intake wheels.
-         * @param value The speed of the intake wheels (-1 to 1)
+         * @param value The speed of the intake wheels (-1 to 1).
          */
         void intake(double value = WHEEL_SPEED)
         {
             intakeMotor.moveVoltage(value);
-            isIntaking = true;
-            isOuttaking = false;
         }
 
         /**
@@ -49,8 +47,6 @@ namespace devils
         void outtake()
         {
             intakeMotor.moveVoltage(-WHEEL_SPEED);
-            isIntaking = false;
-            isOuttaking = true;
         }
 
         /**
@@ -59,8 +55,6 @@ namespace devils
         void stop()
         {
             intakeMotor.stop();
-            isIntaking = false;
-            isOuttaking = false;
         }
 
         /**
@@ -70,32 +64,7 @@ namespace devils
          */
         void useSensor(OpticalSensor *sensor)
         {
-            enableSensor = true;
             this->sensor = sensor;
-        }
-
-        /**
-         * Returns true if the intake is extended.
-         */
-        const bool getExtended()
-        {
-            return isExtended;
-        }
-
-        /**
-         * Returns true if the intake is intaking.
-         */
-        const bool getIntaking()
-        {
-            return isIntaking;
-        }
-
-        /**
-         * Returns true if the intake is outtaking.
-         */
-        const bool getOuttaking()
-        {
-            return isOuttaking;
         }
 
     private:
@@ -103,11 +72,7 @@ namespace devils
         static constexpr double SENSOR_SPEED = 0.5;
         static constexpr double SENSOR_THRESHOLD = 0.5;
 
-        bool isExtended = false;
-        bool isIntaking = false;
-        bool isOuttaking = false;
-        bool enableSensor = false;
         SmartMotor intakeMotor;
-        OpticalSensor *sensor;
+        OpticalSensor *sensor = nullptr;
     };
 }
