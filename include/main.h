@@ -19,6 +19,7 @@
 // Add each robot definition here
 #include "devils/2024/autoTest.hpp"
 #include "devils/2024/pepperJack.hpp"
+#include "devils/2024/blazeTest.hpp"
 
 using namespace devils;
 

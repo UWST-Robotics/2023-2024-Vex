@@ -72,12 +72,12 @@ namespace devils
 
     private:
         // V5 Ports
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {10, -19, -8, 18};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {-11, 12, -1, 2};
-        static constexpr uint8_t INTAKE_MOTOR_PORT = 9;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {19, 9, -20, -10};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {11, 1, -12, -2};
+        static constexpr uint8_t INTAKE_MOTOR_PORT = 18;
         static constexpr uint8_t IMU_PORT = 5;
-        static constexpr uint8_t GPS_PORT = 5; // <<< ??
-        static constexpr uint8_t STORAGE_SENSOR_PORT = 20;
+        static constexpr uint8_t GPS_PORT = 15;
+        static constexpr uint8_t STORAGE_SENSOR_PORT = 6;
 
         // Geometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // in

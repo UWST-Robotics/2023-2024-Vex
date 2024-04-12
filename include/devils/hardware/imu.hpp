@@ -2,6 +2,7 @@
 #include "pros/imu.hpp"
 #include "../utils/logger.hpp"
 #include "../geometry/units.hpp"
+#include "../geometry/vector3.hpp"
 #include <string>
 
 namespace devils
@@ -25,6 +26,24 @@ namespace devils
                 imu.reset(true);
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": imu port is invalid");
+        }
+
+        /**
+         * Gets the current acceleration of the IMU in inches per second squared.
+         * @return The current acceleration of the IMU in inches per second squared.
+         */
+        Vector3 getAccel()
+        {
+            auto accel = imu.get_accel();
+            if (accel.x == PROS_ERR_F && LOGGING_ENABLED)
+            {
+                Logger::error(name + ": imu get accel failed");
+                return Vector3(0, 0, 0);
+            }
+            return Vector3(
+                Units::metersToIn(accel.x),
+                Units::metersToIn(accel.y),
+                Units::metersToIn(accel.z));
         }
 
         /**

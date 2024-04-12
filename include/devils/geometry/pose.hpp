@@ -1,32 +1,35 @@
 #pragma once
 #include <string>
 #include <cmath>
+#include "vector2.hpp"
 
 namespace devils
 {
     /**
      * Represents a pose in 2D space.
      */
-    struct Pose
+    struct Pose : public Vector2
     {
         /// @brief The x position of the robot in inches
-        double x = 0;
+        double &x = Vector2::x;
+
         /// @brief The y position of the robot in inches
-        double y = 0;
+        double &y = Vector2::y;
+
         /// @brief The rotation of the robot in radians
         double rotation = 0;
 
         /**
          * Constructs a pose with all values set to 0
          */
-        Pose() : x(0), y(0), rotation(0) {}
+        Pose() : rotation(0) {}
 
         /**
          * Constructs a pose with the given x and y
          * @param x The x position of the robot in inches
          * @param y The y position of the robot in inches
          */
-        Pose(double x, double y) : x(x), y(y), rotation(0) {}
+        Pose(double x, double y) : Vector2(x, y), rotation(0) {}
 
         /**
          * Constructs a pose with the given x, y, and rotation
@@ -34,13 +37,25 @@ namespace devils
          * @param y The y position of the robot in inches
          * @param rotation The rotation of the robot in radians
          */
-        Pose(double x, double y, double rotation) : x(x), y(y), rotation(rotation) {}
+        Pose(double x, double y, double rotation) : Vector2(x, y), rotation(rotation) {}
+
+        /**
+         * Constructs a pose by copying another vector. Sets rotation to 0.
+         * @param other The other vector
+         */
+        Pose(const Vector2 &other) : Vector2(other.x, other.y), rotation(0) {}
 
         /**
          * Constructs a pose by copying another pose
          * @param other The other pose
          */
-        Pose(const Pose &other) : x(other.x), y(other.y), rotation(other.rotation) {}
+        Pose operator=(const Pose &other)
+        {
+            x = other.x;
+            y = other.y;
+            rotation = other.rotation;
+            return *this;
+        }
 
         /**
          * Adds two poses together
@@ -90,35 +105,6 @@ namespace devils
         bool operator!=(const Pose &other)
         {
             return !(*this == other);
-        }
-
-        /**
-         * Calculates the dot product of two poses
-         * @param other The other pose
-         * @return The dot product of the two poses
-         */
-        double dot(const Pose &other)
-        {
-            return x * other.x + y * other.y + rotation * other.rotation;
-        }
-
-        /**
-         * Calculates the distance between two poses
-         * @param other The other pose
-         * @return The distance between the two poses
-         */
-        double distanceTo(const Pose &other)
-        {
-            return std::sqrt(std::pow(other.x - x, 2) + std::pow(other.y - y, 2));
-        }
-
-        /**
-         * Calculates the magnitude of the pose
-         * @return The magnitude of the pose
-         */
-        double magnitude()
-        {
-            return std::sqrt(std::pow(x, 2) + std::pow(y, 2));
         }
 
         /**
