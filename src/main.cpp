@@ -10,7 +10,7 @@ void initialize()
 {
 	Logger::init();
 	Logger::info("==== Initialize ====");
-	robot = std::make_shared<BlazeTest>(); // <-- Change this to the target robot
+	robot = std::make_shared<Blaze>(); // <-- Change this to the target robot
 }
 
 /**
