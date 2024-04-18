@@ -17,8 +17,8 @@ namespace devils
     public:
         ~FieldRenderer()
         {
-            lv_obj_del(redGoalBox);
             lv_obj_del(blueGoalBox);
+            lv_obj_del(redGoalBox);
             lv_obj_del(centerBar);
             lv_obj_del(topBar);
             lv_obj_del(bottomBar);
@@ -48,18 +48,6 @@ namespace devils
             blueStyle.body.grad_color = LV_COLOR_MAKE(0x00, 0x00, 0xff);
             blueStyle.body.opa = 128;
 
-            // Red Goal Box
-            redGoalBox = lv_obj_create(root, NULL);
-            lv_obj_set_size(
-                redGoalBox,
-                GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
-                GOAL_BOX_HEIGHT * DisplayUtils::PX_PER_IN);
-            lv_obj_set_pos(
-                redGoalBox,
-                GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X,
-                GOAL_BOX_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y);
-            lv_obj_set_style(redGoalBox, &redStyle);
-
             // Blue Goal Box
             blueGoalBox = lv_obj_create(root, NULL);
             lv_obj_set_size(
@@ -68,9 +56,21 @@ namespace devils
                 GOAL_BOX_HEIGHT * DisplayUtils::PX_PER_IN);
             lv_obj_set_pos(
                 blueGoalBox,
-                -GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X - GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X,
                 GOAL_BOX_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y);
             lv_obj_set_style(blueGoalBox, &blueStyle);
+
+            // Red Goal Box
+            redGoalBox = lv_obj_create(root, NULL);
+            lv_obj_set_size(
+                redGoalBox,
+                GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_HEIGHT * DisplayUtils::PX_PER_IN);
+            lv_obj_set_pos(
+                redGoalBox,
+                -GOAL_BOX_X * DisplayUtils::PX_PER_IN + FIELD_OFFSET_X - GOAL_BOX_WIDTH * DisplayUtils::PX_PER_IN,
+                GOAL_BOX_Y * DisplayUtils::PX_PER_IN + FIELD_OFFSET_Y);
+            lv_obj_set_style(redGoalBox, &redStyle);
 
             // Center Bar
             centerBar = lv_line_create(root, NULL);
@@ -118,8 +118,8 @@ namespace devils
         static constexpr int TOP_BAR_X = -24;
         static constexpr int TOP_BAR_Y = -48;
 
-        lv_obj_t *redGoalBox;
         lv_obj_t *blueGoalBox;
+        lv_obj_t *redGoalBox;
         lv_obj_t *centerBar;
         lv_obj_t *topBar;
         lv_obj_t *bottomBar;

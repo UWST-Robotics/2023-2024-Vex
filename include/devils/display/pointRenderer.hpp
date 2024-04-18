@@ -2,7 +2,6 @@
 #include "../geometry/pose.hpp"
 #include "../odom/odomSource.hpp"
 #include "displayUtils.hpp"
-#include "../geometry/displayPoint.hpp"
 #include "renderer.hpp"
 #include <cmath>
 #include <string>
@@ -12,7 +11,7 @@ namespace devils
     /**
      * Renderer that displays a `DisplayPoint` object.
      */
-    class DisplayPointRenderer : public Renderer
+    class PointRenderer : public Renderer
     {
     public:
         /**
@@ -21,12 +20,12 @@ namespace devils
          * @param g The green value of the cursor
          * @param b The blue value of the cursor
          */
-        DisplayPointRenderer(u_char r, u_char g, u_char b) : odomSource(odomSource)
+        PointRenderer(u_char r, u_char g, u_char b) : odomSource(odomSource)
         {
             cursorColor = LV_COLOR_MAKE(r, g, b);
         }
 
-        ~DisplayPointRenderer()
+        ~PointRenderer()
         {
             lv_obj_del(cursorObject);
         }
@@ -47,7 +46,7 @@ namespace devils
             }
         }
 
-        void setPoint(DisplayPoint &point)
+        void setPoint(Vector2 &point)
         {
             // Update Cursor Position
             lv_obj_set_pos(

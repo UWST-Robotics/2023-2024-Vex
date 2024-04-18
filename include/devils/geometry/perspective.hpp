@@ -1,6 +1,6 @@
 #pragma once
 #include "../utils/logger.hpp"
-#include "displayPoint.hpp"
+#include "Vector2.hpp"
 #include "units.hpp"
 #include "pose.hpp"
 #include <cmath>
@@ -107,11 +107,11 @@ namespace devils
          * @param point The point to transform.
          * @return The transformed point.
          */
-        DisplayPoint screenToWorld(DisplayPoint point)
+        Vector2 screenToWorld(Vector2 point)
         {
             Eigen::Vector4d screenPoint(point.x, point.y, 0, 1);
             Eigen::Vector4d worldPoint = transformationMatrix.inverse() * screenPoint;
-            return DisplayPoint{worldPoint(0) / worldPoint(3), worldPoint(1) / worldPoint(3)};
+            return Vector2{worldPoint(0) / worldPoint(3), worldPoint(1) / worldPoint(3)};
         }
 
         /**
@@ -119,16 +119,14 @@ namespace devils
          * @param point The point to transform.
          * @return The transformed point.
          */
-        DisplayPoint worldToScreen(DisplayPoint point)
+        Vector2 worldToScreen(Vector2 point)
         {
             Eigen::Vector4d worldPoint(point.x, point.y, 0, 1);
             Eigen::Vector4d screenPoint = transformationMatrix * worldPoint;
-            return DisplayPoint{screenPoint(0) / screenPoint(3), screenPoint(1) / screenPoint(3)};
+            return Vector2{screenPoint(0) / screenPoint(3), screenPoint(1) / screenPoint(3)};
         }
 
     private:
-        static constexpr double CLIPPING_PLANE = 0.1;
-
         Eigen::Matrix4d transformationMatrix;
     };
 }

@@ -61,14 +61,14 @@ namespace devils
                 auto p2 = controlPoints[i + 1];
 
                 // Get Anchor Points
-                auto a1 = Pose{
+                auto a1 = Pose(
                     p1.x + p1.exitDelta * std::cos(p1.rotation) * (isReversed ? -1 : 1),
-                    p2.y + p1.exitDelta * std::sin(p1.rotation) * (isReversed ? -1 : 1),
-                    p1.rotation};
-                auto a2 = Pose{
-                    p1.x - p2.enterDelta * std::cos(p2.rotation),
+                    p1.y + p1.exitDelta * std::sin(p1.rotation) * (isReversed ? -1 : 1),
+                    p1.rotation);
+                auto a2 = Pose(
+                    p2.x - p2.enterDelta * std::cos(p2.rotation),
                     p2.y - p2.enterDelta * std::sin(p2.rotation),
-                    p2.rotation};
+                    p2.rotation);
 
                 // Lerp between points
                 for (double t = 0; t < 1; t += DT)

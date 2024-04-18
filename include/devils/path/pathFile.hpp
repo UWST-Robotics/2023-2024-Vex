@@ -50,6 +50,30 @@ namespace devils
         std::vector<PathEvent> events = {};
 
         /**
+         * Constructs a path point with all values set to 0.
+         */
+        PathPoint() : Pose(0, 0, 0) {}
+
+        /**
+         * Constructs a path point from a `Pose`.
+         * @param pose The pose to construct the path point from.
+         */
+        PathPoint(const Pose &pose) : Pose(pose) {}
+
+        /**
+         * Copy constructor.
+         * @param pathPoint The path point to copy.
+        */
+        PathPoint(const PathPoint &pathPoint) :
+            Pose(pathPoint.x, pathPoint.y, pathPoint.rotation),
+            enterDelta(pathPoint.enterDelta),
+            exitDelta(pathPoint.exitDelta),
+            isReversed(pathPoint.isReversed),
+            events(pathPoint.events)
+        {
+        }
+
+        /**
          * Converts the point to a string.
          * @return The point as a string.
          */

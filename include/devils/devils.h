@@ -34,7 +34,7 @@
 #include "display/pathPickerRenderer.hpp"
 #include "display/occupancyRenderer.hpp"
 #include "display/statsRenderer.hpp"
-#include "display/displayPointRenderer.hpp"
+#include "display/pointRenderer.hpp"
 
 // Hardware
 #include "hardware/gps.hpp"
@@ -47,6 +47,7 @@
 #include "odom/complementaryFilterOdom.hpp"
 #include "odom/trackingWheelOdom.hpp"
 #include "odom/differentialWheelOdom.hpp"
+#include "odom/transformOdom.hpp"
 
 // Path
 #include "path/pathGenerator.hpp"

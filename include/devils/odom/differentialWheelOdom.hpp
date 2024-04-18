@@ -39,7 +39,7 @@ namespace devils
          * @param leftRotations The left wheel rotations.
          * @param rightRotations The right wheel rotations.
          */
-        void update(int leftRotations, int rightRotations)
+        void update(double leftRotations, double rightRotations)
         {
             // Get Delta Time
             uint32_t deltaT = lastUpdateTimestamp - pros::millis();
@@ -79,8 +79,8 @@ namespace devils
          */
         void update(RotationSensor &leftSensor, RotationSensor &rightSensor)
         {
-            double leftRotations = leftSensor.getAngle() / (2 * M_PI);
-            double rightRotations = rightSensor.getAngle() / (2 * M_PI);
+            double leftRotations = (leftSensor.getAngle() / (2 * M_PI)) / ticksPerRevolution;
+            double rightRotations = (rightSensor.getAngle() / (2 * M_PI)) / ticksPerRevolution;
             update(leftRotations, rightRotations);
         }
 
@@ -89,8 +89,8 @@ namespace devils
          */
         void update(TankChassis &chassis)
         {
-            double leftPosition = chassis.getLeftMotors().getPosition();
-            double rightPosition = chassis.getRightMotors().getPosition();
+            double leftPosition = chassis.getLeftMotors().getPosition() / ticksPerRevolution;
+            double rightPosition = chassis.getRightMotors().getPosition() / ticksPerRevolution;
             update(leftPosition, rightPosition);
         }
 
@@ -101,12 +101,9 @@ namespace devils
         {
             if (imu == nullptr)
                 return;
-
-            double imuHeading = imu->getHeading();
-            if (imuHeading == PROS_ERR_F)
-                Logger::error("TankWheelOdometry: Failed to update from IMU");
-            else
-                currentPose.rotation = imuHeading;
+            double heading = imu->getHeading();
+            if (heading != PROS_ERR_F)
+                currentPose.rotation = heading;
         }
 
         /**
@@ -137,6 +134,16 @@ namespace devils
                 imu->setHeading(pose.rotation);
         }
 
+        /**
+         * Sets the number of ticks per revolution of the wheels.
+         * Used to pass gear ratios to the odometry system.
+         * @param ticksPerRevolution The number of encoder ticks per revolution of the wheels.
+        */
+        void setTicksPerRevolution(double ticksPerRevolution)
+        {
+            this->ticksPerRevolution = ticksPerRevolution;
+        }
+
     private:
         const double wheelRadius;
         const double wheelBase;
@@ -148,6 +155,8 @@ namespace devils
         double lastRight = 0;
         double lastVertical = 0;
         double lastHorizontal = 0;
+
+        double ticksPerRevolution = 1.0;
 
         // IMU
         IMU *imu = nullptr;

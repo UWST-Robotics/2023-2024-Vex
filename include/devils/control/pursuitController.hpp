@@ -7,6 +7,7 @@
 #include "../utils/pid.hpp"
 #include "../geometry/lerp.hpp"
 #include "autoController.hpp"
+#include "directController.hpp"
 #include <cmath>
 #include <vector>
 
@@ -28,15 +29,18 @@ namespace devils
         PursuitController(BaseChassis &chassis, OdomSource &odometry, GeneratedPath *path = nullptr, bool skipCheckpoints = false)
             : chassis(chassis),
               odometry(odometry),
+              directController(chassis, odometry),
               skipCheckpoints(skipCheckpoints),
               currentPath(path)
         {
             setPath(path);
+            directController.setMaxAccel(0.4);
         }
 
         void reset() override
         {
             AutoController::reset();
+            directController.reset();
             robotPointIndex = 0;
             lookaheadPointIndex = 0;
             controlPointIndex = 0;
@@ -100,18 +104,19 @@ namespace devils
             // Handle Finish
             auto lastPoint = pathPoints->back();
             bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
-            bool lookingAtLastPoint = robotPointIndex == pathPoints->size() - 1;
+            bool lookingAtLastPoint = robotPointIndex >= pathPoints->size() - 1;
             if (withinRangeOfLastPoint && lookingAtLastPoint)
             {
                 Logger::debug("Finished path");
                 currentState.isFinished = true;
                 chassis.stop();
+                return;
             }
+
             // Drive To Point
-            else
-            {
-                driveTowards(*targetPose, isReversed);
-            }
+            directController.setTargetPose(*targetPose);
+            directController.setReverse(isReversed);
+            directController.update();
         }
 
         /**
@@ -129,47 +134,8 @@ namespace devils
             reset();
         }
 
-        /**
-         * Drives the robot towards the target point.
-         * @param targetPose The target point to drive towards.
-         * @param isReversed Whether the robot is driving in reverse.
-         */
-        void driveTowards(Pose &targetPose, bool isReversed = false)
-        {
-            // Get Current Pose
-            auto currentPose = odometry.getPose();
-
-            // Calculate Forward & Turn
-            double deltaX = targetPose.x - currentPose.x;
-            double deltaY = targetPose.y - currentPose.y;
-            double normal = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
-            double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
-            double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
-
-            // Handle Reversed
-            if (isReversed)
-                deltaRotation = Units::diffRad(deltaRotation, M_PI);
-
-            // Calculate PID
-            double forward = translationPID.update(deltaForward);
-            double turn = rotationPID.update(deltaRotation);
-
-            // Clamp Values
-            if (isReversed)
-                forward = std::clamp(forward, -1.0, 0.0);
-            else
-                forward = std::clamp(forward, 0.0, 1.0);
-            turn = std::clamp(turn, -1.0, 1.0) * normal;
-
-            // Drive
-            chassis.move(forward, turn);
-        }
-
     private:
-        static constexpr double LOOKAHEAD_DISTANCE = 6.0; // in
-
-        PID translationPID = PID(5.0, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.3, 0, 0);    // <-- Rotation
+        static constexpr double LOOKAHEAD_DISTANCE = 8.0; // in
 
         // Object Handles
         BaseChassis &chassis;
@@ -181,6 +147,7 @@ namespace devils
         std::vector<Pose> *pathPoints;
 
         // Controller State
+        DirectController directController;
         int robotPointIndex = 0;      // Closest path index to the robot
         int lookaheadPointIndex = 0;  // Closest path index to the lookahead
         int controlPointIndex = 0;    // Current control index of the event

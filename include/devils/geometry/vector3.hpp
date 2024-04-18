@@ -37,6 +37,12 @@ namespace devils
         Vector3(double x, double y, double z) : x(x), y(y), z(z) {}
 
         /**
+         * Copy constructor
+         * @param other The other vector
+         */
+        Vector3(const Vector3 &other) : x(other.x), y(other.y), z(other.z) {}
+
+        /**
          * Constructs a vector by copying another vector
          * @param other The other vector
          */

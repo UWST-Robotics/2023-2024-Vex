@@ -27,6 +27,12 @@ namespace devils
         Vector2(double x, double y) : x(x), y(y) {}
 
         /**
+         * Copy constructor
+         * @param other The other vector
+         */
+        Vector2(const Vector2 &other) : x(other.x), y(other.y) {}
+
+        /**
          * Constructs a vector by copying another vector
          * @param other The other vector
          */

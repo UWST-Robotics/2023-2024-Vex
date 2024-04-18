@@ -9,7 +9,7 @@ namespace devils
     {
     public:
         /**
-         * Starts the timer if it is not already running.
+         * Starts the timer if the ID is not already running.
          * @param timerID The ID of the timer or event.
          * @param duration The duration of the timer in milliseconds.
          */
@@ -34,8 +34,8 @@ namespace devils
         }
 
         /**
-         * Returns the time remaining on the timer.
-         * @return The time remaining on the timer.
+         * Returns the time remaining on the timer in milliseconds.
+         * @return The time remaining on the timer in milliseconds.
          */
         double getTimeRemaining()
         {

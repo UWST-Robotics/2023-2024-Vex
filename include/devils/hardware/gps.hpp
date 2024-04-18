@@ -3,6 +3,7 @@
 #include "../utils/logger.hpp"
 #include "../geometry/pose.hpp"
 #include "../geometry/units.hpp"
+#include "../geometry/polygon.hpp"
 #include "../odom/odomSource.hpp"
 
 namespace devils
@@ -21,10 +22,11 @@ namespace devils
          */
         GPS(std::string name, uint8_t gpsPort)
             : name(name),
-              gps(gpsPort)
+              gps(gpsPort, 0, 0, 0, 0, 0)
         {
             if (errno != 0)
                 Logger::error(name + ": GPS port is invalid");
+            gps.set_data_rate(40);
         }
 
         /**
@@ -32,20 +34,32 @@ namespace devils
          */
         void update()
         {
-            auto status = gps.get_status();
+            double gpsX = gps.get_x_position();
+            double gpsY = gps.get_y_position();
+            double gpsHeading = gps.get_heading();
 
-            if (status.yaw == PROS_ERR_F)
+            if (gpsX == PROS_ERR_F || gpsY == PROS_ERR_F || gpsHeading == PROS_ERR_F)
             {
                 Logger::error(name + ": GPS update failed");
                 return;
             }
 
-            Pose gpsPose = Pose(
-                Units::metersToIn(status.x),
-                Units::metersToIn(status.y),
-                Units::normalizeRadians(Units::degToRad(status.yaw) - GPS_ROTATION_OFFSET));
+            // Convert Units
+            gpsX = Units::metersToIn(gpsX);
+            gpsY = -Units::metersToIn(gpsY);
+            gpsHeading = Units::normalizeRadians(Units::degToRad(gpsHeading) - GPS_ROTATION_OFFSET - rotationalOffset);
 
-            currentPose = gpsPose - gpsOffset;
+            // Check Within Bounds
+            if (gpsX < -MAX_GPS_X || gpsX > MAX_GPS_X || gpsY < -MAX_GPS_Y || gpsY > MAX_GPS_Y)
+            {
+                Logger::error(name + ": GPS out of bounds");
+                return;
+            }
+
+            // Update Pose
+            currentPose.x = gpsX;
+            currentPose.y = gpsY;
+            currentPose.rotation = gpsHeading;
         }
 
         /**
@@ -67,14 +81,14 @@ namespace devils
         {
             currentPose = pose;
 
-            double gpsX = Units::inToMeters(pose.x + gpsOffset.x);
-            double gpsY = Units::inToMeters(pose.y + gpsOffset.y);
-            double gpsYaw = Units::degToRad(pose.rotation + GPS_ROTATION_OFFSET + gpsOffset.rotation);
+            double gpsX = Units::inToMeters(pose.x);
+            double gpsY = Units::inToMeters(pose.y);
+            double gpsYaw = Units::degToRad(pose.rotation) + GPS_ROTATION_OFFSET + rotationalOffset;
 
             int32_t status = gps.set_position(
                 gpsX,
                 gpsY,
-                Units::normalizeRadians(gpsYaw));
+                gpsYaw);
 
             if (status != 1)
                 Logger::error(name + ": GPS set position failed");
@@ -88,15 +102,23 @@ namespace devils
          */
         void setOffset(double x, double y, double rotation)
         {
-            gpsOffset = Pose(x, y, rotation);
+            auto result = gps.set_offset(
+                Units::inToMeters(x),
+                Units::inToMeters(y));
+            rotationalOffset = rotation;
+
+            if (result != 1)
+                Logger::error(name + ": GPS set offset failed");
         }
 
     private:
         static constexpr double GPS_ROTATION_OFFSET = M_PI * 0.5; // PROS defaults to north as 0 degrees
-
+        static constexpr double MAX_GPS_X = 72;
+        static constexpr double MAX_GPS_Y = 72;
+        
         std::string name;
         pros::Gps gps;
         Pose currentPose = Pose(0, 0, 0);
-        Pose gpsOffset = Pose(0, 0, 0);
+        double rotationalOffset = 0;
     };
 }

@@ -5,9 +5,8 @@
 
 namespace devils
 {
-    class Lerp
+    struct Lerp
     {
-    public:
         /**
          * Linearly interpolates a value from a to b.
          * @param a The minimum value.
@@ -15,7 +14,7 @@ namespace devils
          * @param t The ratio between a and b. Values between 0 and 1.
          * @return The interpolated value.
          */
-        static double cubic(double a, double b, double t)
+        static double lerp(double a, double b, double t)
         {
             return a + (b - a) * t;
         }
@@ -35,14 +34,14 @@ namespace devils
             {
                 if (aMod > bMod)
                 {
-                    return Units::normalizeRadians(cubic(aMod, bMod + 2 * M_PI, t));
+                    return Units::normalizeRadians(lerp(aMod, bMod + 2 * M_PI, t));
                 }
                 else
                 {
-                    return Units::normalizeRadians(cubic(aMod + 2 * M_PI, bMod, t));
+                    return Units::normalizeRadians(lerp(aMod + 2 * M_PI, bMod, t));
                 }
             }
-            return Units::normalizeRadians(cubic(aMod, bMod, t));
+            return Units::normalizeRadians(lerp(aMod, bMod, t));
         }
 
         /**
@@ -54,10 +53,10 @@ namespace devils
          */
         static Pose linearPoints(Pose &a, Pose &b, double t)
         {
-            return Pose{
-                cubic(a.x, b.x, t),
-                cubic(a.y, b.y, t),
-                rotation(a.rotation, b.rotation, t)};
+            return Pose(
+                lerp(a.x, b.x, t),
+                lerp(a.y, b.y, t),
+                rotation(a.rotation, b.rotation, t));
         }
 
         /**
@@ -90,5 +89,8 @@ namespace devils
             Pose bcd = quadraticPoints(b, c, d, t);
             return linearPoints(abc, bcd, t);
         }
+        
+    private:
+        Lerp() = delete;
     };
 }

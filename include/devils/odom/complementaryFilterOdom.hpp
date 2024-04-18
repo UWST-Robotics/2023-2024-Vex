@@ -40,11 +40,25 @@ namespace devils
             Pose relativePose = relativeOdom->getPose();
 
             // Check if the absolute pose has changed
-            if (absolutePose != lastAbsolutePose)
+            if (absolutePose.x != lastAbsolutePose.x || absolutePose.y != lastAbsolutePose.y) // Ignore GPS IMU
             {
+                // Update the last absolute pose
+                lastAbsolutePose = absolutePose;
+
                 // Weight the absolute and relative poses
                 currentPose = absolutePose * absoluteWeight + relativePose * relativeWeight;
+
+                // Weight the absolute and relative rotations.
+                // Accounts for normalization in the rotation.
+                double diffRad = Units::diffRad(absolutePose.rotation, relativePose.rotation);
+                currentPose.rotation = Units::normalizeRadians(relativePose.rotation + diffRad * absoluteWeight);
+
+                // Use IMU for rotation
+                //currentPose.rotation = relativePose.rotation;
+                
+                // Update Relative Odometry
                 relativeOdom->setPose(currentPose);
+
             }
             else
             {

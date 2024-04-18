@@ -1,6 +1,7 @@
 #pragma once
-#include "../hardware/smartMotor.hpp"
-#include "../hardware/scuffPneumatic.hpp"
+#include "../../hardware/smartMotor.hpp"
+#include "../../hardware/scuffPneumatic.hpp"
+#include "../../utils/pid.hpp"
 
 namespace devils
 {
@@ -14,58 +15,45 @@ namespace devils
          * Creates a new launcher system.
          * @param leftMotorPort The port of the left launcher motor
          * @param rightMotorPort The port of the right launcher motor
-         * @param armPneumaticPort The ADI port of the arm pneumatic
          */
-        LauncherSystem(const int8_t leftMotorPort, const int8_t rightMotorPort, const int8_t armPneumaticPort)
+        LauncherSystem(const int8_t leftMotorPort, const int8_t rightMotorPort)
             : leftMotor("Left Launcher Motor", leftMotorPort),
-              rightMotor("Right Launcher Motor", rightMotorPort),
-              armPneumatic("Arm Pneumatic", armPneumaticPort)
+              rightMotor("Right Launcher Motor", rightMotorPort)
         {
         }
 
         /**
-         * Runs the launcher motors at the default speed
+         * Runs the launcher flywheels using a closed-loop PID controller.
          */
-        void fire()
+        void firePID()
         {
-            fire(flywheelSpeed);
+            // Current Velocity
+            double leftMotorVelocity = leftMotor.getVelocity();
+            double rightMotorVelocity = -rightMotor.getVelocity();
+
+            // Target Velocity
+            double leftMotorSetpoint = flywheelSetpoint - deltaVelocity;
+            double rightMotorSetpoint = flywheelSetpoint + deltaVelocity;
+
+            // Calculate PID
+            double leftMotorVoltage = flywheelPID.update(leftMotorVelocity - leftMotorSetpoint);
+            double rightMotorVoltage = -flywheelPID.update(rightMotorVelocity - rightMotorSetpoint);
+
+            // Run Motors
+            fireVoltage(leftMotorVoltage, rightMotorVoltage);
         }
 
         /**
-         * Runs the launcher motors at the given speed
-         * @param speed The speed to run the launcher motors
-         */
-        void fire(double speed)
+         * Runs the launcher flywheels using an open-loop voltage control.
+         * @param leftVoltage The voltage to run the left motor at (from -1 to 1)
+         * @param rightVoltage The voltage to run the right motor at (from -1 to 1)
+        */
+        void fireVoltage(double leftVoltage = 1.0, double rightVoltage = -1.0)
         {
-            // Flywheels
-            leftMotor.moveVoltage(speed + deltaSpeed);
-            rightMotor.moveVoltage(-speed + deltaSpeed);
-            isFiring = true;
+            leftMotor.moveVoltage(leftVoltage);
+            rightMotor.moveVoltage(rightVoltage);
         }
 
-        /**
-         * Runs the launcher motors at the given speed
-         * and automatically extends and retracts the arm.
-         */
-        void autoFire()
-        {
-            fire();
-
-            // Arm
-            if (isArmUp)
-                raiseArm();
-            else
-                lowerArm();
-
-            // Handle Arm Timer
-            int duration = isArmUp ? ARM_UP_TIME : ARM_DOWN_TIME;
-            int deltaTime = pros::millis() - startTime;
-            if (deltaTime > duration)
-            {
-                isArmUp = !isArmUp;
-                startTime = pros::millis();
-            }
-        }
 
         /**
          * Stops the launcher motors
@@ -74,9 +62,7 @@ namespace devils
         {
             leftMotor.moveVoltage(0);
             rightMotor.moveVoltage(0);
-            raiseArm();
             isFiring = false;
-            isArmUp = false;
         }
 
         /**
@@ -88,105 +74,65 @@ namespace devils
         }
 
         /**
-         * Raises the arm.
-         */
-        void raiseArm()
+         * Sets the flywheel setpoint.
+         * @param setpoint The flywheel setpoint, in RPM
+        */
+        void setSetpoint(double setpoint)
         {
-            armPneumatic.extend();
-            isArmUp = true;
+            flywheelSetpoint = setpoint;
         }
 
         /**
-         * Lowers the arm.
-         */
-        void lowerArm()
+         * Sets the delta speed.
+         * @param delta The delta speed, in delta RPM
+        */
+        void setDelta(double delta)
         {
-            armPneumatic.retract();
-            isArmUp = false;
-        }
-
-        /**
-         * Returns true if the arm is up.
-         */
-        const bool getArmUp()
-        {
-            return isArmUp;
-        }
-
-        /**
-         * Increases the flywheel speed.
-         * @return The new flywheel speed
-         */
-        double increaseSpeed()
-        {
-            flywheelSpeed += FLYWHEEL_INCREMENT;
-            return flywheelSpeed;
-        }
-
-        /**
-         * Decreases the flywheel speed.
-         * @return The new flywheel speed
-         */
-        double decreaseSpeed()
-        {
-            flywheelSpeed -= FLYWHEEL_INCREMENT;
-            return flywheelSpeed;
-        }
-
-        /**
-         * Increases the delta speed.
-         * @return The new delta speed
-         */
-        double increaseDelta()
-        {
-            deltaSpeed += DELTA_INCREMENT;
-            return deltaSpeed;
-        }
-
-        /**
-         * Decreases the delta speed.
-         * @return The new delta speed
-         */
-        double decreaseDelta()
-        {
-            deltaSpeed -= DELTA_INCREMENT;
-            return deltaSpeed;
+            deltaVelocity = delta;
         }
 
         /**
          * Returns the delta speed.
-         * @return The delta speed
+         * @return The delta speed, in delta RPM
          */
         double getDelta()
         {
-            return deltaSpeed;
+            return deltaVelocity;
         }
 
         /**
-         * Returns the current flywheel speed.
-         * @return The flywheel speed
-         */
-        double getSpeed()
+         * Returns the flywheel setpoint.
+         * @return The flywheel setpoint, in RPM
+        */
+        double getSetpoint()
         {
-            return flywheelSpeed;
+            return flywheelSetpoint;
+        }
+
+        /**
+         * Gets the average velocity of the flywheel motors.
+        */
+        double getCurrentVelocity()
+        {
+            double leftMotorVelocity = leftMotor.getVelocity();
+            double rightMotorVelocity = rightMotor.getVelocity();
+            return (leftMotorVelocity + rightMotorVelocity) / 2;
         }
 
     private:
-        static constexpr double DEFAULT_FLYWHEEL_SPEED = 0.65;
-        static constexpr double DEFAULT_DELTA = 0.2;
-        static constexpr double FLYWHEEL_INCREMENT = 0.05;
-        static constexpr double DELTA_INCREMENT = 0.05;
-        static constexpr int ARM_DOWN_TIME = 500; // ms
-        static constexpr int ARM_UP_TIME = 2000;  // ms
+        static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 200; // rpm
+        static constexpr double DEFAULT_DELTA = 20; // rpm
+        static constexpr double FLYWHEEL_INCREMENT = 10;
+        static constexpr double DELTA_INCREMENT = 5;
 
-        double flywheelSpeed = DEFAULT_FLYWHEEL_SPEED;
-        double deltaSpeed = DEFAULT_DELTA; // Difference between left and right motor speeds
+        PID flywheelPID = PID(0.01, 0, 0);
+
+        double flywheelSetpoint = DEFAULT_FLYWHEEL_SETPOINT;
+        double deltaVelocity = DEFAULT_DELTA; // Difference between left and right motor speeds
         bool isFiring = false;
-        bool isArmUp = false;
         int startTime = 0;
 
         SmartMotor leftMotor;
         SmartMotor rightMotor;
-        ScuffPneumatic armPneumatic;
     };
 }

@@ -37,7 +37,7 @@ namespace devils
             // Calculate Forward & Turn
             double deltaX = targetPose->x - currentPose.x;
             double deltaY = targetPose->y - currentPose.y;
-            double normal = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+            double distanceToPose = sqrt(pow(deltaX, 2) + pow(deltaY, 2)); // Prevent sharp turns when close
             double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
             double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
 
@@ -51,10 +51,10 @@ namespace devils
 
             // Clamp Values
             if (isReversed)
-                forward = std::clamp(forward, -1.0, 0.0);
+                forward = std::clamp(forward, -maxAccel, 0.0);
             else
-                forward = std::clamp(forward, 0.0, 1.0);
-            turn = std::clamp(turn, -1.0, 1.0) * normal;
+                forward = std::clamp(forward, 0.0, maxAccel);
+            turn = std::clamp(turn * distanceToPose, -maxTurn, maxTurn);
 
             // Drive
             chassis.move(forward, turn);
@@ -78,9 +78,27 @@ namespace devils
             currentState.target = &targetPose;
         }
 
+        /**
+         * Sets the maximum forward acceleration for the controller.
+         * @param maxAccel The maximum acceleration from 0 to 1.
+        */
+        void setMaxAccel(double maxAccel)
+        {
+            this->maxAccel = maxAccel;
+        }
+
+        /**
+         * Sets the maximum rotation acceleration for the controller.
+         * @param maxTurn The maximum acceleration from 0 to 1.
+        */
+        void setMaxTurn(double maxTurn)
+        {
+            this->maxTurn = maxTurn;
+        }
+
     private:
-        PID translationPID = PID(5.0, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.2, 0, 0);    // <-- Rotation
+        PID translationPID = PID(0.18, 0, 0); // <-- Translation
+        PID rotationPID = PID(0.12, 0, 0.001);    // <-- Rotation
         std::vector<PathEvent> NO_EVENTS = {};
 
         // Object Handles
@@ -88,6 +106,8 @@ namespace devils
         OdomSource &odometry;
 
         // State
+        double maxAccel = 1.0;
+        double maxTurn = 1.0;
         Pose *targetPose;
         bool isReversed = false;
     };

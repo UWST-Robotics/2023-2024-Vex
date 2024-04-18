@@ -17,8 +17,8 @@ namespace devils
     public:
         // Thank you James Pearman for these measurements
         // https://www.vexforum.com/t/vision-sensor-fov-measurements/62397
-        static constexpr int VISION_WIDTH = VISION_FOV_WIDTH;   // px
-        static constexpr int VISION_HEIGHT = VISION_FOV_HEIGHT; // px
+        static constexpr int VISION_WIDTH_PX = VISION_FOV_WIDTH;   // px
+        static constexpr int VISION_HEIGHT_PX = VISION_FOV_HEIGHT; // px
         static constexpr int VISION_WIDTH_FOV = 61;             // degrees
         static constexpr int VISION_HEIGHT_FOV = 41;            // degrees
 
@@ -39,9 +39,9 @@ namespace devils
          * Gets any objects detected by the vision sensor.
          * @return The objects detected by the vision sensor
          */
-        std::vector<DisplayPoint> getObjects()
+        std::vector<Vector2> getObjects()
         {
-            std::vector<DisplayPoint> objects = {};
+            std::vector<Vector2> objects = {};
 
             // Get object count
             int objectCount = sensor.get_object_count();
@@ -71,11 +71,17 @@ namespace devils
                 // Create Display Object
                 short x = object.x_middle_coord;
                 short y = object.y_middle_coord;
-                DisplayPoint displayObject = DisplayPoint{(double)x, (double)y};
-                objects.push_back(displayObject);
+                objects.push_back(Vector2((double)x, (double)y));
             }
 
             return objects;
+        }
+
+        /**
+         * Gets the angle of an object relative to the center of the vision sensor.
+        */
+        static double getAngle(Vector2 object) {
+            return (object.x * VISION_WIDTH_FOV) / VISION_WIDTH_PX;
         }
 
         /**

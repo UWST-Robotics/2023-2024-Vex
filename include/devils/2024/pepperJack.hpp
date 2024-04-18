@@ -2,6 +2,13 @@
 
 #include "../devils.h"
 #include "systems/intakeSystem.hpp"
+#include "systems/wingSystem.hpp"
+
+#define __ARM_NEON
+#include "incbin/incbin.h"
+
+#define INCBIN_PREFIX g_
+INCTXT(testPathFile, "paths/TestPath.txt");
 
 namespace devils
 {
@@ -20,7 +27,14 @@ namespace devils
 
             // Set GPS Offset
             gps.setOffset(GPS_OFFSET_X, GPS_OFFSET_Y, GPS_OFFSET_ROTATION);
-            // gps.setPose();
+
+            // Init Differential Wheel Odometry
+            wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
+            
+            // Add Stats
+            StatsRenderer* statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
+            statsRenderer->useOdomSource(&fusedOdom);
+            statsRenderer->useChassis(&chassis);
 
             // Run Display
             mainDisplay.runAsync();
@@ -28,10 +42,79 @@ namespace devils
 
         void autonomous() override
         {
+            // Init Odom
+            fusedOdom.setPose(*autoController.getStartingPose());
+
+            // Set Debug Speed
+            chassis.setSpeed(CHASSIS_AUTO_SPEED);
+
+            // Calibrate IMU
+            imu.calibrate();
+            imu.waitUntilCalibrated();
+
+            // Reset Auto Controller
+            autoController.reset();
+
+            EventTimer pauseTimer = EventTimer();
+
+            while (true) {
+
+                // Update Odometry
+                gps.update();
+                wheelOdom.update(chassis);
+                fusedOdom.update();
+
+                // Run Auto Controller
+                if (pauseTimer.getRunning())
+                    chassis.stop();
+                else
+                    autoController.update();
+
+                // Handle Auto Controller Events
+                auto& events = autoController.getState().events;
+                for (auto& event : events) {
+                    
+                    // Wings
+                    if (event.name == "rightWing") {
+                        wings.extendRight();
+                    } else if (event.name == "leftWing") {
+                        wings.extendLeft();
+                    } else if (event.name == "closeWings") {
+                        wings.retractRight();
+                        wings.retractLeft();
+
+                    // Intake
+                    } else if (event.name == "intake") {
+                        intake.intake();
+                    } else if (event.name == "outtake") {
+                        intake.outtake();
+                    } else if (event.name == "stopIntake") {
+                        intake.stop();
+
+                    // Other
+                    } else if (event.name == "pause") {
+                        pauseTimer.start(event.id, std::stoi(event.params));
+                    } else if (event.name == "setSpeed") {
+                        chassis.setSpeed(std::stod(event.params) * CHASSIS_AUTO_SPEED);
+                    } else {
+                        Logger::warn("Unknown Event: " + event.name);
+                    }
+                }
+
+                // Pause
+                pros::delay(20);
+            }
         }
 
         void opcontrol() override
         {
+            // Reset Speed
+            chassis.setSpeed(1.0);
+
+            // Calibrate IMU
+            imu.calibrate();
+            imu.waitUntilCalibrated();
+
             // Loop
             while (true)
             {
@@ -72,25 +155,32 @@ namespace devils
 
     private:
         // V5 Ports
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {19, 9, -20, -10};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {11, 1, -12, -2};
-        static constexpr uint8_t INTAKE_MOTOR_PORT = 18;
-        static constexpr uint8_t IMU_PORT = 5;
-        static constexpr uint8_t GPS_PORT = 15;
-        static constexpr uint8_t STORAGE_SENSOR_PORT = 6;
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-12, 11, -9, 10};
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {19, -20, 2, -1};
+        static constexpr std::initializer_list<int8_t> INTAKE_MOTOR_PORTS = {16};
+        static constexpr uint8_t IMU_PORT = 4;
+        static constexpr uint8_t GPS_PORT = 6;
+        static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
+
+        // ADI Ports
+        static constexpr uint8_t LEFT_WING_PORT = 1;
+        static constexpr uint8_t RIGHT_WING_PORT = 2;
 
         // Geometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 12.0;                            // in
         static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
+        static constexpr double CHASSIS_AUTO_SPEED = 0.8;                     // 50% speed
 
+        // GPS Offset
         static constexpr double GPS_OFFSET_X = 0.0;         // in
-        static constexpr double GPS_OFFSET_Y = -7.0;        // in
+        static constexpr double GPS_OFFSET_Y = 6.0;        // in
         static constexpr double GPS_OFFSET_ROTATION = M_PI; // rad
 
         // Subsystems
         TankChassis chassis = TankChassis(L_MOTOR_PORTS, R_MOTOR_PORTS);
-        IntakeSystem intake = IntakeSystem(INTAKE_MOTOR_PORT);
+        IntakeSystem intake = IntakeSystem(INTAKE_MOTOR_PORTS);
+        WingSystem wings = WingSystem(LEFT_WING_PORT, RIGHT_WING_PORT);
 
         // Sensors
         GPS gps = GPS("PepperJack.GPS", GPS_PORT);
@@ -98,13 +188,22 @@ namespace devils
         OpticalSensor storageSensor = OpticalSensor("PepperJack.StorageSensor", STORAGE_SENSOR_PORT);
 
         // Odometry
+        TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side
         DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(WHEEL_RADIUS, WHEEL_BASE);
-        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gps, &wheelOdom, 0.01);
+        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.02);
+
+        // GameObjects
+        GameObjectManager gameObjectManager = GameObjectManager();
+
+        // Controller
+        PJAutoController autoController = PJAutoController(chassis, fusedOdom, gameObjectManager);
 
         // Display
         Display mainDisplay = Display({new GridRenderer(),
                                        new FieldRenderer(),
                                        new OdomRenderer(&fusedOdom),
+                                       new ControlRenderer(&autoController, &fusedOdom),
+                                       new PathRenderer(nullptr),
                                        new StatsRenderer()});
     };
 }

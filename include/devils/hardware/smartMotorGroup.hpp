@@ -35,16 +35,6 @@ namespace devils
         }
 
         /**
-         * Sets the ramp rate of the motor group.
-         * @param rampRate The max change in motor value per second.
-         */
-        void setRampRate(double rampRate)
-        {
-            for (auto motor : motors)
-                motor->setRampRate(rampRate);
-        }
-
-        /**
          * Stops all the motors.
          */
         void stop() override
@@ -69,12 +59,21 @@ namespace devils
          * Returns the average speed of all the motors in RPM.
          * @return The average speed of all the motors in RPM.
          */
-        double getSpeed() override
+        double getVelocity()
         {
             double speed = 0;
             for (auto motor : motors)
-                speed += motor->getSpeed();
+                speed += motor->getVelocity();
             return speed / motors.size();
+        }
+
+        /**
+         * Gets the motors in the motor group.
+         * @return The motors in the motor group.
+        */
+        std::vector<std::shared_ptr<SmartMotor>> &getMotors()
+        {
+            return motors;
         }
 
         /**

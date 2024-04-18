@@ -88,9 +88,7 @@ namespace devils
                 return;
 
             double imuHeading = imu->getHeading();
-            if (imuHeading == PROS_ERR_F)
-                Logger::error("TankWheelOdometry: Failed to update from IMU");
-            else
+            if (imuHeading != PROS_ERR_F)
                 currentPose.rotation = imuHeading;
         }
 

@@ -23,9 +23,10 @@ namespace devils
             // Loop
             while (true)
             {
-                double input = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
-                motorsA.moveVoltage(input);
-                motorsB.moveVoltage(-input);
+                double inputA = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
+                double inputB = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
+                motorsA.moveVoltage(inputA);
+                motorsB.moveVoltage(inputB);
 
                 // Intake
                 if (mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_R1))
@@ -50,8 +51,8 @@ namespace devils
 
     private:
         // Motors
-        SmartMotorGroup motorsA = SmartMotorGroup("TestMotors", {1, 2, 3, 4});
-        SmartMotorGroup motorsB = SmartMotorGroup("TestMotors", {5, 6, 7, 8});
+        SmartMotorGroup motorsA = SmartMotorGroup("TestMotors", {1, 2, 3, 4, 5, -6, -7, -8, -9, -10});
+        SmartMotorGroup motorsB = SmartMotorGroup("TestMotors", {11, 12, 13, 14, 15, -16, -17, -18, -19, -20});
 
         ScuffPneumatic intake1 = ScuffPneumatic("Intake1", 1);
         ScuffPneumatic intake2 = ScuffPneumatic("Intake2", 2);

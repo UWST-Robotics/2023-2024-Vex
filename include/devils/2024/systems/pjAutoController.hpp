@@ -6,10 +6,9 @@
 #include "incbin/incbin.h"
 
 #define INCBIN_PREFIX g_
-INCTXT(initialPath, "paths/pj-init.txt");
-
-#define INCBIN_PREFIX g_
+INCTXT(initialPath, "paths/pj-auto.txt");
 INCTXT(finishPath, "paths/pj-finish.txt");
+INCTXT(occupancyGrid, "paths/occupancy.txt");
 
 namespace devils
 {
@@ -22,11 +21,8 @@ namespace devils
         PJAutoController(
             BaseChassis &chassis,
             OdomSource &odometry,
-            GameObjectManager &gameObjectManager,
-            OccupancyGrid &occupancyGrid)
-            : initialPath(PathGenerator::generateLinear(PathFileReader::deserialize(g_initialPathData))),
-              finishPath(PathGenerator::generateLinear(PathFileReader::deserialize(g_finishPathData))),
-              odometry(odometry),
+            GameObjectManager &gameObjectManager)
+            : odometry(odometry),
               initialController(chassis, odometry, &initialPath),
               collectionController(chassis, odometry, gameObjectManager, occupancyGrid),
               reverseControllerA(chassis, REVERSE_DURATION, REVERSE_SPEED),
@@ -59,7 +55,8 @@ namespace devils
             if (currentController == &autoPointController && pathRenderer != nullptr)
                 pathRenderer->setPath(finishPath);
 
-            // TODO: Update Event State
+            // Update State
+            currentState.events = currentController->getState().events;
             mainStack.update();
         }
 
@@ -126,23 +123,25 @@ namespace devils
         }
 
     private:
+        static constexpr double CHASSIS_SPEED = 0.5;
         static constexpr int REVERSE_DURATION = 300; // ms
         static constexpr double REVERSE_SPEED = -0.5;
         static constexpr int PUSH_DURATION = 100; // ms
         static constexpr double PUSH_SPEED = 1.0;
         static constexpr int AUTO_POINT_TIMEOUT = 30 * 1000; // 30 seconds (15 seconds left for auto point)
         const std::vector<Pose> GOAL_POSES = {
-            Pose{60, 24},
-            Pose{48, 10},
-            Pose{48, -10},
-            Pose{60, -24}};
+            Pose(60, 24),
+            Pose(48, 10),
+            Pose(48, -10),
+            Pose(60, -24)};
 
         // Systems
         OdomSource &odometry;
 
         // Paths
-        GeneratedPath initialPath;
-        GeneratedPath finishPath;
+        OccupancyGrid occupancyGrid = OccupancyFileReader::deserialize(g_occupancyGridData);
+        GeneratedPath initialPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_initialPathData));
+        GeneratedPath finishPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_finishPathData));
 
         // Controllers
         PursuitController initialController;       // Initial Path
@@ -158,6 +157,20 @@ namespace devils
         ControllerList loopStack = ControllerList({&collectionController, &reverseControllerA, &goalController, /*&pushController,*/ &reverseControllerB}, true);
         ControllerList timeoutStack = ControllerList({&initialController, &loopStack}, false, AUTO_POINT_TIMEOUT);
         ControllerList mainStack = ControllerList({&timeoutStack, &returnController, &autoPointController});
+
+        /*
+            1. Initial Path
+            
+            2. Loop:
+                a. Collection
+                b. Reverse
+                c. Goal
+                d. Push
+                e. Reverse
+            
+            3. Return
+            4. Auto Point
+        */
 
         // Optional Components
         PathRenderer *pathRenderer = nullptr;

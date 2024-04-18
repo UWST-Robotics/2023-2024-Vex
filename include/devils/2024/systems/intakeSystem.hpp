@@ -14,22 +14,12 @@ namespace devils
     public:
         /**
          * Controls the intake system to intake triballs.
-         * @param wheelPort The port of the flywheel motor.
+         * @param intakePort The port of the intake motor.
+         * @param conveyorPort The port of the conveyor motor.
          */
-        IntakeSystem(const int8_t wheelPort)
-            : intakeMotor("IntakeMotor", wheelPort)
+        IntakeSystem(std::initializer_list<int8_t> intakePorts)
+            : intakeMotors("Intake Motor", intakePorts)
         {
-        }
-
-        /**
-         * Runs the intake wheels automatically using the Optical Sensor.
-         */
-        void autoIntake()
-        {
-            if (sensor != nullptr && sensor->getProximity() > SENSOR_THRESHOLD)
-                intake(SENSOR_SPEED);
-            else
-                intake();
         }
 
         /**
@@ -38,7 +28,7 @@ namespace devils
          */
         void intake(double value = WHEEL_SPEED)
         {
-            intakeMotor.moveVoltage(value);
+            intakeMotors.moveVoltage(value);
         }
 
         /**
@@ -46,7 +36,7 @@ namespace devils
          */
         void outtake()
         {
-            intakeMotor.moveVoltage(-WHEEL_SPEED);
+            intakeMotors.moveVoltage(-WHEEL_SPEED);
         }
 
         /**
@@ -54,7 +44,7 @@ namespace devils
          */
         void stop()
         {
-            intakeMotor.stop();
+            intakeMotors.stop();
         }
 
         /**
@@ -68,11 +58,10 @@ namespace devils
         }
 
     private:
-        static constexpr double WHEEL_SPEED = 0.5;
-        static constexpr double SENSOR_SPEED = 0.5;
-        static constexpr double SENSOR_THRESHOLD = 0.5;
+        static constexpr double WHEEL_SPEED = 1.0;
+        static constexpr double SENSOR_THRESHOLD = 0.9;
 
-        SmartMotor intakeMotor;
+        SmartMotorGroup intakeMotors;
         OpticalSensor *sensor = nullptr;
     };
 }

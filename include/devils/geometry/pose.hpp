@@ -46,6 +46,12 @@ namespace devils
         Pose(const Vector2 &other) : Vector2(other.x, other.y), rotation(0) {}
 
         /**
+         * Copy constructor
+         * @param other The other pose
+         */
+        Pose(const Pose &other) : Vector2(other.x, other.y), rotation(other.rotation) {}
+
+        /**
          * Constructs a pose by copying another pose
          * @param other The other pose
          */

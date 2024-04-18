@@ -53,18 +53,18 @@ namespace devils
 
             // Create Text
             std::stringstream stream;
-            stream << "Battery: " << DisplayUtils::colorizeValue(batteryPercent / 100.0, std::to_string((int)batteryPercent) + "%");
-            stream << "Competition: " << DisplayUtils::colorizeValue(isCompetition, isCompetition ? "Yes" : "No");
-            stream << "Mode: " << DisplayUtils::colorizeValue(!isAutonomous, isAutonomous ? "Auto" : "Driver");
-            stream << "Status: " << DisplayUtils::colorizeValue(!isDisabled, isDisabled ? "Disabled" : "Enabled");
-            stream << "SD: " << DisplayUtils::colorizeValue(isSDInserted, isSDInserted ? "Installed" : "Removed");
+            stream << "Battery: " << DisplayUtils::colorizeValue(batteryPercent / 100.0, std::to_string((int)batteryPercent) + "%") << "\n";
+            stream << "Competition: " << DisplayUtils::colorizeValue(isCompetition, isCompetition ? "Yes" : "No") << "\n";
+            stream << "Mode: " << DisplayUtils::colorizeValue(!isAutonomous, isAutonomous ? "Auto" : "Driver") << "\n";
+            stream << "Status: " << DisplayUtils::colorizeValue(!isDisabled, isDisabled ? "Disabled" : "Enabled") << "\n";
+            stream << "SD: " << DisplayUtils::colorizeValue(isSDInserted, isSDInserted ? "Installed" : "Removed") << "\n";
 
             // Controller
             if (controller != nullptr && controller->is_connected())
             {
                 int controllerBattery = controller->get_battery_level();
                 stream << "\n";
-                stream << "Controller: " << DisplayUtils::colorizeValue(controllerBattery / 100.0, std::to_string(controllerBattery) + "%");
+                stream << "Controller: " << DisplayUtils::colorizeValue(controllerBattery / 100.0, std::to_string(controllerBattery) + "%") << "\n";
             }
 
             // Odom
@@ -92,6 +92,24 @@ namespace devils
                             stream << DisplayUtils::colorText(" (" + event.params + ")", "#aaaaaa");
                         stream << "\n";
                     }
+                }
+            }
+
+            // Chassis
+            if (chassis != nullptr)
+            {
+                auto leftMotors = chassis->getLeftMotors().getMotors();
+                auto rightMotors = chassis->getRightMotors().getMotors();
+
+                stream << "\nL: ";
+                for (auto &motor : leftMotors) {
+                    double temp = motor.get()->getTemperature();
+                    stream << DisplayUtils::colorizeValue(1 - (temp - 20.0) / 40.0, std::to_string((int)temp) + "C ");
+                }
+                stream << "\nR: ";
+                for (auto &motor : rightMotors) {
+                    double temp = motor.get()->getTemperature();
+                    stream << DisplayUtils::colorizeValue(1 - (temp - 20.0) / 40.0, std::to_string((int)temp) + "C ");
                 }
             }
 
@@ -132,6 +150,15 @@ namespace devils
         }
 
         /**
+         * Uses a tank chassis to display additional stats.
+         * @param chassis The tank chassis
+        */
+        void useChassis(TankChassis *chassis)
+        {
+            this->chassis = chassis;
+        }
+
+        /**
          * Appends additional text to the stats.
          * @param additionalText The additional text to append
          */
@@ -148,5 +175,6 @@ namespace devils
         pros::Controller *controller = nullptr;
         AutoController *autoController = nullptr;
         OdomSource *odomSource = nullptr;
+        TankChassis *chassis = nullptr;
     };
 }

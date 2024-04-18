@@ -37,7 +37,7 @@ namespace devils
          * Compares the difference of two radian angles.
          * @param radiansA The first angle in radians.
          * @param radiansB The second angle in radians.
-         * @return The difference between the two angles in radians.
+         * @return The difference between the two angles, relative to `radiansB`. Can be [-PI, PI]
          */
         static double diffRad(double radiansA, double radiansB)
         {

@@ -68,7 +68,6 @@ namespace devils
                     pathFile.points.back().isReversed = isReversed;
                 }
             }
-
             return pathFile;
         }
 

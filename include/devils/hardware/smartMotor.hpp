@@ -2,7 +2,6 @@
 #include "pros/motors.hpp"
 #include "motor.hpp"
 #include "../utils/logger.hpp"
-#include "../utils/ramp.hpp"
 #include <string>
 
 namespace devils
@@ -20,8 +19,7 @@ namespace devils
          */
         SmartMotor(std::string name, int8_t port)
             : name(name),
-              motor(port),
-              voltageRamp(100000)
+              motor(port)
         {
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": motor port is invalid");
@@ -34,19 +32,10 @@ namespace devils
         void moveVoltage(double voltage) override
         {
             // Move Motor
-            int32_t status = motor.move(voltageRamp.update(voltage) * 127);
+            int32_t status = motor.move(voltage * 127);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": motor move failed");
             _checkHealth();
-        }
-
-        /**
-         * Sets the ramp rate of the motor.
-         * @param rampRate The ramp rate of the motor from 0 to 2.
-         */
-        void setRampRate(double rampRate)
-        {
-            voltageRamp.setRampRate(rampRate);
         }
 
         /**
@@ -78,12 +67,23 @@ namespace devils
         /**
          * Returns the current speed of the motor in RPM.
          */
-        double getSpeed() override
+        double getVelocity()
         {
             double velocity = motor.get_actual_velocity();
             if (velocity == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": motor get speed failed");
             return velocity == PROS_ERR_F ? 0 : velocity;
+        }
+
+        /**
+         * Gets the current temperature of the motor in degrees Celsius.
+        */
+        double getTemperature()
+        {
+            double temperature = motor.get_temperature();
+            if (temperature == PROS_ERR_F && LOGGING_ENABLED)
+                Logger::error(name + ": motor get temperature failed");
+            return temperature == PROS_ERR_F ? PROS_ERR_F : temperature;
         }
 
         /**
@@ -108,6 +108,5 @@ namespace devils
         double currentVoltage = 0;
         std::string name;
         pros::Motor motor;
-        Ramp voltageRamp;
     };
 }

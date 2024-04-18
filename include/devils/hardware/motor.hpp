@@ -26,10 +26,5 @@ namespace devils
          * @return The current position of the motor in encoder ticks.
          */
         virtual double getPosition() = 0;
-
-        /**
-         * Returns the current speed of the motor in RPM.
-         */
-        virtual double getSpeed() = 0;
     };
 }

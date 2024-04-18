@@ -48,26 +48,26 @@ namespace devils
 
         /**
          * Gets the current heading of the IMU in radians.
-         * @return The current heading of the IMU in radians.
+         * @return The current heading of the IMU in radians or `PROS_ERR_F` if the operation failed.
          */
         double getHeading()
         {
             double heading = imu.get_heading();
             if (heading == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get heading failed");
-            return heading == PROS_ERR_F ? 0 : Units::degToRad(heading + headingOffset);
+            return heading == PROS_ERR_F ? PROS_ERR_F : Units::degToRad(heading);
         }
 
         /**
          * Gets the current pitch of the IMU in radians.
-         * @return The current pitch of the IMU in radians.
+         * @return The current pitch of the IMU in radians or `PROS_ERR_F` if the operation failed.
          */
         double getPitch()
         {
             double pitch = imu.get_pitch();
             if (pitch == PROS_ERR_F && LOGGING_ENABLED)
                 Logger::error(name + ": imu get pitch failed");
-            return pitch == PROS_ERR_F ? 0 : Units::degToRad(pitch);
+            return pitch;
         }
 
         /**
@@ -76,7 +76,9 @@ namespace devils
          */
         void setHeading(double heading)
         {
-            headingOffset = Units::radToDeg(heading);
+            auto result = imu.set_heading(Units::radToDeg(heading + headingOffset));
+            if (result == PROS_ERR && LOGGING_ENABLED)
+                Logger::error(name + ": imu set heading failed");
         }
 
         /**
@@ -90,6 +92,25 @@ namespace devils
                 Logger::error(name + ": imu get accel failed");
             double avgAcceleration = sqrt(pow(accel.x, 2) + pow(accel.y, 2) + pow(accel.z, 2));
             return accel.x == PROS_ERR_F ? 0 : avgAcceleration;
+        }
+
+        /**
+         * Calibrates the IMU. Robot should be still during calibration.
+         * Run `waitUntilCalibrated` to wait until calibration is finished.
+        */
+        void calibrate()
+        {
+            imu.reset(false);
+        }
+
+        /**
+         * Waits until the IMU is finished calibrating.
+         * Should be ran to avoid movement during calibration.
+        */
+        void waitUntilCalibrated()
+        {
+            while (imu.is_calibrating())
+                pros::delay(20);
         }
 
     private:

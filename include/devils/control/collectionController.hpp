@@ -171,7 +171,7 @@ namespace devils
         // Constants
         static constexpr double CHASE_DISTANCE = 18.0;     // in
         static constexpr double COLLECTION_DISTANCE = 4.0; // in
-        static constexpr double OPTICAL_PROXIMITY = 0.5;   // %
+        static constexpr double OPTICAL_PROXIMITY = 0.9;   // %
         std::vector<PathEvent> COLLECTION_EVENTS = {PathEvent("collection", "")};
         std::vector<PathEvent> CHASE_EVENTS = {PathEvent("chase", "")};
 

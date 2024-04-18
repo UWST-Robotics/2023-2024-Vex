@@ -20,8 +20,8 @@ namespace devils
                 VisionSensor::VISION_HEIGHT_FOV,
                 NEAR_CLIP,
                 FAR_CLIP,
-                VisionSensor::VISION_WIDTH,
-                VisionSensor::VISION_HEIGHT,
+                VisionSensor::VISION_WIDTH_PX,
+                VisionSensor::VISION_HEIGHT_PX,
                 cameraHeight,
                 cameraPitch);
         }

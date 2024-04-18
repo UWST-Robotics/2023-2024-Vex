@@ -66,7 +66,7 @@ namespace devils
          */
         static std::string colorizeValue(bool value, std::string text)
         {
-            return colorText(text, colorScale(value)) + "\n";
+            return colorText(text, colorScale(value));
         }
 
         /**
@@ -77,7 +77,7 @@ namespace devils
          */
         static std::string colorizeValue(double value, std::string text)
         {
-            return colorText(text, colorScale(value)) + "\n";
+            return colorText(text, colorScale(value));
         }
 
         /**
