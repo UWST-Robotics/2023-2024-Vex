@@ -46,7 +46,7 @@ namespace devils
             controller.update();
         }
 
-        AutoController::State &getState() override
+        AutoState &getState() override
         {
             return controller.getState();
         }
@@ -77,7 +77,7 @@ namespace devils
                 originalTargetPose = targetPose;
 
                 // Get Current Pose
-                auto currentPose = odometry.getPose();
+                Pose currentPose = odometry.getPose();
 
                 // Regenerate the path
                 currentPath = PathFinder::generatePath(currentPose, targetPose, occupancyGrid);

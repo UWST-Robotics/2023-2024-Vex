@@ -24,7 +24,7 @@ namespace devils
 
         ~PathPickerRenderer()
         {
-            for (auto button : autoButtons)
+            for (lv_obj_t *button : autoButtons)
                 lv_obj_del(button);
         }
 

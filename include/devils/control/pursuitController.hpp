@@ -55,17 +55,17 @@ namespace devils
                 return;
 
             // Get Current Pose
-            auto currentPose = odometry.getPose();
+            Pose currentPose = odometry.getPose();
 
             // Update Control Point Index
-            PathPoint *controlPoint = &controlPoints->at(controlPointIndex);
+            ControlPoint *controlPoint = &controlPoints->at(controlPointIndex);
             int checkpointPathIndex = (this->controlPointIndex + 1) / currentPath->dt;
 
             // Update Path Point Index
             double closestDistance = INT_MAX;
             for (int i = robotPointIndex; i < pathPoints->size(); i++)
             {
-                auto point = pathPoints->at(i);
+                Pose point = pathPoints->at(i);
                 double distance = point.distanceTo(currentPose);
 
                 // Check if closest
@@ -148,8 +148,8 @@ namespace devils
 
         // Shorthands
         GeneratedPath *currentPath;
-        PathPoints *controlPoints;
-        std::vector<Pose> *pathPoints;
+        ControlPoints *controlPoints;
+        PoseSequence *pathPoints;
 
         // Controller State
         DirectController directController;

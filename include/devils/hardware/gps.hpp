@@ -102,7 +102,7 @@ namespace devils
          */
         void setOffset(double x, double y, double rotation)
         {
-            auto result = gps.set_offset(
+            int32_t result = gps.set_offset(
                 Units::inToMeters(x),
                 Units::inToMeters(y));
             rotationalOffset = rotation;
@@ -115,7 +115,7 @@ namespace devils
         static constexpr double GPS_ROTATION_OFFSET = M_PI * 0.5; // PROS defaults to north as 0 degrees
         static constexpr double MAX_GPS_X = 72;
         static constexpr double MAX_GPS_Y = 72;
-        
+
         std::string name;
         pros::Gps gps;
         Pose currentPose = Pose(0, 0, 0);

@@ -32,7 +32,7 @@ namespace devils
         void update() override
         {
             // Get Current Pose
-            auto currentPose = odometry.getPose();
+            Pose currentPose = odometry.getPose();
 
             // Calculate Forward & Turn
             double deltaX = targetPose->x - currentPose.x;

@@ -76,7 +76,7 @@ namespace devils
          */
         void setHeading(double heading)
         {
-            auto result = imu.set_heading(Units::radToDeg(heading + headingOffset));
+            int32_t result = imu.set_heading(Units::radToDeg(heading + headingOffset));
             if (result == PROS_ERR && LOGGING_ENABLED)
                 Logger::error(name + ": imu set heading failed");
         }
@@ -97,7 +97,7 @@ namespace devils
         /**
          * Calibrates the IMU. Robot should be still during calibration.
          * Run `waitUntilCalibrated` to wait until calibration is finished.
-        */
+         */
         void calibrate()
         {
             imu.reset(false);
@@ -106,7 +106,7 @@ namespace devils
         /**
          * Waits until the IMU is finished calibrating.
          * Should be ran to avoid movement during calibration.
-        */
+         */
         void waitUntilCalibrated()
         {
             while (imu.is_calibrating())

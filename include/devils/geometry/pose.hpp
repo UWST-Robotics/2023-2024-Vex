@@ -132,4 +132,9 @@ namespace devils
             return "Pose(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(rotation) + ")";
         }
     };
+
+    /**
+     * A list of poses to play in sequence
+     */
+    typedef std::vector<Pose> PoseSequence;
 }

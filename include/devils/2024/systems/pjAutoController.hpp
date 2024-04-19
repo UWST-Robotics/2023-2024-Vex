@@ -43,7 +43,7 @@ namespace devils
 
         void update() override
         {
-            auto currentController = mainStack.getCurrentController(true);
+            AutoController *currentController = mainStack.getCurrentController(true);
 
             // Update w/ Closest Goal Pose
             if (currentController == &goalController)
@@ -105,11 +105,11 @@ namespace devils
          */
         Pose _getClosestGoalPose()
         {
-            auto currentPose = odometry.getPose();
+            Pose currentPose = odometry.getPose();
             Pose closestPose = GOAL_POSES[0];
             double closestDistance = currentPose.distanceTo(closestPose);
 
-            for (auto &pose : GOAL_POSES)
+            for (Vector2 pose : GOAL_POSES)
             {
                 double distance = currentPose.distanceTo(pose);
                 if (distance < closestDistance)
@@ -129,11 +129,11 @@ namespace devils
         static constexpr int PUSH_DURATION = 100; // ms
         static constexpr double PUSH_SPEED = 1.0;
         static constexpr int AUTO_POINT_TIMEOUT = 30 * 1000; // 30 seconds (15 seconds left for auto point)
-        const std::vector<Pose> GOAL_POSES = {
-            Pose(60, 24),
-            Pose(48, 10),
-            Pose(48, -10),
-            Pose(60, -24)};
+        const std::vector<Vector2> GOAL_POSES = {
+            Vector2(60, 24),
+            Vector2(48, 10),
+            Vector2(48, -10),
+            Vector2(60, -24)};
 
         // Systems
         OdomSource &odometry;
@@ -160,14 +160,14 @@ namespace devils
 
         /*
             1. Initial Path
-            
+
             2. Loop:
                 a. Collection
                 b. Reverse
                 c. Goal
                 d. Push
                 e. Reverse
-            
+
             3. Return
             4. Auto Point
         */

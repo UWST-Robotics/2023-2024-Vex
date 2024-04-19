@@ -41,7 +41,7 @@ namespace devils
                 linePointVector.clear();
                 for (int i = 0; i < polygon->points.size() + 1; i++)
                 {
-                    auto point = polygon->points[i % polygon->points.size()];
+                    Vector2 &point = polygon->points[i % polygon->points.size()];
                     linePointVector.push_back({(short)(point.x * DisplayUtils::PX_PER_IN + offsetX),
                                                (short)(point.y * DisplayUtils::PX_PER_IN + offsetY)});
                 }

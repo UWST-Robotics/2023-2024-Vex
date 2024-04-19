@@ -67,8 +67,8 @@ namespace devils
             }
 
             // Get Poses
-            auto &currentPose = odomSource->getPose();
-            auto targetPose = controller->getState().target;
+            Pose &currentPose = odomSource->getPose();
+            Pose *targetPose = controller->getState().target;
 
             // Abort if no point
             if (targetPose == nullptr)

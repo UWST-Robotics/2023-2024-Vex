@@ -15,7 +15,7 @@ namespace devils
         void update() override
         {
             // Remove MIA game objects
-            for (auto &object : gameObjects)
+            for (GameObject &object : gameObjects)
             {
                 if (object.getTimeSinceLastSeen() > MAX_AGE)
                     remove(object);
@@ -46,7 +46,7 @@ namespace devils
         void add(GameObject &object)
         {
             // Group game objects that are close together
-            for (auto &other : gameObjects)
+            for (GameObject &other : gameObjects)
             {
                 if (object.distanceTo(other) < GROUP_RADIUS)
                 {

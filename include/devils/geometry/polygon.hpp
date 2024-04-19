@@ -14,7 +14,7 @@ namespace devils
          * Creates a new polygon.
          * @param points The points of the polygon.
          */
-        Polygon(std::initializer_list<Pose> points)
+        Polygon(std::initializer_list<Vector2> points)
             : points(points)
         {
         }
@@ -24,7 +24,7 @@ namespace devils
          * @param pose The odometry pose to check.
          * @return True if the odometry pose is within the polygon.
          */
-        bool contains(Pose &pose)
+        bool contains(Vector2 &pose)
         {
             int i, j;
             bool c = false;
@@ -46,14 +46,14 @@ namespace devils
         }
 
         /**
-         * Gets a random pose within the polygon.
-         * @return A random pose within the polygon.
+         * Gets a random point within the polygon.
+         * @return A random point within the polygon.
          */
-        Pose getRandomPose()
+        Vector2 getRandomPose()
         {
             // If the polygon is empty, return an empty pose
             if (points.size() == 0)
-                return Pose();
+                return Vector2();
 
             // Calculate the bounding box of the polygon
             double minX = points[0].x;
@@ -69,7 +69,7 @@ namespace devils
             }
 
             // Randomly select a point within the bounding box until it is within the polygon
-            Pose pose = Pose();
+            Vector2 pose = Vector2();
             _setRandomSeed();
             do
             {
@@ -77,12 +77,12 @@ namespace devils
                 double rand2 = (rand() % 1000) / 1000.0;
                 double x = minX + (maxX - minX) * rand1;
                 double y = minY + (maxY - minY) * rand2;
-                pose = Pose(x, y, 0);
+                pose = Vector2(x, y);
             } while (!contains(pose));
 
             return pose;
         }
 
-        std::vector<Pose> points;
+        std::vector<Vector2> points;
     };
 }

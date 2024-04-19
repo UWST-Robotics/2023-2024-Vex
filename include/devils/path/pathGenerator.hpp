@@ -17,7 +17,7 @@ namespace devils
             auto controlPoints = pathFile.points;
 
             // Initialize path points
-            std::vector<Pose> pathPoints;
+            PoseSequence pathPoints;
             pathPoints.reserve(controlPoints.size() * (1 / DT));
 
             // Iterate through each set of control points
@@ -49,7 +49,7 @@ namespace devils
             auto controlPoints = pathFile.points;
 
             // Initialize path points
-            std::vector<Pose> pathPoints;
+            PoseSequence pathPoints;
             pathPoints.reserve(controlPoints.size() * (1 / DT));
 
             // Iterate through each set of control points
@@ -57,15 +57,15 @@ namespace devils
             for (int i = 0; i < controlPoints.size() - 1; i++)
             {
                 // Get the two points to lerp between
-                auto p1 = controlPoints[i];
-                auto p2 = controlPoints[i + 1];
+                ControlPoint &p1 = controlPoints[i];
+                ControlPoint &p2 = controlPoints[i + 1];
 
                 // Get Anchor Points
-                auto a1 = Pose(
+                Pose a1 = Pose(
                     p1.x + p1.exitDelta * std::cos(p1.rotation) * (isReversed ? -1 : 1),
                     p1.y + p1.exitDelta * std::sin(p1.rotation) * (isReversed ? -1 : 1),
                     p1.rotation);
-                auto a2 = Pose(
+                Pose a2 = Pose(
                     p2.x - p2.enterDelta * std::cos(p2.rotation),
                     p2.y - p2.enterDelta * std::sin(p2.rotation),
                     p2.rotation);

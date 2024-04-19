@@ -39,7 +39,7 @@ namespace devils
 
             // Starting Node
             allNodes.push_back(startCell);
-            auto startingNode = &allNodes.back();
+            AStarNode *startingNode = &allNodes.back();
             startingNode->x = startCell.x;
             startingNode->y = startCell.y;
             startingNode->gCost = 0;
@@ -78,8 +78,8 @@ namespace devils
                 }
 
                 // Iterate through neighbors
-                auto neighbors = _getNeighborPoses(currentNode);
-                for (auto &neighbor : neighbors)
+                std::vector<GridPose> neighbors = _getNeighborPoses(currentNode);
+                for (GridPose &neighbor : neighbors)
                 {
                     // Skip occupied cells & OOB cells
                     if (occupancyGrid.getOccupied(neighbor.x, neighbor.y))
@@ -87,7 +87,7 @@ namespace devils
 
                     // Search for existing node
                     AStarNode *existingNode = nullptr;
-                    for (auto &node : allNodes)
+                    for (AStarNode &node : allNodes)
                     {
                         if (node == neighbor)
                         {
@@ -212,15 +212,15 @@ namespace devils
             // Initialize path file
             PathFile pathFile = PathFile();
             pathFile.version = 1;
-            pathFile.points = std::vector<PathPoint>();
+            pathFile.points = ControlPoints();
 
             // Iterate through node parents
             AStarNode *currentNode = &finalNode;
             while (currentNode != nullptr)
             {
                 // Add pose to path
-                auto pose = _gridToPose(*currentNode, sourceGrid);
-                pathFile.points.insert(pathFile.points.begin(), PathPoint{pose});
+                Pose pose = _gridToPose(*currentNode, sourceGrid);
+                pathFile.points.insert(pathFile.points.begin(), ControlPoint{pose});
 
                 // Point to node's parent
                 currentNode = currentNode->parentNode;
@@ -287,7 +287,7 @@ namespace devils
             // TODO: Replace brute-force w/ more efficient algorithm
             GridPose &closestCell = allCells[0];
             double closestDistance = closestCell.getDistance(orginCell);
-            for (auto &cell : allCells)
+            for (GridPose &cell : allCells)
             {
                 double distance = cell.getDistance(orginCell);
                 if (distance < closestDistance)

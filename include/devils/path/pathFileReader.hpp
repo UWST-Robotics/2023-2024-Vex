@@ -53,7 +53,7 @@ namespace devils
                     continue;
                 if (line.rfind("POINT") == 0)
                 {
-                    PathPoint point = _parsePoint(line);
+                    ControlPoint point = _parsePoint(line);
                     point.isReversed = isReversed;
                     pathFile.points.push_back(point);
                 }
@@ -76,12 +76,12 @@ namespace devils
          * @param line The line to parse.
          * @return The parsed point.
          */
-        static PathPoint _parsePoint(std::string line)
+        static ControlPoint _parsePoint(std::string line)
         {
             // Split the line into properties
             auto split = StringUtils::split(line, ' ');
             int index = 0;
-            PathPoint point;
+            ControlPoint point;
 
             // Iterate through each property
             for (int i = 0; i < split.size(); i++)

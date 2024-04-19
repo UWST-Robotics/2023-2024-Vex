@@ -35,7 +35,7 @@ namespace devils
             AutoController::reset();
             startTime = pros::millis();
             controllerIndex = 0;
-            for (auto controller : controllers)
+            for (AutoController *controller : controllers)
                 controller->reset();
         }
 
@@ -50,7 +50,7 @@ namespace devils
                 return;
 
             // Update the current controller
-            auto controller = getCurrentController();
+            AutoController *controller = getCurrentController();
             if (controller != nullptr)
             {
                 controller->update();
@@ -74,10 +74,10 @@ namespace devils
         AutoController::State &getState() override
         {
             // Update State
-            auto controller = getCurrentController();
+            AutoController *controller = getCurrentController();
             if (controller != nullptr)
             {
-                auto &currentControllerState = controller->getState();
+                AutoState &currentControllerState = controller->getState();
                 currentState.target = currentControllerState.target;
                 currentState.events = currentControllerState.events;
             }
@@ -133,7 +133,7 @@ namespace devils
                 currentState.isFinished = controllerIndex >= controllers.size();
 
             // Reset the next controller
-            auto currentController = getCurrentController();
+            AutoController *currentController = getCurrentController();
             if (currentController != nullptr)
                 currentController->reset();
         }

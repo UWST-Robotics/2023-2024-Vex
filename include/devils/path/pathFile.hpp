@@ -17,7 +17,7 @@ namespace devils
         {
         }
 
-        /// @brief Random ID created at runtime
+        /// @brief Random ID created at runtime, unique to each event
         int id = 0;
         /// @brief The name of the event
         std::string name;
@@ -40,9 +40,9 @@ namespace devils
     typedef std::vector<PathEvent> PathEvents;
 
     /**
-     * A struct representing a point in the robot path.
+     * A struct representing a control point in the robot path.
      */
-    struct PathPoint : public Pose
+    struct ControlPoint : public Pose
     {
         /// @brief The entry delta of the robot in inches
         double enterDelta = 0;
@@ -56,23 +56,23 @@ namespace devils
         /**
          * Constructs a path point with all values set to 0.
          */
-        PathPoint() : Pose(0, 0, 0) {}
+        ControlPoint() : Pose(0, 0, 0) {}
 
         /**
          * Constructs a path point from a `Pose`.
          * @param pose The pose to construct the path point from.
          */
-        PathPoint(const Pose &pose) : Pose(pose) {}
+        ControlPoint(const Pose &pose) : Pose(pose) {}
 
         /**
          * Copy constructor.
          * @param pathPoint The path point to copy.
          */
-        PathPoint(const PathPoint &pathPoint) : Pose(pathPoint.x, pathPoint.y, pathPoint.rotation),
-                                                enterDelta(pathPoint.enterDelta),
-                                                exitDelta(pathPoint.exitDelta),
-                                                isReversed(pathPoint.isReversed),
-                                                events(pathPoint.events)
+        ControlPoint(const ControlPoint &pathPoint) : Pose(pathPoint.x, pathPoint.y, pathPoint.rotation),
+                                                      enterDelta(pathPoint.enterDelta),
+                                                      exitDelta(pathPoint.exitDelta),
+                                                      isReversed(pathPoint.isReversed),
+                                                      events(pathPoint.events)
         {
         }
 
@@ -90,9 +90,9 @@ namespace devils
     };
 
     /**
-     * A vector of `PathPoint` structs.
+     * A vector of `ControlPoint` structs.
      */
-    typedef std::vector<PathPoint> PathPoints;
+    typedef std::vector<ControlPoint> ControlPoints;
 
     /**
      * A struct representing a robot path.
@@ -101,8 +101,8 @@ namespace devils
     {
         /// @brief The version of the path file
         int version = 0;
-        /// @brief The points in the path
-        PathPoints points;
+        /// @brief The control points in the path
+        ControlPoints points;
 
         /**
          * Converts the path to a string.
@@ -111,7 +111,7 @@ namespace devils
         std::string toString() const
         {
             std::string str = "PathFile " + std::to_string(version) + "\n====================\n";
-            for (auto point : points)
+            for (ControlPoint point : points)
                 str += point.toString();
             str += "====================";
             return str;

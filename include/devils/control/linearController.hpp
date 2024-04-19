@@ -44,15 +44,15 @@ namespace devils
                 reset();
 
             // Get Current Pose
-            auto currentPose = odometry.getPose();
+            Pose currentPose = odometry.getPose();
 
             // Calculate time since last checkpoint
             double timeSinceLastCheckpoint = pros::millis() - lastCheckpointTime;
             bool skipCheckpoint = timeSinceLastCheckpoint > CHECKPOINT_TIMEOUT && CHECKPOINT_TIMEOUT > 0;
 
             // Calculate Control Point Distance
-            auto &controlPoints = generatedPath.controlPoints;
-            auto &point = controlPoints[currentIndex];
+            ControlPoints &controlPoints = generatedPath.controlPoints;
+            ControlPoint &point = controlPoints[currentIndex];
             double distance = point.distanceTo(currentPose);
 
             // Check within trigger range
@@ -60,7 +60,7 @@ namespace devils
                 _nextControlPoint();
 
             // Get Current Point
-            auto &currentPoint = controlPoints[currentIndex % controlPoints.size()];
+            ControlPoint &currentPoint = controlPoints[currentIndex % controlPoints.size()];
 
             // Calculate direction of travel
             double deltaX = currentPoint.x - currentPose.x;

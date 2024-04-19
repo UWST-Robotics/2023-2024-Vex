@@ -35,8 +35,8 @@ namespace devils
                 return;
 
             // Get Path
-            auto pathPoints = &generatedPath->pathPoints;
-            auto controlPoints = &generatedPath->controlPoints;
+            PoseSequence *pathPoints = &generatedPath->pathPoints;
+            ControlPoints *controlPoints = &generatedPath->controlPoints;
 
             // Calculate Offset
             double offsetX = DisplayUtils::DISPLAY_WIDTH / 2;

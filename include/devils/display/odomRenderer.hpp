@@ -75,7 +75,7 @@ namespace devils
         void update() override
         {
             // Pose
-            auto pose = odomSource->getPose();
+            Pose pose = odomSource->getPose();
 
             // Object
             lv_obj_set_pos(

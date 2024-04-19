@@ -28,7 +28,7 @@ namespace devils
 
         ~GameObjectRenderer()
         {
-            for (auto objectRenderer : rendererPool)
+            for (lv_obj_t *objectRenderer : rendererPool)
                 lv_obj_del(objectRenderer);
         }
 
@@ -48,10 +48,10 @@ namespace devils
             gameObjectDisabledStyle.body.radius = 1;
 
             // Create game object renderers
-            auto gameObjects = gameObjectManager.getGameObjects();
-            for (auto gameObject : *gameObjects)
+            std::vector<GameObject> *gameObjects = gameObjectManager.getGameObjects();
+            for (GameObject &gameObject : *gameObjects)
             {
-                auto renderer = _addRendererToPool();
+                lv_obj_t *renderer = _addRendererToPool();
                 _renderObject(renderer, gameObject);
             }
         }
@@ -59,7 +59,7 @@ namespace devils
         void update() override
         {
             // Get GameObject List
-            auto gameObjects = gameObjectManager.getGameObjects();
+            std::vector<GameObject> *gameObjects = gameObjectManager.getGameObjects();
 
             // Add additional renderers if needed
             while (rendererPool.size() < gameObjects->size())

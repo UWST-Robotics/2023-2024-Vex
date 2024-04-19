@@ -16,10 +16,10 @@ namespace devils
         double dt = 0;
 
         /// @brief A list of control points that the path was generated from.
-        PathPoints controlPoints = {};
+        ControlPoints controlPoints = {};
 
-        /// @brief The duration of the path in seconds.
-        std::vector<Pose> pathPoints = {};
+        /// @brief The list of points interpolated between the control points. `1/dt` points per control point.
+        PoseSequence pathPoints = {};
 
         /**
          * Gets a single point on the path at a given time.

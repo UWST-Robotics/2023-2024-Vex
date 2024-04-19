@@ -46,8 +46,8 @@ namespace devils
         void update() override
         {
             // Get Current State
-            auto currentPose = odometry.getPose();
-            auto gameObjects = gameObjectManager.getGameObjects();
+            Pose currentPose = odometry.getPose();
+            std::vector<GameObject> *gameObjects = gameObjectManager.getGameObjects();
 
             // Get the closest object
             targetObject = _getClosestObject();
@@ -65,7 +65,7 @@ namespace devils
 
             // Check if object is picked up
             bool hasObject = false;
-            auto objectDistance = targetObject->distanceTo(currentPose);
+            double objectDistance = targetObject->distanceTo(currentPose);
             if (storageSensor != nullptr)
                 hasObject = storageSensor->getProximity() > OPTICAL_PROXIMITY;
             else
@@ -142,16 +142,16 @@ namespace devils
         GameObject *_getClosestObject()
         {
             // Get Current State
-            auto currentPose = odometry.getPose();
-            auto gameObjects = gameObjectManager.getGameObjects();
+            Pose currentPose = odometry.getPose();
+            std::vector<GameObject> *gameObjects = gameObjectManager.getGameObjects();
 
             // Get the closest object
             double closestDistance = INT_MAX;
             GameObject *closestObject = nullptr;
-            for (auto &object : *gameObjects)
+            for (GameObject &object : *gameObjects)
             {
                 // Calculate Distance
-                auto distance = object.distanceTo(currentPose);
+                double distance = object.distanceTo(currentPose);
                 if (distance < closestDistance)
                 {
                     // Skip if object is not in the collection area

@@ -88,7 +88,9 @@ namespace devils
 
         State currentState;
     };
+
+    typedef AutoController::State AutoState;
 }
 
 // Define an empty vector of PathEvents
-PathEvents devils::AutoController::NO_EVENTS = {};
+devils::PathEvents devils::AutoController::NO_EVENTS = {};
