@@ -5,7 +5,6 @@
 
 namespace devils
 {
-
     /**
      * A struct representing an event at a point in the robot path.
      */
@@ -36,6 +35,11 @@ namespace devils
     };
 
     /**
+     * A vector of `PathEvent` structs.
+     */
+    typedef std::vector<PathEvent> PathEvents;
+
+    /**
      * A struct representing a point in the robot path.
      */
     struct PathPoint : public Pose
@@ -47,7 +51,7 @@ namespace devils
         /// @brief Whether the robot is reversed at this point
         bool isReversed = false;
         /// @brief The events at this point
-        std::vector<PathEvent> events = {};
+        PathEvents events = {};
 
         /**
          * Constructs a path point with all values set to 0.
@@ -63,13 +67,12 @@ namespace devils
         /**
          * Copy constructor.
          * @param pathPoint The path point to copy.
-        */
-        PathPoint(const PathPoint &pathPoint) :
-            Pose(pathPoint.x, pathPoint.y, pathPoint.rotation),
-            enterDelta(pathPoint.enterDelta),
-            exitDelta(pathPoint.exitDelta),
-            isReversed(pathPoint.isReversed),
-            events(pathPoint.events)
+         */
+        PathPoint(const PathPoint &pathPoint) : Pose(pathPoint.x, pathPoint.y, pathPoint.rotation),
+                                                enterDelta(pathPoint.enterDelta),
+                                                exitDelta(pathPoint.exitDelta),
+                                                isReversed(pathPoint.isReversed),
+                                                events(pathPoint.events)
         {
         }
 
@@ -80,11 +83,16 @@ namespace devils
         std::string toString() const
         {
             std::string str = "Point: (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(rotation) + ")[" + std::to_string(enterDelta) + ", " + std::to_string(exitDelta) + "] R=" + std::to_string(isReversed) + "\n";
-            for (auto event : events)
+            for (PathEvent event : events)
                 str += "    " + event.toString() + "\n";
             return str;
         }
     };
+
+    /**
+     * A vector of `PathPoint` structs.
+     */
+    typedef std::vector<PathPoint> PathPoints;
 
     /**
      * A struct representing a robot path.
@@ -94,7 +102,7 @@ namespace devils
         /// @brief The version of the path file
         int version = 0;
         /// @brief The points in the path
-        std::vector<PathPoint> points;
+        PathPoints points;
 
         /**
          * Converts the path to a string.

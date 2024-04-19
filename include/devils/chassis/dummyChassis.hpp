@@ -17,9 +17,9 @@ namespace devils
     public:
         void move(double forward, double turn, double strafe = 0) override
         {
-            forward = std::clamp(forward, -1.0, 1.0) * speed;
-            turn = std::clamp(turn, -1.0, 1.0) * speed;
-            strafe = std::clamp(strafe, -1.0, 1.0) * speed;
+            forward = std::clamp(forward, -1.0, 1.0) * forwardSpeed;
+            turn = std::clamp(turn, -1.0, 1.0) * turnSpeed;
+            strafe = std::clamp(strafe, -1.0, 1.0) * strafeSpeed;
 
             lastForward = forward;
             lastTurn = turn;

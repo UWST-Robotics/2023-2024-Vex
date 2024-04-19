@@ -84,7 +84,7 @@ namespace devils
             else
             {
                 currentState.target = nullptr;
-                currentState.events = NO_EVENTS;
+                currentState.events = &NO_EVENTS;
             }
 
             // Check for Timeout

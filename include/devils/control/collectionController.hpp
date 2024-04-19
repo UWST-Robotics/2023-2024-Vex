@@ -89,14 +89,14 @@ namespace devils
                 directController.update();
 
                 // Update State
-                currentState.events = CHASE_EVENTS;
+                currentState.events = &CHASE_EVENTS;
             }
             else
             {
                 findController.update();
 
                 // Update State
-                currentState.events = COLLECTION_EVENTS;
+                currentState.events = &COLLECTION_EVENTS;
             }
         }
 
@@ -172,8 +172,8 @@ namespace devils
         static constexpr double CHASE_DISTANCE = 18.0;     // in
         static constexpr double COLLECTION_DISTANCE = 4.0; // in
         static constexpr double OPTICAL_PROXIMITY = 0.9;   // %
-        std::vector<PathEvent> COLLECTION_EVENTS = {PathEvent("collection", "")};
-        std::vector<PathEvent> CHASE_EVENTS = {PathEvent("chase", "")};
+        PathEvents COLLECTION_EVENTS = {PathEvent("collection", "")};
+        PathEvents CHASE_EVENTS = {PathEvent("chase", "")};
 
         // PID
         PID rotationPID = PID(0.1, 0.0, 0.0);

@@ -32,6 +32,10 @@ namespace devils
          */
         void move(double forward, double turn, double strafe = 0) override
         {
+            forward *= forwardSpeed;
+            turn *= turnSpeed;
+            strafe *= strafeSpeed;
+
             moveTank(forward + turn, forward - turn);
         }
 
@@ -42,8 +46,8 @@ namespace devils
          */
         void moveTank(double left, double right)
         {
-            double fixedLeft = std::clamp(left, -1.0, 1.0) * speed;
-            double fixedRight = std::clamp(right, -1.0, 1.0) * speed;
+            double fixedLeft = std::clamp(left, -1.0, 1.0);
+            double fixedRight = std::clamp(right, -1.0, 1.0);
 
             leftMotors.moveVoltage(fixedLeft);
             rightMotors.moveVoltage(fixedRight);

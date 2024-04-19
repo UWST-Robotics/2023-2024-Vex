@@ -3,12 +3,9 @@
 #include "../devils.h"
 #include "systems/intakeSystem.hpp"
 #include "systems/wingSystem.hpp"
-
-#define __ARM_NEON
-#include "incbin/incbin.h"
-
-#define INCBIN_PREFIX g_
-INCTXT(testPathFile, "paths/TestPath.txt");
+#include "systems/pjAutoController.hpp"
+#include "systems/testController.hpp"
+#include "systems/blockerSystem.hpp"
 
 namespace devils
 {
@@ -30,9 +27,9 @@ namespace devils
 
             // Init Differential Wheel Odometry
             wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
-            
+
             // Add Stats
-            StatsRenderer* statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
+            StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
             statsRenderer->useOdomSource(&fusedOdom);
             statsRenderer->useChassis(&chassis);
 
@@ -45,8 +42,8 @@ namespace devils
             // Init Odom
             fusedOdom.setPose(*autoController.getStartingPose());
 
-            // Set Debug Speed
-            chassis.setSpeed(CHASSIS_AUTO_SPEED);
+            // Set Speed
+            chassis.setSpeed(CHASSIS_AUTO_FORWARD, CHASSIS_AUTO_TURN);
 
             // Calibrate IMU
             imu.calibrate();
@@ -57,7 +54,8 @@ namespace devils
 
             EventTimer pauseTimer = EventTimer();
 
-            while (true) {
+            while (true)
+            {
 
                 // Update Odometry
                 gps.update();
@@ -71,32 +69,48 @@ namespace devils
                     autoController.update();
 
                 // Handle Auto Controller Events
-                auto& events = autoController.getState().events;
-                for (auto& event : events) {
-                    
+                PathEvents *events = autoController.getState().events;
+                for (PathEvent event : *events)
+                {
+
                     // Wings
-                    if (event.name == "rightWing") {
+                    if (event.name == "rightWing")
+                    {
                         wings.extendRight();
-                    } else if (event.name == "leftWing") {
+                    }
+                    else if (event.name == "leftWing")
+                    {
                         wings.extendLeft();
-                    } else if (event.name == "closeWings") {
+                    }
+                    else if (event.name == "closeWings")
+                    {
                         wings.retractRight();
                         wings.retractLeft();
-
+                    }
                     // Intake
-                    } else if (event.name == "intake") {
+                    else if (event.name == "intake")
+                    {
                         intake.intake();
-                    } else if (event.name == "outtake") {
+                    }
+                    else if (event.name == "outtake")
+                    {
                         intake.outtake();
-                    } else if (event.name == "stopIntake") {
+                    }
+                    else if (event.name == "stopIntake")
+                    {
                         intake.stop();
-
+                    }
                     // Other
-                    } else if (event.name == "pause") {
+                    else if (event.name == "pause")
+                    {
                         pauseTimer.start(event.id, std::stoi(event.params));
-                    } else if (event.name == "setSpeed") {
-                        chassis.setSpeed(std::stod(event.params) * CHASSIS_AUTO_SPEED);
-                    } else {
+                    }
+                    else if (event.name == "setSpeed")
+                    {
+                        chassis.setSpeed(std::stod(event.params) * CHASSIS_AUTO_FORWARD, CHASSIS_AUTO_TURN);
+                    }
+                    else
+                    {
                         Logger::warn("Unknown Event: " + event.name);
                     }
                 }
@@ -109,11 +123,9 @@ namespace devils
         void opcontrol() override
         {
             // Reset Speed
-            chassis.setSpeed(1.0);
+            chassis.setSpeed(1.0, 1.0);
 
-            // Calibrate IMU
-            imu.calibrate();
-            imu.waitUntilCalibrated();
+            bool isBlockerUp = false;
 
             // Loop
             while (true)
@@ -121,11 +133,11 @@ namespace devils
                 // Take Controller Inputs
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = mainController.get_analog(ANALOG_LEFT_X) / 127.0;
-                // bool leftWing = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_L2);
-                // bool rightWing = mainController.get_digital(DIGITAL_R1) || mainController.get_digital(DIGITAL_R2);
-                // bool blockerUp = mainController.get_digital_new_press(DIGITAL_X);
-                // bool blockerDown = mainController.get_digital(DIGITAL_B);
-                double intakeValue = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
+                bool leftWing = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_L2);
+                bool rightWing = mainController.get_digital(DIGITAL_R1) || mainController.get_digital(DIGITAL_R2);
+                bool blockerUp = mainController.get_digital_new_press(DIGITAL_X);
+                bool blockerDown = mainController.get_digital(DIGITAL_B);
+                double intakeValue = -mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
 
                 // Curve Joystick Inputs
                 // leftY = JoystickCurve::square(JoystickCurve::dlerp(0.1, 0.3, 1.0, leftY));
@@ -136,6 +148,24 @@ namespace devils
                 // Drive the Robot
                 intake.intake(intakeValue);
                 chassis.move(leftY, leftX);
+
+                // Wings
+                if (leftWing)
+                    wings.extendLeft();
+                else
+                    wings.retractLeft();
+                if (rightWing)
+                    wings.extendRight();
+                else
+                    wings.retractRight();
+
+                // Blocker
+                if (blockerUp)
+                    isBlockerUp = !isBlockerUp;
+                if (isBlockerUp)
+                    blocker.extend();
+                else
+                    blocker.retract(blockerDown);
 
                 // Update Odometry
                 gps.update();
@@ -157,7 +187,7 @@ namespace devils
         // V5 Ports
         static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-12, 11, -9, 10};
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {19, -20, 2, -1};
-        static constexpr std::initializer_list<int8_t> INTAKE_MOTOR_PORTS = {16};
+        static constexpr std::initializer_list<int8_t> INTAKE_MOTOR_PORTS = {-16};
         static constexpr uint8_t IMU_PORT = 4;
         static constexpr uint8_t GPS_PORT = 6;
         static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
@@ -165,22 +195,26 @@ namespace devils
         // ADI Ports
         static constexpr uint8_t LEFT_WING_PORT = 1;
         static constexpr uint8_t RIGHT_WING_PORT = 2;
+        static constexpr uint8_t BLOCKER_DOWN_PORT = 6;
+        static constexpr uint8_t BLOCKER_UP_PORT = 3;
 
         // Geometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 12.0;                            // in
-        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (60.0 / 36.0); // ticks
-        static constexpr double CHASSIS_AUTO_SPEED = 0.8;                     // 50% speed
+        static constexpr double TICKS_PER_REVOLUTION = 300.0 * (48.0 / 36.0); // ticks
+        static constexpr double CHASSIS_AUTO_FORWARD = 0.3;                   // % speed
+        static constexpr double CHASSIS_AUTO_TURN = 0.7;                      // % speed
 
         // GPS Offset
         static constexpr double GPS_OFFSET_X = 0.0;         // in
-        static constexpr double GPS_OFFSET_Y = 6.0;        // in
+        static constexpr double GPS_OFFSET_Y = 6.0;         // in
         static constexpr double GPS_OFFSET_ROTATION = M_PI; // rad
 
         // Subsystems
         TankChassis chassis = TankChassis(L_MOTOR_PORTS, R_MOTOR_PORTS);
         IntakeSystem intake = IntakeSystem(INTAKE_MOTOR_PORTS);
         WingSystem wings = WingSystem(LEFT_WING_PORT, RIGHT_WING_PORT);
+        BlockerSystem blocker = BlockerSystem(BLOCKER_DOWN_PORT, BLOCKER_UP_PORT);
 
         // Sensors
         GPS gps = GPS("PepperJack.GPS", GPS_PORT);
@@ -196,7 +230,8 @@ namespace devils
         GameObjectManager gameObjectManager = GameObjectManager();
 
         // Controller
-        PJAutoController autoController = PJAutoController(chassis, fusedOdom, gameObjectManager);
+        // PJAutoController autoController = PJAutoController(chassis, fusedOdom, gameObjectManager);
+        TestController autoController = TestController(chassis, fusedOdom);
 
         // Display
         Display mainDisplay = Display({new GridRenderer(),

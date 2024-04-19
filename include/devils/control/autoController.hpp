@@ -18,7 +18,7 @@ namespace devils
         struct State
         {
             Pose *target = nullptr;
-            std::vector<PathEvent> &events = NO_EVENTS;
+            PathEvents *events = &NO_EVENTS;
             bool isFinished = false;
         };
 
@@ -30,7 +30,7 @@ namespace devils
         {
             currentState.isFinished = false;
             currentState.target = nullptr;
-            currentState.events = NO_EVENTS;
+            currentState.events = &NO_EVENTS;
         }
 
         /**
@@ -91,4 +91,4 @@ namespace devils
 }
 
 // Define an empty vector of PathEvents
-std::vector<devils::PathEvent> devils::AutoController::NO_EVENTS = {};
+PathEvents devils::AutoController::NO_EVENTS = {};

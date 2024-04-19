@@ -34,7 +34,6 @@ namespace devils
               currentPath(path)
         {
             setPath(path);
-            directController.setMaxAccel(0.4);
         }
 
         void reset() override
@@ -51,18 +50,14 @@ namespace devils
             // Abort if path is missing
             if (currentPath == nullptr || pathPoints == nullptr || controlPoints == nullptr)
                 return;
+            // Abort if finished
+            if (currentState.isFinished)
+                return;
 
             // Get Current Pose
             auto currentPose = odometry.getPose();
 
             // Update Control Point Index
-            if (controlPointIndex < controlPoints->size() - 1)
-            {
-                auto &controlPoint = controlPoints->at(controlPointIndex + 1);
-                double distance = controlPoint.distanceTo(currentPose);
-                if (distance < LOOKAHEAD_DISTANCE)
-                    controlPointIndex++;
-            }
             PathPoint *controlPoint = &controlPoints->at(controlPointIndex);
             int checkpointPathIndex = (this->controlPointIndex + 1) / currentPath->dt;
 
@@ -94,28 +89,37 @@ namespace devils
                 lookaheadPointIndex = i;
             }
 
+            // Checkpoint
+            bool isLookaheadPastCheckpoint = lookaheadPointIndex > checkpointPathIndex;
+            bool isRotated = std::abs(Units::diffRad(currentPose.rotation, targetPose->rotation)) < ROTATIONAL_THRESHOLD;
+            if (isLookaheadPastCheckpoint && isRotated)
+            {
+                // Increment Control Point
+                if (controlPointIndex < controlPoints->size() - 1)
+                {
+                    controlPointIndex++;
+
+                    // Re-run update to get new control point
+                    update();
+                    return;
+                }
+                // Finish
+                else
+                {
+                    Logger::debug("Finished path");
+                    currentState.isFinished = true;
+                    chassis.stop();
+                    return;
+                }
+            }
+
             // Update State
             currentState.target = targetPose;
-            currentState.events = controlPoint->events;
-
-            // Get Current Point
-            bool isReversed = controlPoint->isReversed;
-
-            // Handle Finish
-            auto lastPoint = pathPoints->back();
-            bool withinRangeOfLastPoint = currentPose.distanceTo(lastPoint) < LOOKAHEAD_DISTANCE;
-            bool lookingAtLastPoint = robotPointIndex >= pathPoints->size() - 1;
-            if (withinRangeOfLastPoint && lookingAtLastPoint)
-            {
-                Logger::debug("Finished path");
-                currentState.isFinished = true;
-                chassis.stop();
-                return;
-            }
+            currentState.events = &controlPoint->events;
 
             // Drive To Point
             directController.setTargetPose(*targetPose);
-            directController.setReverse(isReversed);
+            directController.setReverse(controlPoint->isReversed);
             directController.update();
         }
 
@@ -135,7 +139,8 @@ namespace devils
         }
 
     private:
-        static constexpr double LOOKAHEAD_DISTANCE = 8.0; // in
+        static constexpr double ROTATIONAL_THRESHOLD = M_PI / 16; // rads
+        static constexpr double LOOKAHEAD_DISTANCE = 8.0;         // in
 
         // Object Handles
         BaseChassis &chassis;
@@ -143,7 +148,7 @@ namespace devils
 
         // Shorthands
         GeneratedPath *currentPath;
-        std::vector<PathPoint> *controlPoints;
+        PathPoints *controlPoints;
         std::vector<Pose> *pathPoints;
 
         // Controller State

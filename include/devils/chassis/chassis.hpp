@@ -26,23 +26,20 @@ namespace devils
 
         /**
          * Sets the speed of the robot.
-         * @param speed The speed of the robot from 0 to 1.
+         * @param forwardSpeed The forward speed of the robot from -1 to 1.
+         * @param turnSpeed The turn speed of the robot from -1 to 1.
+         * @param strafeSpeed The strafe speed of the robot from -1 to 1.
          */
-        virtual void setSpeed(double speed)
+        virtual void setSpeed(double forwardSpeed, double turnSpeed, double strafeSpeed = 0)
         {
-            this->speed = std::clamp(speed, 0.0, 1.0);
-        }
-
-        /**
-         * Gets the speed of the robot.
-         * @return The speed of the robot from -1 to 1.
-         */
-        virtual double getSpeed()
-        {
-            return speed;
+            this->forwardSpeed = std::clamp(forwardSpeed, 0.0, 1.0);
+            this->turnSpeed = std::clamp(turnSpeed, 0.0, 1.0);
+            this->strafeSpeed = std::clamp(strafeSpeed, 0.0, 1.0);
         }
 
     protected:
-        double speed = 1.0;
+        double forwardSpeed = 1.0;
+        double turnSpeed = 1.0;
+        double strafeSpeed = 1.0;
     };
 }

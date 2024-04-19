@@ -18,9 +18,9 @@ namespace devils
         {
             // Init Differential Wheel Odometry
             wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
-            
+
             // Add Stats
-            StatsRenderer* statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
+            StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
             statsRenderer->useOdomSource(&wheelOdom);
             statsRenderer->useChassis(&chassis);
 
@@ -30,9 +30,6 @@ namespace devils
 
         void autonomous() override
         {
-            // Set Debug Speed
-            chassis.setSpeed(0.8);
-
             // Reset Auto Controller
             autoController.reset();
 
@@ -51,7 +48,7 @@ namespace devils
         void opcontrol() override
         {
             // Reset Speed
-            chassis.setSpeed(1.0);
+            chassis.setSpeed(1.0, 1.0);
 
             // Loop
             while (true)
@@ -62,6 +59,7 @@ namespace devils
                 double rightY = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
                 bool topBumper = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_R1);
                 bool bottomBumper = mainController.get_digital(DIGITAL_L2) || mainController.get_digital(DIGITAL_R2);
+                bool extendButton = mainController.get_digital(DIGITAL_A);
 
                 // Curve Joystick Inputs
                 leftY = JoystickCurve::curve(leftY, 2.0, 0.1);
@@ -79,6 +77,18 @@ namespace devils
                     intake.outtake();
                 else
                     intake.stop();
+
+                // Intake Extend
+                if (extendButton)
+                {
+                    intakePneumaticA.extend();
+                    intakePneumaticB.extend();
+                }
+                else
+                {
+                    intakePneumaticA.retract();
+                    intakePneumaticB.retract();
+                }
 
                 // Update Odometry
                 wheelOdom.update(leftSensor, rightSensor);
@@ -104,6 +114,10 @@ namespace devils
         static constexpr uint8_t LEFT_ROTATION_SENSOR_PORT = 18;
         static constexpr uint8_t RIGHT_ROTATION_SENSOR_PORT = 13;
 
+        // ADI Ports
+        static constexpr uint8_t INTAKE_PNEUMATIC_PORT_A = 7;
+        static constexpr uint8_t INTAKE_PNEUMATIC_PORT_B = 8;
+
         // Geometry
         static constexpr double WHEEL_RADIUS = 1.625;                         // in
         static constexpr double WHEEL_BASE = 15.0;                            // in
@@ -115,6 +129,8 @@ namespace devils
         IntakeSystem intake = IntakeSystem(INTAKE_MOTOR_PORTS);
 
         // Sensors
+        ScuffPneumatic intakePneumaticA = ScuffPneumatic("Blaze.IntakePneumaticA", INTAKE_PNEUMATIC_PORT_A);
+        ScuffPneumatic intakePneumaticB = ScuffPneumatic("Blaze.IntakePneumaticB", INTAKE_PNEUMATIC_PORT_B);
         RotationSensor leftSensor = RotationSensor("Blaze.LeftRotation", LEFT_ROTATION_SENSOR_PORT);
         RotationSensor rightSensor = RotationSensor("Blaze.RightRotation", RIGHT_ROTATION_SENSOR_PORT);
 

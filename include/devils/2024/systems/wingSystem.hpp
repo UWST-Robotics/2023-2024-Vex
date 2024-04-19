@@ -1,5 +1,5 @@
 #pragma once
-#include "../hardware/scuffPneumatic.hpp"
+#include "../../hardware/scuffPneumatic.hpp"
 
 namespace devils
 {

@@ -113,7 +113,7 @@ namespace devils
             // Update State
             if (currentIndex < generatedPath.controlPoints.size() && currentIndex > 0)
             {
-                currentState.events = generatedPath.controlPoints[currentIndex - 1].events;
+                currentState.events = &generatedPath.controlPoints[currentIndex - 1].events;
                 currentState.target = &generatedPath.controlPoints[currentIndex];
                 currentState.isFinished = currentIndex >= generatedPath.controlPoints.size();
             }

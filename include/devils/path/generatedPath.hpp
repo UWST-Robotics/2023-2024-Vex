@@ -16,7 +16,7 @@ namespace devils
         double dt = 0;
 
         /// @brief A list of control points that the path was generated from.
-        std::vector<PathPoint> controlPoints = {};
+        PathPoints controlPoints = {};
 
         /// @brief The duration of the path in seconds.
         std::vector<Pose> pathPoints = {};

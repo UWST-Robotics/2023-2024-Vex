@@ -51,10 +51,10 @@ namespace devils
 
             // Clamp Values
             if (isReversed)
-                forward = std::clamp(forward, -maxAccel, 0.0);
+                forward = std::clamp(forward, -1.0, 0.0);
             else
-                forward = std::clamp(forward, 0.0, maxAccel);
-            turn = std::clamp(turn * distanceToPose, -maxTurn, maxTurn);
+                forward = std::clamp(forward, 0.0, 1.0);
+            turn = std::clamp(turn * distanceToPose, -1.0, 1.0);
 
             // Drive
             chassis.move(forward, turn);
@@ -78,36 +78,15 @@ namespace devils
             currentState.target = &targetPose;
         }
 
-        /**
-         * Sets the maximum forward acceleration for the controller.
-         * @param maxAccel The maximum acceleration from 0 to 1.
-        */
-        void setMaxAccel(double maxAccel)
-        {
-            this->maxAccel = maxAccel;
-        }
-
-        /**
-         * Sets the maximum rotation acceleration for the controller.
-         * @param maxTurn The maximum acceleration from 0 to 1.
-        */
-        void setMaxTurn(double maxTurn)
-        {
-            this->maxTurn = maxTurn;
-        }
-
     private:
         PID translationPID = PID(0.18, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.12, 0, 0.001);    // <-- Rotation
-        std::vector<PathEvent> NO_EVENTS = {};
+        PID rotationPID = PID(0.07, 0, 0);    // <-- Rotation
 
         // Object Handles
         BaseChassis &chassis;
         OdomSource &odometry;
 
         // State
-        double maxAccel = 1.0;
-        double maxTurn = 1.0;
         Pose *targetPose;
         bool isReversed = false;
     };

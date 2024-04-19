@@ -81,11 +81,11 @@ namespace devils
             if (autoController != nullptr)
             {
                 auto &autoState = autoController->getState();
-                if (autoState.events.size() > 0)
+                if (autoState.events->size() > 0)
                 {
                     stream << "\n";
                     stream << "Events: \n";
-                    for (auto &event : autoState.events)
+                    for (auto &event : *autoState.events)
                     {
                         stream << event.name;
                         if (event.params.size() > 0)
@@ -102,12 +102,14 @@ namespace devils
                 auto rightMotors = chassis->getRightMotors().getMotors();
 
                 stream << "\nL: ";
-                for (auto &motor : leftMotors) {
+                for (auto &motor : leftMotors)
+                {
                     double temp = motor.get()->getTemperature();
                     stream << DisplayUtils::colorizeValue(1 - (temp - 20.0) / 40.0, std::to_string((int)temp) + "C ");
                 }
                 stream << "\nR: ";
-                for (auto &motor : rightMotors) {
+                for (auto &motor : rightMotors)
+                {
                     double temp = motor.get()->getTemperature();
                     stream << DisplayUtils::colorizeValue(1 - (temp - 20.0) / 40.0, std::to_string((int)temp) + "C ");
                 }
@@ -152,7 +154,7 @@ namespace devils
         /**
          * Uses a tank chassis to display additional stats.
          * @param chassis The tank chassis
-        */
+         */
         void useChassis(TankChassis *chassis)
         {
             this->chassis = chassis;
