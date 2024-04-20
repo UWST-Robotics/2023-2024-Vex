@@ -1,8 +1,8 @@
 #pragma once
 #include "devils/utils/logger.hpp"
-#include "devils/hardware/smartMotor.hpp"
+#include "devils/hardware/smartMotorGroup.hpp"
 #include "devils/hardware/opticalSensor.hpp"
-#include "devils/hardware/scuffPneumatic.hpp"
+#include "devils/hardware/scuffPneumaticGroup.hpp"
 
 namespace devils
 {
@@ -14,11 +14,14 @@ namespace devils
     public:
         /**
          * Controls the intake system to intake triballs.
-         * @param intakePort The port of the intake motor.
-         * @param conveyorPort The port of the conveyor motor.
+         * @param intakePorts The motor ports of the intake motors.
+         * @param pneumaticPorts The ADI ports of the intake pneumatic pistons.
          */
-        IntakeSystem(std::initializer_list<int8_t> intakePorts)
-            : intakeMotors("Intake Motor", intakePorts)
+        IntakeSystem(std::string name,
+                     std::initializer_list<int8_t> intakePorts,
+                     std::initializer_list<uint8_t> pneumaticPorts = {})
+            : intakeMotors(name + " Motors", intakePorts),
+              intakePneumatics(name + " Pneumatics", pneumaticPorts)
         {
         }
 
@@ -37,6 +40,22 @@ namespace devils
         void outtake()
         {
             intakeMotors.moveVoltage(-WHEEL_SPEED);
+        }
+
+        /**
+         * Extends the intake pneumatics.
+         */
+        void extend()
+        {
+            intakePneumatics.extend();
+        }
+
+        /**
+         * Retracts the intake pneumatics.
+         */
+        void retract()
+        {
+            intakePneumatics.retract();
         }
 
         /**
@@ -62,6 +81,7 @@ namespace devils
         static constexpr double SENSOR_THRESHOLD = 0.9;
 
         SmartMotorGroup intakeMotors;
+        ScuffPneumaticGroup intakePneumatics;
         OpticalSensor *sensor = nullptr;
     };
 }

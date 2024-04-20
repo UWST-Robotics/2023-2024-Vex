@@ -30,7 +30,7 @@ namespace devils
          */
         void enable()
         {
-            int32_t status = led.set_value(true);
+            int32_t status = led.set_value(false);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": led enable failed");
         }
@@ -40,7 +40,7 @@ namespace devils
          */
         void disable()
         {
-            int32_t status = led.set_value(false);
+            int32_t status = led.set_value(true);
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": led disable failed");
         }

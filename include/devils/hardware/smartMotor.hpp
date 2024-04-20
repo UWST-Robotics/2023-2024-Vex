@@ -77,7 +77,7 @@ namespace devils
 
         /**
          * Gets the current temperature of the motor in degrees Celsius.
-        */
+         */
         double getTemperature()
         {
             double temperature = motor.get_temperature();
@@ -100,6 +100,18 @@ namespace devils
                 Logger::warn(name + ": motor is over temperature");
             else if (isOverCurrent == 1 && LOGGING_ENABLED)
                 Logger::warn(name + ": motor is over current");
+        }
+
+        /**
+         * Sets the brake mode of the motor.
+         * @param useBrakes True to use brakes, false to coast.
+         */
+        void setBrakeMode(bool useBrakes)
+        {
+            if (useBrakes)
+                motor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+            else
+                motor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         }
 
     private:

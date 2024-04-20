@@ -244,15 +244,15 @@ namespace devils
 
         // Subsystems
         TankChassis chassis = TankChassis(L_MOTOR_PORTS, R_MOTOR_PORTS);
-        IntakeSystem intake = IntakeSystem(INTAKE_MOTOR_PORTS);
+        IntakeSystem intake = IntakeSystem("PJ.Intake", INTAKE_MOTOR_PORTS);
         WingSystem wings = WingSystem(LEFT_WING_PORT, RIGHT_WING_PORT);
         BlockerSystem blocker = BlockerSystem(BLOCKER_DOWN_PORT, BLOCKER_UP_PORT);
 
         // Sensors
-        GPS gps = GPS("PepperJack.GPS", GPS_PORT);
-        IMU imu = IMU("PepperJack.IMU", IMU_PORT);
-        OpticalSensor storageSensor = OpticalSensor("PepperJack.StorageSensor", STORAGE_SENSOR_PORT);
-        VisionSensor visionSensor = VisionSensor("PepperJack.VisionSensor", VISION_SENSOR_PORT);
+        GPS gps = GPS("PJ.GPS", GPS_PORT);
+        IMU imu = IMU("PJ.IMU", IMU_PORT);
+        OpticalSensor storageSensor = OpticalSensor("PJ.StorageSensor", STORAGE_SENSOR_PORT);
+        VisionSensor visionSensor = VisionSensor("PJ.VisionSensor", VISION_SENSOR_PORT);
 
         // Odometry
         TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side

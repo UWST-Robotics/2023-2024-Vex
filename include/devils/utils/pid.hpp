@@ -19,59 +19,72 @@ namespace devils
          */
         PID(double pGain,
             double iGain,
-            double dGain)
+            double dGain,
+            double maxIntegral = 1)
             : pGain(pGain),
               iGain(iGain),
-              dGain(dGain)
+              dGain(dGain),
+              maxIntegral(maxIntegral),
+              maxError(maxIntegral / iGain)
         {
-            lastError = 0;
-            lastTime = _getCurrentTime();
-            lastOutput = 0;
+        }
+
+        double update(double actual, double setpoint = 0)
+        {
+            double error = setpoint - actual;
+
+            // Proportional
+            double p = pGain * error;
+
+            // Integral
+            double i = iGain * errorSum;
+            i = std::clamp(i, -maxIntegral, maxIntegral);
+
+            // Derivative
+            double d = -dGain * (actual - lastActual);
+
+            // Error
+            errorSum += error;
+            errorSum = std::clamp(errorSum, -maxError, maxError);
+
+            // Output
+            double output = p + i + d;
+            output = std::clamp(output, -maxOutput, maxOutput);
+
+            // Save Last Values
+            lastActual = actual;
+
+            // Debug
+            Logger::debug("P=" + std::to_string(p) + " I=" + std::to_string(i) + " D=" + std::to_string(d) + " O=" + std::to_string(output) + " A=" + std::to_string(actual) + " S=" + std::to_string(setpoint));
+
+            return output;
         }
 
         /**
-         * Calculates the output of the PID controller.
-         * @param currentError The current distance from the goal.
-         * @return The output of the PID controller.
+         * Sets the maximum output of the PID controller.
+         * @param maxOutput The maximum output of the PID controller.
          */
-        double update(double currentError)
+        void setMaxOutput(double maxOutput)
         {
-            // Get Delta Time
-            double currentTime = _getCurrentTime();
-            double deltaTime = currentTime - lastTime;
-
-            // Abort if the delta time is too small
-            if (deltaTime < MIN_DELTA_TIME)
-                return lastOutput;
-            lastTime = currentTime;
-
-            double pOut = pGain * currentError;
-            double iOut = iGain * currentError * deltaTime;
-            double dOut = dGain * (currentError - lastError) / deltaTime;
-            lastError = currentError;
-
-            lastOutput = pOut + iOut + dOut;
-            return lastOutput;
+            this->maxOutput = maxOutput;
         }
 
-        /**
-         * Gets the current time in milliseconds.
-         * @return The current time in milliseconds.
-         */
-        double _getCurrentTime()
+        void reset()
         {
-            return pros::millis();
+            errorSum = 0;
+            lastActual = 0;
         }
 
     private:
-        constexpr static double MIN_DELTA_TIME = 20;
-
         const double pGain;
         const double iGain;
         const double dGain;
+        const double maxIntegral = 1;
+        const double maxError = 1;
 
-        double lastTime = 0;
-        double lastError = 0;
-        double lastOutput = 0;
+        double setpoint = 0;
+        double errorSum = 0;
+        double lastActual = 0;
+        double maxOutput = 1;
     };
 }

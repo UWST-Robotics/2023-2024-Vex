@@ -1,6 +1,7 @@
 #pragma once
 #include "../../hardware/smartMotor.hpp"
 #include "../../hardware/scuffPneumatic.hpp"
+#include "../../hardware/led.hpp"
 #include "../../utils/pid.hpp"
 
 namespace devils
@@ -20,6 +21,7 @@ namespace devils
             : leftMotor("Left Launcher Motor", leftMotorPort),
               rightMotor("Right Launcher Motor", rightMotorPort)
         {
+            // rightMotor.setBrakeMode(true);
         }
 
         /**
@@ -29,15 +31,21 @@ namespace devils
         {
             // Current Velocity
             double leftMotorVelocity = leftMotor.getVelocity();
-            double rightMotorVelocity = -rightMotor.getVelocity();
+            double rightMotorVelocity = rightMotor.getVelocity();
 
             // Target Velocity
-            double leftMotorSetpoint = flywheelSetpoint - deltaVelocity;
-            double rightMotorSetpoint = flywheelSetpoint + deltaVelocity;
+            double leftMotorSetpoint = flywheelSetpoint + deltaVelocity;
+            double rightMotorSetpoint = -flywheelSetpoint - deltaVelocity;
 
             // Calculate PID
-            double leftMotorVoltage = flywheelPID.update(leftMotorVelocity - leftMotorSetpoint);
-            double rightMotorVoltage = -flywheelPID.update(rightMotorVelocity - rightMotorSetpoint);
+            double leftMotorVoltage = flywheelLeftPID.update(leftMotorVelocity, leftMotorSetpoint);
+            double rightMotorVoltage = flywheelRightPID.update(rightMotorVelocity, rightMotorSetpoint);
+
+            // Debug
+            if (isAtSpeed())
+                debugLED.enable();
+            else
+                debugLED.disable();
 
             // Run Motors
             fireVoltage(leftMotorVoltage, rightMotorVoltage);
@@ -59,8 +67,14 @@ namespace devils
          */
         void stop()
         {
-            leftMotor.moveVoltage(0);
-            rightMotor.moveVoltage(0);
+            leftMotor.stop();
+            rightMotor.stop();
+            debugLED.disable();
+
+            // Reset PID
+            flywheelLeftPID.reset();
+            flywheelRightPID.reset();
+
             isFiring = false;
         }
 
@@ -118,11 +132,30 @@ namespace devils
             return (leftMotorVelocity + rightMotorVelocity) / 2;
         }
 
+        /**
+         * Returns true if the launcher is at speed.
+         * @return True if the launcher is at speed, false otherwise
+         */
+        bool isAtSpeed()
+        {
+            // Get Motor Velocities
+            double leftMotorDelta = std::abs(leftMotor.getVelocity()) - flywheelSetpoint;
+            double rightMotorDelta = std::abs(rightMotor.getVelocity()) - flywheelSetpoint;
+
+            // Check if the motors are at speed
+            bool leftAtSpeed = std::abs(leftMotorDelta) < AT_SPEED_RANGE;
+            bool rightAtSpeed = std::abs(rightMotorDelta) < AT_SPEED_RANGE;
+
+            return leftAtSpeed && rightAtSpeed;
+        }
+
     private:
-        static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 200; // rpm
+        static constexpr double AT_SPEED_RANGE = 10;             // RPM
+        static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 110; // rpm
         static constexpr double DEFAULT_DELTA = 0;               // rpm
 
-        PID flywheelPID = PID(0.01, 0, 0);
+        PID flywheelLeftPID = PID(0.003, 0.0004, 0, 0.6);
+        PID flywheelRightPID = PID(0.003, 0.0004, 0, 0.6);
 
         double flywheelSetpoint = DEFAULT_FLYWHEEL_SETPOINT;
         double deltaVelocity = DEFAULT_DELTA; // Difference between left and right motor speeds
@@ -131,5 +164,6 @@ namespace devils
 
         SmartMotor leftMotor;
         SmartMotor rightMotor;
+        LED debugLED = LED("DebugLED", 1);
     };
 }
