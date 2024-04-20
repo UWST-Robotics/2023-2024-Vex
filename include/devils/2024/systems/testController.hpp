@@ -5,13 +5,14 @@
 #include "incbin/incbin.h"
 
 #define INCBIN_PREFIX g_
-INCTXT(mainPath, "paths/pj-auto.txt");
+INCTXT(mainPath, "paths/test.txt");
 
-namespace devils {
+namespace devils
+{
 
     /**
      * Controls the test controller.
-    */
+     */
     class TestController : public ControllerList
     {
     public:
@@ -20,12 +21,17 @@ namespace devils {
             OdomSource &odometry)
             : pursuitController(chassis, odometry, &mainPath),
               ControllerList({&pursuitController}, true)
-        { 
+        {
         }
 
         Pose *getStartingPose()
         {
             return mainPath.getStartingPose();
+        }
+
+        void usePathRenderer(PathRenderer &renderer)
+        {
+            renderer.setPath(mainPath);
         }
 
     private:

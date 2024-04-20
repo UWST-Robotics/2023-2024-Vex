@@ -9,23 +9,23 @@
 namespace devils
 {
     /**
-     * Renderer that displays a `DisplayPoint` object.
+     * Renderer that displays a `Pose` object.
      */
-    class PointRenderer : public Renderer
+    class PoseRenderer : public Renderer
     {
     public:
         /**
-         * Creates a new DisplayPointRenderer
+         * Creates a new `PoseRenderer`
          * @param r The red value of the cursor
          * @param g The green value of the cursor
          * @param b The blue value of the cursor
          */
-        PointRenderer(u_char r, u_char g, u_char b) : odomSource(odomSource)
+        PoseRenderer(u_char r, u_char g, u_char b)
         {
             cursorColor = LV_COLOR_MAKE(r, g, b);
         }
 
-        ~PointRenderer()
+        ~PoseRenderer()
         {
             lv_obj_del(cursorObject);
         }
@@ -46,22 +46,19 @@ namespace devils
             }
         }
 
-        void setPoint(Vector2 &point)
+        void setPose(Pose &pose)
         {
             // Update Cursor Position
             lv_obj_set_pos(
                 cursorObject,
-                point.x * DISPLAY_SCALE + OFFSET_X,
-                point.y * DISPLAY_SCALE + OFFSET_Y);
+                pose.x * DisplayUtils::PX_PER_IN + OFFSET_X,
+                pose.y * DisplayUtils::PX_PER_IN + OFFSET_Y);
         }
 
     private:
         static constexpr int CURSOR_SIZE = 15 * DisplayUtils::PX_PER_IN;
-        static constexpr int DISPLAY_SCALE = 1;
         static constexpr int OFFSET_X = (DisplayUtils::DISPLAY_WIDTH - CURSOR_SIZE) / 2;
         static constexpr int OFFSET_Y = (DisplayUtils::DISPLAY_HEIGHT - CURSOR_SIZE) / 2;
-
-        OdomSource *odomSource;
 
         lv_color_t cursorColor;
         lv_obj_t *cursorObject;

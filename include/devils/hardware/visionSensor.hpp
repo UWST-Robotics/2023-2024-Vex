@@ -5,6 +5,7 @@
 #include "../utils/ramp.hpp"
 #include "../geometry/perspective.hpp"
 #include "../gameobject/gameObject.hpp"
+#include "../utils/visionObject.hpp"
 #include <string>
 
 namespace devils
@@ -19,8 +20,8 @@ namespace devils
         // https://www.vexforum.com/t/vision-sensor-fov-measurements/62397
         static constexpr int VISION_WIDTH_PX = VISION_FOV_WIDTH;   // px
         static constexpr int VISION_HEIGHT_PX = VISION_FOV_HEIGHT; // px
-        static constexpr int VISION_WIDTH_FOV = 61;             // degrees
-        static constexpr int VISION_HEIGHT_FOV = 41;            // degrees
+        static constexpr int VISION_WIDTH_FOV = 61;                // degrees
+        static constexpr int VISION_HEIGHT_FOV = 41;               // degrees
 
         /**
          * Creates a vision sensor object.
@@ -39,9 +40,9 @@ namespace devils
          * Gets any objects detected by the vision sensor.
          * @return The objects detected by the vision sensor
          */
-        std::vector<Vector2> getObjects()
+        std::vector<VisionObject> getObjects()
         {
-            std::vector<Vector2> objects = {};
+            std::vector<VisionObject> objects = {};
 
             // Get object count
             int objectCount = sensor.get_object_count();
@@ -71,7 +72,7 @@ namespace devils
                 // Create Display Object
                 short x = object.x_middle_coord;
                 short y = object.y_middle_coord;
-                objects.push_back(Vector2((double)x, (double)y));
+                objects.push_back(VisionObject((double)x, (double)y, (double)(object.width * object.height)));
             }
 
             return objects;
@@ -79,9 +80,12 @@ namespace devils
 
         /**
          * Gets the angle of an object relative to the center of the vision sensor.
-        */
-        static double getAngle(Vector2 object) {
-            return (object.x * VISION_WIDTH_FOV) / VISION_WIDTH_PX;
+         * @param object The object to get the angle of
+         * @return The angle of the object in radians
+         */
+        static double getAngle(VisionObject object)
+        {
+            return Units::degToRad((object.x * VISION_WIDTH_FOV) / VISION_WIDTH_PX);
         }
 
         /**
@@ -108,7 +112,7 @@ namespace devils
 
     private:
         static constexpr bool LOGGING_ENABLED = true;
-        static constexpr double MIN_OBJECT_AREA = 10 * 10; // px^2
+        static constexpr double MIN_OBJECT_AREA = 3 * 3; // px^2
 
         std::string name;
         pros::Vision sensor;

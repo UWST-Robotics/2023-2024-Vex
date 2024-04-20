@@ -47,13 +47,12 @@ namespace devils
          * Runs the launcher flywheels using an open-loop voltage control.
          * @param leftVoltage The voltage to run the left motor at (from -1 to 1)
          * @param rightVoltage The voltage to run the right motor at (from -1 to 1)
-        */
+         */
         void fireVoltage(double leftVoltage = 1.0, double rightVoltage = -1.0)
         {
             leftMotor.moveVoltage(leftVoltage);
             rightMotor.moveVoltage(rightVoltage);
         }
-
 
         /**
          * Stops the launcher motors
@@ -76,7 +75,7 @@ namespace devils
         /**
          * Sets the flywheel setpoint.
          * @param setpoint The flywheel setpoint, in RPM
-        */
+         */
         void setSetpoint(double setpoint)
         {
             flywheelSetpoint = setpoint;
@@ -85,7 +84,7 @@ namespace devils
         /**
          * Sets the delta speed.
          * @param delta The delta speed, in delta RPM
-        */
+         */
         void setDelta(double delta)
         {
             deltaVelocity = delta;
@@ -103,7 +102,7 @@ namespace devils
         /**
          * Returns the flywheel setpoint.
          * @return The flywheel setpoint, in RPM
-        */
+         */
         double getSetpoint()
         {
             return flywheelSetpoint;
@@ -111,19 +110,17 @@ namespace devils
 
         /**
          * Gets the average velocity of the flywheel motors.
-        */
+         */
         double getCurrentVelocity()
         {
-            double leftMotorVelocity = leftMotor.getVelocity();
-            double rightMotorVelocity = rightMotor.getVelocity();
+            double leftMotorVelocity = std::abs(leftMotor.getVelocity());
+            double rightMotorVelocity = std::abs(rightMotor.getVelocity());
             return (leftMotorVelocity + rightMotorVelocity) / 2;
         }
 
     private:
         static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 200; // rpm
-        static constexpr double DEFAULT_DELTA = 20; // rpm
-        static constexpr double FLYWHEEL_INCREMENT = 10;
-        static constexpr double DELTA_INCREMENT = 5;
+        static constexpr double DEFAULT_DELTA = 0;               // rpm
 
         PID flywheelPID = PID(0.01, 0, 0);
 

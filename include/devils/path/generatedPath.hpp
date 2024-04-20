@@ -21,22 +21,8 @@ namespace devils
         /// @brief The list of points interpolated between the control points. `1/dt` points per control point.
         PoseSequence pathPoints = {};
 
-        /**
-         * Gets a single point on the path at a given time.
-         * @param t The index of the point to get.
-         * @return The point on the path at the given time.
-         */
-        Pose *getPoseAtTime(double t)
-        {
-            if (pathPoints.size() == 0)
-                return nullptr;
-            if (t < 0)
-                return &pathPoints[0];
-            if (t > pathPoints.size() * dt)
-                return &pathPoints[pathPoints.size() - 1];
-
-            return &pathPoints[(int)(t / dt)];
-        }
+        /// @brief The indices of each control point in the path. `controlPointIndices[i]` is the index of the `i`th control point in the path.
+        std::vector<int> controlPointIndices = {};
 
         /**
          * Gets the starting pose of the motion profile.

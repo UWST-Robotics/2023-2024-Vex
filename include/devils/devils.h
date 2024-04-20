@@ -34,7 +34,7 @@
 #include "display/pathPickerRenderer.hpp"
 #include "display/occupancyRenderer.hpp"
 #include "display/statsRenderer.hpp"
-#include "display/pointRenderer.hpp"
+#include "display/poseRenderer.hpp"
 
 // Hardware
 #include "hardware/gps.hpp"

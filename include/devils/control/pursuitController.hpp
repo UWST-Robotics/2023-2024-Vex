@@ -59,7 +59,7 @@ namespace devils
 
             // Update Control Point Index
             ControlPoint *controlPoint = &controlPoints->at(controlPointIndex);
-            int checkpointPathIndex = (this->controlPointIndex + 1) / currentPath->dt;
+            int checkpointPathIndex = currentPath->controlPointIndices.at(controlPointIndex);
 
             // Update Path Point Index
             double closestDistance = INT_MAX;
@@ -90,9 +90,9 @@ namespace devils
             }
 
             // Checkpoint
-            bool isLookaheadPastCheckpoint = lookaheadPointIndex > checkpointPathIndex;
-            bool isRotated = std::abs(Units::diffRad(currentPose.rotation, targetPose->rotation)) < ROTATIONAL_THRESHOLD;
-            if (isLookaheadPastCheckpoint && isRotated)
+            bool isLookaheadPastCheckpoint = lookaheadPointIndex >= checkpointPathIndex;
+            // bool isRotated = std::abs(Units::diffRad(currentPose.rotation, targetPose->rotation)) < ROTATIONAL_THRESHOLD;
+            if (isLookaheadPastCheckpoint)
             {
                 // Increment Control Point
                 if (controlPointIndex < controlPoints->size() - 1)

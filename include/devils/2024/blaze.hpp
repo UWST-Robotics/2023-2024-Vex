@@ -50,25 +50,38 @@ namespace devils
             // Reset Speed
             chassis.setSpeed(1.0, 1.0);
 
+            // Control
+            double flywheelSpeed = 0.0;
+            bool intakeExtended = false;
+
             // Loop
             while (true)
             {
                 // Take Controller Inputs
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = mainController.get_analog(ANALOG_LEFT_X) / 127.0;
-                double rightY = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
                 bool topBumper = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_R1);
                 bool bottomBumper = mainController.get_digital(DIGITAL_L2) || mainController.get_digital(DIGITAL_R2);
-                bool extendButton = mainController.get_digital(DIGITAL_A);
+                bool extendButton = mainController.get_digital_new_press(DIGITAL_A);
+                bool upButton = mainController.get_digital_new_press(DIGITAL_UP);
+                bool downButton = mainController.get_digital_new_press(DIGITAL_DOWN);
 
                 // Curve Joystick Inputs
                 leftY = JoystickCurve::curve(leftY, 2.0, 0.1);
                 leftX = JoystickCurve::curve(leftX, 2.0, 0.1);
-                rightY = JoystickCurve::curve(rightY, 2.0, 0.1);
 
                 // Drive the Robot
                 chassis.move(leftY, leftX);
-                launcher.fireVoltage(rightY, -rightY);
+
+                // Flywheel
+                if (upButton)
+                    flywheelSpeed += 0.02;
+                else if (downButton)
+                    flywheelSpeed -= 0.02;
+                launcher.fireVoltage(flywheelSpeed, -flywheelSpeed);
+
+                double flywheelVelocity = launcher.getCurrentVelocity();
+                mainController.set_text(0, 0, std::to_string((int)(flywheelSpeed * 100)) + "% " + std::to_string((int)flywheelVelocity) + " RPM");
 
                 // Intake
                 if (topBumper)
@@ -80,6 +93,8 @@ namespace devils
 
                 // Intake Extend
                 if (extendButton)
+                    intakeExtended = !intakeExtended;
+                if (intakeExtended)
                 {
                     intakePneumaticA.extend();
                     intakePneumaticB.extend();

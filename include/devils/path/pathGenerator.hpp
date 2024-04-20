@@ -17,12 +17,16 @@ namespace devils
             auto controlPoints = pathFile.points;
 
             // Initialize path points
+            std::vector<int> controlPointIndices;
             PoseSequence pathPoints;
             pathPoints.reserve(controlPoints.size() * (1 / DT));
 
             // Iterate through each set of control points
             for (int i = 0; i < controlPoints.size() - 1; i++)
             {
+                // Add Control Point Index
+                controlPointIndices.push_back(pathPoints.size());
+
                 // Get the two points to lerp between
                 auto p1 = controlPoints[i];
                 auto p2 = controlPoints[i + 1];
@@ -36,7 +40,8 @@ namespace devils
             return GeneratedPath{
                 DT,
                 controlPoints,
-                pathPoints};
+                pathPoints,
+                controlPointIndices};
         }
 
         /**
@@ -49,6 +54,7 @@ namespace devils
             auto controlPoints = pathFile.points;
 
             // Initialize path points
+            std::vector<int> controlPointIndices;
             PoseSequence pathPoints;
             pathPoints.reserve(controlPoints.size() * (1 / DT));
 
@@ -56,6 +62,9 @@ namespace devils
             bool isReversed = false;
             for (int i = 0; i < controlPoints.size() - 1; i++)
             {
+                // Add Control Point Index
+                controlPointIndices.push_back(pathPoints.size());
+
                 // Get the two points to lerp between
                 ControlPoint &p1 = controlPoints[i];
                 ControlPoint &p2 = controlPoints[i + 1];

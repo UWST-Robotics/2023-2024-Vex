@@ -33,6 +33,9 @@ namespace devils
             statsRenderer->useOdomSource(&fusedOdom);
             statsRenderer->useChassis(&chassis);
 
+            // Path Renderer
+            autoController.usePathRenderer(*pathRenderer);
+
             // Run Display
             mainDisplay.runAsync();
         }
@@ -125,11 +128,37 @@ namespace devils
             // Reset Speed
             chassis.setSpeed(1.0, 1.0);
 
+            // Wait for IMU
+            imu.calibrate();
+            imu.waitUntilCalibrated();
+
+            // Controls
             bool isBlockerUp = false;
 
             // Loop
             while (true)
             {
+                Pose robotPose = fusedOdom.getPose();
+                auto objects = visionSensor.getObjects();
+                for (VisionObject object : objects)
+                {
+                    // Calculate Angle and Distance
+                    double angle = visionSensor.getAngle(object) + robotPose.rotation;
+                    double size = std::sqrt(object.area);
+                    double distance = 770 * std::pow(size, -0.75);
+                    // double distance = 43000 * std::pow(object.y, -1.8);
+
+                    // Calculate Offsets
+                    double offsetX = distance * std::cos(angle);
+                    double offsetY = distance * std::sin(angle);
+
+                    // Calculate Global Position
+                    Pose objectPose = Pose(offsetX, offsetY, 0) + robotPose;
+
+                    // Render Object
+                    poseRenderer->setPose(objectPose);
+                }
+
                 // Take Controller Inputs
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = mainController.get_analog(ANALOG_LEFT_X) / 127.0;
@@ -167,6 +196,8 @@ namespace devils
                 else
                     blocker.retract(blockerDown);
 
+                // Vision Sensor
+
                 // Update Odometry
                 gps.update();
                 wheelOdom.update(chassis);
@@ -180,7 +211,7 @@ namespace devils
         void disabled() override
         {
             // Climb
-            // blocker.retract(true);
+            blocker.retract(true);
         }
 
     private:
@@ -191,10 +222,11 @@ namespace devils
         static constexpr uint8_t IMU_PORT = 4;
         static constexpr uint8_t GPS_PORT = 6;
         static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
+        static constexpr uint8_t VISION_SENSOR_PORT = 15;
 
         // ADI Ports
-        static constexpr uint8_t LEFT_WING_PORT = 1;
-        static constexpr uint8_t RIGHT_WING_PORT = 2;
+        static constexpr uint8_t LEFT_WING_PORT = 2;
+        static constexpr uint8_t RIGHT_WING_PORT = 1;
         static constexpr uint8_t BLOCKER_DOWN_PORT = 6;
         static constexpr uint8_t BLOCKER_UP_PORT = 3;
 
@@ -220,6 +252,7 @@ namespace devils
         GPS gps = GPS("PepperJack.GPS", GPS_PORT);
         IMU imu = IMU("PepperJack.IMU", IMU_PORT);
         OpticalSensor storageSensor = OpticalSensor("PepperJack.StorageSensor", STORAGE_SENSOR_PORT);
+        VisionSensor visionSensor = VisionSensor("PepperJack.VisionSensor", VISION_SENSOR_PORT);
 
         // Odometry
         TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side
@@ -237,8 +270,11 @@ namespace devils
         Display mainDisplay = Display({new GridRenderer(),
                                        new FieldRenderer(),
                                        new OdomRenderer(&fusedOdom),
+                                       new PoseRenderer(0, 255, 0),
                                        new ControlRenderer(&autoController, &fusedOdom),
                                        new PathRenderer(nullptr),
                                        new StatsRenderer()});
+        PoseRenderer *poseRenderer = mainDisplay.getRenderer<PoseRenderer>();
+        PathRenderer *pathRenderer = mainDisplay.getRenderer<PathRenderer>();
     };
 }
