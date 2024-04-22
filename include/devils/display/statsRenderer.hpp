@@ -115,6 +115,13 @@ namespace devils
                 }
             }
 
+            // Auto Picker
+            if (autoPickerRenderer != nullptr)
+            {
+                stream << "\n";
+                stream << "Auto: " << autoPickerRenderer->getSelected() << "\n";
+            }
+
             // Additional Text
             stream << "\n";
             stream << additionalText;
@@ -161,6 +168,15 @@ namespace devils
         }
 
         /**
+         * Uses an auto picker renderer to display additional stats.
+         * @param autoPickerRenderer The auto picker renderer
+         */
+        void useAutoPickerRenderer(AutoPickerRenderer *autoPickerRenderer)
+        {
+            this->autoPickerRenderer = autoPickerRenderer;
+        }
+
+        /**
          * Appends additional text to the stats.
          * @param additionalText The additional text to append
          */
@@ -178,5 +194,6 @@ namespace devils
         AutoController *autoController = nullptr;
         OdomSource *odomSource = nullptr;
         TankChassis *chassis = nullptr;
+        AutoPickerRenderer *autoPickerRenderer = nullptr;
     };
 }

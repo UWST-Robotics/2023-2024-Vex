@@ -29,12 +29,19 @@ namespace devils
             statsRenderer->useOdomSource(&wheelOdom);
             statsRenderer->useChassis(&chassis);
             autoController.usePathRenderer(*pathRenderer);
+            statsRenderer->useAutoPickerRenderer(autoPickerRenderer);
 
             mainDisplay.runAsync();
         }
 
         void autonomous() override
         {
+            // Switch Auto
+            std::string selectedAuto = autoPickerRenderer->getSelected();
+
+            bool isSkills = selectedAuto == "Skills";
+            autoController.enableSkills(isSkills);
+
             // Reset Odom
             wheelOdom.setPose(*autoController.getStartingPose());
 
@@ -288,8 +295,10 @@ namespace devils
                                        new OdomRenderer(&wheelOdom),
                                        new ControlRenderer(&autoController, &wheelOdom),
                                        new PathRenderer(nullptr),
+                                       new AutoPickerRenderer({"Match", "Skills"}),
                                        new StatsRenderer()});
         StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
+        AutoPickerRenderer *autoPickerRenderer = mainDisplay.getRenderer<AutoPickerRenderer>();
         PathRenderer *pathRenderer = mainDisplay.getRenderer<PathRenderer>();
     };
 }

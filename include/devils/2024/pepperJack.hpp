@@ -32,12 +32,23 @@ namespace devils
             statsRenderer->useOdomSource(&fusedOdom);
             statsRenderer->useChassis(&chassis);
             autoController.usePathRenderer(*pathRenderer);
+            statsRenderer->useAutoPickerRenderer(autoPickerRenderer);
 
             mainDisplay.runAsync();
         }
 
         void autonomous() override
         {
+            // Auto Picker
+            std::string selectedAuto = autoPickerRenderer->getSelected();
+
+            bool flipGPS = selectedAuto == "Blue";
+            gpsOdom.setMirrorX(flipGPS);
+            gpsOdom.setMirrorY(flipGPS);
+
+            bool isSkills = selectedAuto == "Skills";
+            autoController.enableSkills(isSkills);
+
             // Reset Odom
             fusedOdom.setPose(*autoController.getStartingPose());
 
@@ -256,8 +267,10 @@ namespace devils
                                        new OdomRenderer(&fusedOdom),
                                        new ControlRenderer(&autoController, &fusedOdom),
                                        new PathRenderer(nullptr),
+                                       new AutoPickerRenderer({"Red", "Blue", "Skills"}),
                                        new StatsRenderer()});
         PathRenderer *pathRenderer = mainDisplay.getRenderer<PathRenderer>();
+        AutoPickerRenderer *autoPickerRenderer = mainDisplay.getRenderer<AutoPickerRenderer>();
         StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
     };
 }

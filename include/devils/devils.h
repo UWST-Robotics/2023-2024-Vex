@@ -32,7 +32,7 @@
 #include "display/gridRenderer.hpp"
 #include "display/polygonRenderer.hpp"
 #include "display/gameObjectRenderer.hpp"
-#include "display/pathPickerRenderer.hpp"
+#include "display/autoPickerRenderer.hpp"
 #include "display/occupancyRenderer.hpp"
 #include "display/statsRenderer.hpp"
 #include "display/poseRenderer.hpp"

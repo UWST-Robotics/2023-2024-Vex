@@ -6,6 +6,7 @@
 
 #define INCBIN_PREFIX g_
 INCTXT(pjPath, "paths/pj-auto.txt");
+INCTXT(pjSkills, "paths/pj-skills.txt");
 
 namespace devils
 {
@@ -24,21 +25,50 @@ namespace devils
         {
         }
 
-        Pose *getStartingPose()
+        /**
+         * Gets the path to use.
+         * @return The path to use.
+         */
+        GeneratedPath &_getPath()
         {
-            return mainPath.getStartingPose();
+            return isSkillsPath ? skillsPath : mainPath;
         }
 
+        Pose *getStartingPose()
+        {
+            return _getPath().getStartingPose();
+        }
+
+        /**
+         * Uses the given path renderer.
+         * @param renderer The path renderer to use.
+         */
         void usePathRenderer(PathRenderer &renderer)
         {
-            renderer.setPath(mainPath);
+            pathRenderer = &renderer;
+            pathRenderer->setPath(_getPath());
+        }
+
+        /**
+         * Enables or disables the skills path.
+         * @param enable Whether to enable the skills path.
+         */
+        void enableSkills(bool enable)
+        {
+            isSkillsPath = enable;
+            pursuitController.setPath(&_getPath());
+            if (pathRenderer != nullptr)
+                pathRenderer->setPath(_getPath());
         }
 
     private:
         // Path
         GeneratedPath mainPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_pjPathData));
+        GeneratedPath skillsPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_pjSkillsData));
+        bool isSkillsPath = false;
 
         // Controllers
         PursuitController pursuitController;
+        PathRenderer *pathRenderer = nullptr;
     };
 }
