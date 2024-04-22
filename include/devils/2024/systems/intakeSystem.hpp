@@ -20,8 +20,8 @@ namespace devils
         IntakeSystem(std::string name,
                      std::initializer_list<int8_t> intakePorts,
                      std::initializer_list<uint8_t> pneumaticPorts = {})
-            : intakeMotors(name + " Motors", intakePorts),
-              intakePneumatics(name + " Pneumatics", pneumaticPorts)
+            : intakeMotors(name + ".Motors", intakePorts),
+              intakePneumatics(name + ".Pneumatics", pneumaticPorts)
         {
         }
 
@@ -56,6 +56,15 @@ namespace devils
         void retract()
         {
             intakePneumatics.retract();
+        }
+
+        /**
+         * Checks if the intake is extended.
+         * @return True if the intake is extended, false otherwise.
+         */
+        bool getExtended()
+        {
+            return intakePneumatics.getExtended();
         }
 
         /**

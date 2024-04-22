@@ -14,21 +14,21 @@ namespace devils
             : chassis(chassis),
               forwardController(chassis, forwardDuration, forwardSpeed),
               reverseController(chassis, reverseDuration, reverseSpeed),
-              ControllerList({&forwardController, &reverseController}, true)
+              ControllerList({&reverseController, &forwardController}, true)
         {
         }
         BounceController(BaseChassis &chassis, double forwardSpeed, double reverseSpeed)
             : chassis(chassis),
               forwardController(chassis, forwardDuration, forwardSpeed),
               reverseController(chassis, reverseDuration, reverseSpeed),
-              ControllerList({&forwardController, &reverseController}, true)
+              ControllerList({&reverseController, &forwardController}, true)
         {
         }
         BounceController(BaseChassis &chassis, double forwardSpeed, double reverseSpeed, int forwardDuration, int reverseDuration)
             : chassis(chassis),
               forwardController(chassis, forwardDuration, forwardSpeed),
               reverseController(chassis, reverseDuration, reverseSpeed),
-              ControllerList({&forwardController, &reverseController}, true)
+              ControllerList({&reverseController, &forwardController}, true)
         {
         }
 

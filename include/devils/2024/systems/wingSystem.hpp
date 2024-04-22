@@ -11,12 +11,16 @@ namespace devils
     public:
         /**
          * Creates a new wing system.
+         * @param name The name of the wing system (for logging purposes)
          * @param leftPort The ADI port of the left wing pneumatic.
          * @param rightPort The ADI port of the right wing pneumatic.
          */
-        WingSystem(const uint8_t leftPort, const uint8_t rightPort)
-            : leftPneumatic("WingsLeftPneumatic", leftPort),
-              rightPneumatic("WingsRightPneumatic", rightPort)
+        WingSystem(
+            std::string name,
+            const uint8_t leftPort,
+            const uint8_t rightPort)
+            : leftPneumatic(name + ".LeftWing", leftPort),
+              rightPneumatic(name + ".RightWing", rightPort)
         {
         }
 

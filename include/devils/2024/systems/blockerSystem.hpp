@@ -11,12 +11,16 @@ namespace devils
     public:
         /**
          * Creates a new blocker system.
+         * @param name The name of the blocker system (for logging purposes)
          * @param downPneumaticPort The ADI port of the down blocker pneumatic.
          * @param upPneumaticPort The ADI port of the up blocker pneumatic.
          */
-        BlockerSystem(const uint8_t downPneumaticPort, const uint8_t upPneumaticPort)
-            : downPneumatics("BlockerDownPneumatic", downPneumaticPort),
-              upPneumatics("BlockerUpPneumatic", upPneumaticPort)
+        BlockerSystem(
+            std::string name,
+            const uint8_t downPneumaticPort,
+            const uint8_t upPneumaticPort)
+            : downPneumatics(name + ".DownPneumatic", downPneumaticPort),
+              upPneumatics(name + ".UpPneumatic", upPneumaticPort)
         {
         }
 

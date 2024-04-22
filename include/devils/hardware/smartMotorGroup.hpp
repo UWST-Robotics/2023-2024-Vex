@@ -70,7 +70,7 @@ namespace devils
         /**
          * Gets the motors in the motor group.
          * @return The motors in the motor group.
-        */
+         */
         std::vector<std::shared_ptr<SmartMotor>> &getMotors()
         {
             return motors;
@@ -82,6 +82,16 @@ namespace devils
         std::string _getMotorName(int32_t port)
         {
             return name + "_" + std::to_string(port);
+        }
+
+        /**
+         * Sets the brake mode of all the motors in the group.
+         * @param useBrakeMode True to use brake mode, false to use coast mode.
+         */
+        void setBrakeMode(bool useBrakeMode)
+        {
+            for (auto motor : motors)
+                motor->setBrakeMode(useBrakeMode);
         }
 
     private:

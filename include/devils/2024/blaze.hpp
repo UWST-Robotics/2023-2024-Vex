@@ -17,26 +17,25 @@ namespace devils
          */
         Blaze()
         {
-            // Fix Bounce Controller
-            bounceController.setSpeeds(1.0, -1.2);
+            // Setup Bounce Controller
+            bounceController.setSpeeds(1.0, -1.1);
             bounceController.setDurations(700, 700);
-
-            // Add Renderers
-            statsRenderer->useOdomSource(&wheelOdom);
-            statsRenderer->useChassis(&chassis);
-            autoController.usePathRenderer(*pathRenderer);
 
             // Run Odom
             wheelOdom.useIMU(imu);
             wheelOdom.runAsync();
 
-            // Run Display
+            // Display
+            statsRenderer->useOdomSource(&wheelOdom);
+            statsRenderer->useChassis(&chassis);
+            autoController.usePathRenderer(*pathRenderer);
+
             mainDisplay.runAsync();
         }
 
         void autonomous() override
         {
-            // Init Odom
+            // Reset Odom
             wheelOdom.setPose(*autoController.getStartingPose());
 
             // Set Speed
@@ -150,8 +149,8 @@ namespace devils
             chassis.setSpeed(1.0, 1.0);
 
             // Control
-            bool intakeExtended = false;
             bool runFlywheel = false;
+            bool hasRumbled = false;
 
             // Loop
             while (true)
@@ -159,10 +158,12 @@ namespace devils
                 // Take Controller Inputs
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = mainController.get_analog(ANALOG_LEFT_X) / 127.0;
-                bool intakeButton = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_R1);
-                bool outtakeButton = mainController.get_digital(DIGITAL_L2) || mainController.get_digital(DIGITAL_R2);
-                bool extendButton = mainController.get_digital_new_press(DIGITAL_A);
-                bool launchButton = mainController.get_digital_new_press(DIGITAL_B);
+                bool extendButton = mainController.get_digital(DIGITAL_L1) || mainController.get_digital(DIGITAL_R1);
+                bool retractButton = mainController.get_digital(DIGITAL_L2) || mainController.get_digital(DIGITAL_R2);
+                bool intakeButton = mainController.get_digital(DIGITAL_A);
+                bool outtakeButton = mainController.get_digital(DIGITAL_B);
+                bool launchButton = mainController.get_digital_new_press(DIGITAL_Y);
+                bool slomoButton = mainController.get_digital(DIGITAL_X);
                 bool upButon = mainController.get_digital_new_press(DIGITAL_UP);
                 bool downButton = mainController.get_digital_new_press(DIGITAL_DOWN);
 
@@ -170,8 +171,11 @@ namespace devils
                 leftY = JoystickCurve::curve(leftY, 2.0, 0.1);
                 leftX = JoystickCurve::curve(leftX, 2.0, 0.1);
 
+                // Slo-mo
+                double speedMultiplier = slomoButton ? SLOMO_MULTIPLIER : 1.0;
+
                 // Drive the Robot
-                chassis.move(leftY, leftX);
+                chassis.move(leftY * speedMultiplier, leftX * speedMultiplier);
 
                 // Flywheel
                 if (launchButton)
@@ -186,10 +190,22 @@ namespace devils
                     launcher.setSetpoint(launcher.getSetpoint() + 5);
                 if (downButton)
                     launcher.setSetpoint(launcher.getSetpoint() - 5);
-                mainController.set_text(0, 0, std::to_string((int)launcher.getSetpoint()) + "rpm - " + std::to_string((int)launcher.getCurrentVelocity()) + "rpm");
+
+                // Controller Feedback
+                bool launcherAtSpeed = launcher.isAtSpeed();
+                if (launcherAtSpeed && !hasRumbled)
+                {
+                    mainController.rumble(".");
+                    hasRumbled = true;
+                }
+                else if (!launcherAtSpeed)
+                {
+                    hasRumbled = false;
+                }
+                // mainController.set_text(0, 0, std::to_string((int)launcher.getSetpoint()) + "rpm - " + std::to_string((int)launcher.getCurrentVelocity()) + "rpm");
 
                 // Outer Intake
-                if (intakeButton)
+                if (intakeButton /* && outerIntake.getExtended()*/) // <-- Uncomment to only intake when extended
                     outerIntake.intake();
                 else if (outtakeButton)
                     outerIntake.outtake();
@@ -197,7 +213,7 @@ namespace devils
                     outerIntake.stop();
 
                 // Inner Intake
-                if (intakeButton)
+                if (intakeButton /* && launcherAtSpeed*/) // <-- Uncomment to only intake when launcher is at speed
                     innerIntake.intake();
                 else if (outtakeButton)
                     innerIntake.outtake();
@@ -206,21 +222,22 @@ namespace devils
 
                 // Intake Extend
                 if (extendButton)
-                    intakeExtended = !intakeExtended;
-                if (intakeExtended)
                     outerIntake.extend();
-                else
+                else if (retractButton)
                     outerIntake.retract();
 
                 // Delay to prevent the CPU from being overloaded
-                pros::delay(10);
+                pros::delay(10); // <-- Smaller delay to improve PID loop
             }
         }
 
         void disabled() override
         {
-            // Climb
-            // blocker.retract(true);
+            // Stop the robot
+            chassis.stop();
+            launcher.stop();
+            outerIntake.stop();
+            innerIntake.stop();
         }
 
     private:
@@ -238,6 +255,7 @@ namespace devils
         // Speeds
         static constexpr double CHASSIS_AUTO_FORWARD = 0.3; // % speed
         static constexpr double CHASSIS_AUTO_TURN = 0.7;    // % speed
+        static constexpr double SLOMO_MULTIPLIER = 0.3;     // % speed
 
         // ADI Ports
         static constexpr std::initializer_list<uint8_t> OUTER_INTAKE_PNEUMATIC_PORTS = {7, 8};
@@ -247,10 +265,10 @@ namespace devils
         static constexpr double WHEEL_BASE = 4.0;   // in
 
         // Subsystems
-        TankChassis chassis = TankChassis(L_MOTOR_PORTS, R_MOTOR_PORTS);
-        LauncherSystem launcher = LauncherSystem(LEFT_FLYWHEEL_PORT, RIGHT_FLYWHEEL_PORT);
-        IntakeSystem innerIntake = IntakeSystem("InnerIntake", INNER_INTAKE_MOTOR_PORTS);
-        IntakeSystem outerIntake = IntakeSystem("OuterIntake", OUTER_INTAKE_MOTOR_PORTS, OUTER_INTAKE_PNEUMATIC_PORTS);
+        TankChassis chassis = TankChassis("Blaze.Chassis", L_MOTOR_PORTS, R_MOTOR_PORTS);
+        LauncherSystem launcher = LauncherSystem("Blaze.Launcher", LEFT_FLYWHEEL_PORT, RIGHT_FLYWHEEL_PORT);
+        IntakeSystem innerIntake = IntakeSystem("Blaze.InnerIntake", INNER_INTAKE_MOTOR_PORTS);
+        IntakeSystem outerIntake = IntakeSystem("Blaze.OuterIntake", OUTER_INTAKE_MOTOR_PORTS, OUTER_INTAKE_PNEUMATIC_PORTS);
 
         // Sensors
         IMU imu = IMU("Blaze.IMU", IMU_SENSOR_PORT);

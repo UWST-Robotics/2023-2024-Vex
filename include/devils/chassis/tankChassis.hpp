@@ -15,14 +15,18 @@ namespace devils
     public:
         /**
          * Creates a new tank chassis.
+         * @param name The name of the chassis (for logging purposes)
          * @param leftMotorPorts The ports of the left motors. Negative ports are reversed.
          * @param rightMotorPorts The ports of the right motors. Negative ports are reversed.
          */
         TankChassis(
+            std::string name,
             const std::initializer_list<int8_t> leftMotorPorts,
-            const std::initializer_list<int8_t> rightMotorPorts) : leftMotors("TankChassis.LeftMotors", leftMotorPorts),
-                                                                   rightMotors("TankChassis.RightMotors", rightMotorPorts)
+            const std::initializer_list<int8_t> rightMotorPorts) : leftMotors(name + ".LeftMotors", leftMotorPorts),
+                                                                   rightMotors(name + ".RightMotors", rightMotorPorts)
         {
+            leftMotors.setBrakeMode(USE_BRAKE_MODE);
+            rightMotors.setBrakeMode(USE_BRAKE_MODE);
         }
 
         /**
@@ -81,6 +85,8 @@ namespace devils
         }
 
     private:
+        static constexpr bool USE_BRAKE_MODE = true;
+
         SmartMotorGroup leftMotors;
         SmartMotorGroup rightMotors;
     };

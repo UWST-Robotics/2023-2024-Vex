@@ -30,6 +30,7 @@ namespace devils
         void extend()
         {
             int32_t status = controller.set_value(true);
+            isExtended = true;
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": pneumatic extend failed");
         }
@@ -40,8 +41,18 @@ namespace devils
         void retract()
         {
             int32_t status = controller.set_value(false);
+            isExtended = false;
             if (status != 1 && LOGGING_ENABLED)
                 Logger::error(name + ": pneumatic retract failed");
+        }
+
+        /**
+         * Checks if the pneumatic is extended.
+         * @return True if the pneumatic is extended, false otherwise.
+         */
+        bool getExtended()
+        {
+            return isExtended;
         }
 
     private:
@@ -49,5 +60,6 @@ namespace devils
 
         std::string name;
         pros::ADIDigitalOut controller;
+        bool isExtended = false;
     };
 }

@@ -104,11 +104,16 @@ namespace devils
 
         /**
          * Sets the brake mode of the motor.
-         * @param useBrakes True to use brakes, false to coast.
+         *
+         * \note
+         * Brake mode will use the motor's e-brake to stop the motor when `stop()` is called.
+         * Coast mode will allow the motor to coast to a stop when `stop()` is called.
+         *
+         * @param useBrakeMode True to use brake mode, false to coast mode.
          */
-        void setBrakeMode(bool useBrakes)
+        void setBrakeMode(bool useBrakeMode)
         {
-            if (useBrakes)
+            if (useBrakeMode)
                 motor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
             else
                 motor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);

@@ -14,14 +14,19 @@ namespace devils
     public:
         /**
          * Creates a new launcher system.
+         * @param name The name of the launcher system (for logging purposes)
          * @param leftMotorPort The port of the left launcher motor
          * @param rightMotorPort The port of the right launcher motor
          */
-        LauncherSystem(const int8_t leftMotorPort, const int8_t rightMotorPort)
-            : leftMotor("Left Launcher Motor", leftMotorPort),
-              rightMotor("Right Launcher Motor", rightMotorPort)
+        LauncherSystem(
+            std::string name,
+            const int8_t leftMotorPort,
+            const int8_t rightMotorPort)
+            : leftMotor(name + ".LeftFlywheel", leftMotorPort),
+              rightMotor(name + ".RightFlywheel", rightMotorPort)
         {
-            // rightMotor.setBrakeMode(true);
+            leftMotor.setBrakeMode(false);
+            rightMotor.setBrakeMode(false);
         }
 
         /**

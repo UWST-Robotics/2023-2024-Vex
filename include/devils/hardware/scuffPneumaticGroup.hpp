@@ -43,6 +43,18 @@ namespace devils
         }
 
         /**
+         * Checks if all the pneumatics in the group are extended.
+         * @return True if all the pneumatics in the group are extended, false otherwise.
+         */
+        bool getExtended()
+        {
+            for (auto pneumatic : pneumatics)
+                if (!pneumatic->getExtended())
+                    return false;
+            return true;
+        }
+
+        /**
          * Gets the pneumatics in the motor group.
          * @return The pneumatics in the motor group.
          */

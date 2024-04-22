@@ -19,35 +19,26 @@ namespace devils
          */
         PepperJack()
         {
-            // Use IMU in Odometry
+            // Setup Odom
             wheelOdom.useIMU(imu);
-
-            // Run GPS
+            wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
             gps.setOffset(GPS_OFFSET_X, GPS_OFFSET_Y, GPS_OFFSET_ROTATION);
 
-            // Run Odom Sources
             gps.runAsync();
             wheelOdom.runAsync();
             fusedOdom.runAsync();
 
-            // Init Differential Wheel Odometry
-            wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
-
-            // Add Stats
-            StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
+            // Display
             statsRenderer->useOdomSource(&fusedOdom);
             statsRenderer->useChassis(&chassis);
-
-            // Path Renderer
             autoController.usePathRenderer(*pathRenderer);
 
-            // Run Display
             mainDisplay.runAsync();
         }
 
         void autonomous() override
         {
-            // Init Odom
+            // Reset Odom
             fusedOdom.setPose(*autoController.getStartingPose());
 
             // Set Speed
@@ -124,15 +115,6 @@ namespace devils
                     {
                         bounceTimer.start(event.id, std::stoi(event.params));
                     }
-                    else if (event.name == "centerGPS")
-                    {
-                        /*
-                        Pose gpsPose = gps.getPose();
-                        gpsPose.rotation = Units::normalizeRadians(gpsPose.rotation);
-                        wheelOdom.setPose(gpsPose);
-                        mainController.set_text(0, 0, std::to_string(Units::radToDeg(gpsPose.rotation)));
-                        */
-                    }
                     else if (event.name == "alignToAngle")
                     {
                         double angleDeg = std::stod(event.params);
@@ -159,37 +141,12 @@ namespace devils
             // Reset Speed
             chassis.setSpeed(1.0, 1.0);
 
-            // Wait for IMU
-            // imu.calibrate();
-            // imu.waitUntilCalibrated();
-
             // Controls
             bool isBlockerUp = false;
 
             // Loop
             while (true)
             {
-                Pose robotPose = fusedOdom.getPose();
-                auto objects = visionSensor.getObjects();
-                for (VisionObject object : objects)
-                {
-                    // Calculate Angle and Distance
-                    double angle = visionSensor.getAngle(object) + robotPose.rotation;
-                    double size = std::sqrt(object.area);
-                    double distance = 770 * std::pow(size, -0.75);
-                    // double distance = 43000 * std::pow(object.y, -1.8);
-
-                    // Calculate Offsets
-                    double offsetX = distance * std::cos(angle);
-                    double offsetY = distance * std::sin(angle);
-
-                    // Calculate Global Position
-                    Pose objectPose = Pose(offsetX, offsetY, 0) + robotPose;
-
-                    // Render Object
-                    poseRenderer->setPose(objectPose);
-                }
-
                 // Take Controller Inputs
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double leftX = mainController.get_analog(ANALOG_LEFT_X) / 127.0;
@@ -222,7 +179,7 @@ namespace devils
                 // Blocker
                 if (blockerUp)
                     isBlockerUp = !isBlockerUp;
-                if (isBlockerUp)
+                if (isBlockerUp && !blockerDown)
                     blocker.extend();
                 else
                     blocker.retract(blockerDown);
@@ -236,8 +193,12 @@ namespace devils
 
         void disabled() override
         {
-            // Climb
-            // blocker.retract(true);
+            // Stop the robot
+            chassis.stop();
+            intake.stop();
+            blocker.retract(true); // Uncomment to auto-climb
+            // wings.retractLeft(); // Need extended for auto win point
+            // wings.retractRight(); // Need extended for auto win point
         }
 
     private:
@@ -269,27 +230,23 @@ namespace devils
         static constexpr double GPS_OFFSET_ROTATION = M_PI; // rad
 
         // Subsystems
-        TankChassis chassis = TankChassis(L_MOTOR_PORTS, R_MOTOR_PORTS);
+        TankChassis chassis = TankChassis("PJ.Chassis", L_MOTOR_PORTS, R_MOTOR_PORTS);
         IntakeSystem intake = IntakeSystem("PJ.Intake", INTAKE_MOTOR_PORTS);
-        WingSystem wings = WingSystem(LEFT_WING_PORT, RIGHT_WING_PORT);
-        BlockerSystem blocker = BlockerSystem(BLOCKER_DOWN_PORT, BLOCKER_UP_PORT);
+        WingSystem wings = WingSystem("PJ.Wings", LEFT_WING_PORT, RIGHT_WING_PORT);
+        BlockerSystem blocker = BlockerSystem("PJ.Blocker", BLOCKER_DOWN_PORT, BLOCKER_UP_PORT);
 
         // Sensors
         GPS gps = GPS("PJ.GPS", GPS_PORT);
         IMU imu = IMU("PJ.IMU", IMU_PORT);
         OpticalSensor storageSensor = OpticalSensor("PJ.StorageSensor", STORAGE_SENSOR_PORT);
-        VisionSensor visionSensor = VisionSensor("PJ.VisionSensor", VISION_SENSOR_PORT);
+        // VisionSensor visionSensor = VisionSensor("PJ.VisionSensor", VISION_SENSOR_PORT);
 
         // Odometry
         TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side
         DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(chassis, WHEEL_RADIUS, WHEEL_BASE);
         ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.005);
 
-        // GameObjects
-        GameObjectManager gameObjectManager = GameObjectManager();
-
-        // Controller
-        // PJAutoController autoController = PJAutoController(chassis, fusedOdom, gameObjectManager);
+        // Auto Controller
         PJAutoController autoController = PJAutoController(chassis, fusedOdom);
         BounceController bounceController = BounceController(chassis);
 
@@ -297,11 +254,10 @@ namespace devils
         Display mainDisplay = Display({new GridRenderer(),
                                        new FieldRenderer(),
                                        new OdomRenderer(&fusedOdom),
-                                       new PoseRenderer(0, 255, 0),
                                        new ControlRenderer(&autoController, &fusedOdom),
                                        new PathRenderer(nullptr),
                                        new StatsRenderer()});
-        PoseRenderer *poseRenderer = mainDisplay.getRenderer<PoseRenderer>();
         PathRenderer *pathRenderer = mainDisplay.getRenderer<PathRenderer>();
+        StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
     };
 }
