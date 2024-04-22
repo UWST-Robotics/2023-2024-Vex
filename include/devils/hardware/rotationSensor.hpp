@@ -15,12 +15,11 @@ namespace devils
         /**
          * Creates a new IMU.
          * @param name The name of the rotational sensor (for logging purposes)
-         * @param port The port of the rotational sensor (from 1 to 21)
-         * @param isReversed Whether the sensor is reversed
+         * @param port The port of the rotational sensor (from 1 to 21). Negative ports are reversed.
          */
-        RotationSensor(std::string name, uint8_t port, bool isReversed = false)
+        RotationSensor(std::string name, int8_t port)
             : name(name),
-              rotationSensor(port, isReversed)
+              rotationSensor(port < 0 ? -port : port, port < 0)
         {
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": rotationSensor port is invalid");
@@ -32,7 +31,7 @@ namespace devils
          */
         double getAngle()
         {
-            double angle = rotationSensor.get_angle();
+            double angle = rotationSensor.get_position();
             if (angle == PROS_ERR && LOGGING_ENABLED)
                 Logger::error(name + ": rotation sensor get angle failed");
             return angle == PROS_ERR ? 0 : Units::centidegToRad(angle);

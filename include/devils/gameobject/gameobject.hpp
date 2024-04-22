@@ -5,6 +5,7 @@ namespace devils
 {
     /**
      * Represents a game object on the field
+     * \deprecated This class is not used in the final implementation
      */
     struct GameObject : public Pose
     {

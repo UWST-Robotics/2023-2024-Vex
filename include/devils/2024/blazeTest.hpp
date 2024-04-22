@@ -1,6 +1,6 @@
 #pragma once
 #include "../devils.h"
-#include "systems/pjAutoController.hpp"
+#include "control/pjAutoController.hpp"
 #include <time.h>
 
 namespace devils

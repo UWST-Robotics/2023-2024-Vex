@@ -3,9 +3,9 @@
 #include "../devils.h"
 #include "systems/intakeSystem.hpp"
 #include "systems/wingSystem.hpp"
-#include "systems/pjAutoController.hpp"
-#include "systems/testController.hpp"
 #include "systems/blockerSystem.hpp"
+#include "control/bounceController.hpp"
+#include "control/pjAutoController.hpp"
 
 namespace devils
 {
@@ -22,8 +22,13 @@ namespace devils
             // Use IMU in Odometry
             wheelOdom.useIMU(imu);
 
-            // Set GPS Offset
+            // Run GPS
             gps.setOffset(GPS_OFFSET_X, GPS_OFFSET_Y, GPS_OFFSET_ROTATION);
+
+            // Run Odom Sources
+            gps.runAsync();
+            wheelOdom.runAsync();
+            fusedOdom.runAsync();
 
             // Init Differential Wheel Odometry
             wheelOdom.setTicksPerRevolution(TICKS_PER_REVOLUTION);
@@ -56,25 +61,28 @@ namespace devils
             autoController.reset();
 
             EventTimer pauseTimer = EventTimer();
+            EventTimer bounceTimer = EventTimer();
 
             while (true)
             {
-
-                // Update Odometry
-                gps.update();
-                wheelOdom.update(chassis);
-                fusedOdom.update();
-
                 // Run Auto Controller
                 if (pauseTimer.getRunning())
                     chassis.stop();
+                else if (bounceTimer.getRunning())
+                    bounceController.update();
                 else
                     autoController.update();
+
+                // Debug
+                // mainController.set_text(0, 0, std::to_string(imu.getHeading()));
 
                 // Handle Auto Controller Events
                 PathEvents *events = autoController.getState().events;
                 for (PathEvent event : *events)
                 {
+                    // Post-Pause Events
+                    if (event.params == "afterPause" && pauseTimer.getRunning())
+                        continue;
 
                     // Wings
                     if (event.name == "rightWing")
@@ -112,6 +120,29 @@ namespace devils
                     {
                         chassis.setSpeed(std::stod(event.params) * CHASSIS_AUTO_FORWARD, CHASSIS_AUTO_TURN);
                     }
+                    else if (event.name == "bounce")
+                    {
+                        bounceTimer.start(event.id, std::stoi(event.params));
+                    }
+                    else if (event.name == "centerGPS")
+                    {
+                        /*
+                        Pose gpsPose = gps.getPose();
+                        gpsPose.rotation = Units::normalizeRadians(gpsPose.rotation);
+                        wheelOdom.setPose(gpsPose);
+                        mainController.set_text(0, 0, std::to_string(Units::radToDeg(gpsPose.rotation)));
+                        */
+                    }
+                    else if (event.name == "alignToAngle")
+                    {
+                        double angleDeg = std::stod(event.params);
+                        double angleRad = Units::degToRad(angleDeg);
+                        double deltaAngle = Units::diffRad(angleRad, imu.getHeading());
+
+                        bounceController.setRotation(deltaAngle);
+                        if (pauseTimer.getRunning())
+                            chassis.move(0.0, deltaAngle);
+                    }
                     else
                     {
                         Logger::warn("Unknown Event: " + event.name);
@@ -129,8 +160,8 @@ namespace devils
             chassis.setSpeed(1.0, 1.0);
 
             // Wait for IMU
-            imu.calibrate();
-            imu.waitUntilCalibrated();
+            // imu.calibrate();
+            // imu.waitUntilCalibrated();
 
             // Controls
             bool isBlockerUp = false;
@@ -198,11 +229,6 @@ namespace devils
 
                 // Vision Sensor
 
-                // Update Odometry
-                gps.update();
-                wheelOdom.update(chassis);
-                fusedOdom.update();
-
                 // Delay to prevent the CPU from being overloaded
                 pros::delay(20);
             }
@@ -211,7 +237,7 @@ namespace devils
         void disabled() override
         {
             // Climb
-            blocker.retract(true);
+            // blocker.retract(true);
         }
 
     private:
@@ -256,15 +282,16 @@ namespace devils
 
         // Odometry
         TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side
-        DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(WHEEL_RADIUS, WHEEL_BASE);
-        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.02);
+        DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(chassis, WHEEL_RADIUS, WHEEL_BASE);
+        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.005);
 
         // GameObjects
         GameObjectManager gameObjectManager = GameObjectManager();
 
         // Controller
         // PJAutoController autoController = PJAutoController(chassis, fusedOdom, gameObjectManager);
-        TestController autoController = TestController(chassis, fusedOdom);
+        PJAutoController autoController = PJAutoController(chassis, fusedOdom);
+        BounceController bounceController = BounceController(chassis);
 
         // Display
         Display mainDisplay = Display({new GridRenderer(),

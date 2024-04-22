@@ -20,6 +20,7 @@ namespace devils
             Pose *target = nullptr;
             PathEvents *events = &NO_EVENTS;
             bool isFinished = false;
+            std::string debugText = "";
         };
 
         /**

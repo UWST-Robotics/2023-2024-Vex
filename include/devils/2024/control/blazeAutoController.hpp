@@ -5,23 +5,24 @@
 #include "incbin/incbin.h"
 
 #define INCBIN_PREFIX g_
-INCTXT(mainPath, "paths/test.txt");
+INCTXT(blazePath, "paths/blaze-auto.txt");
 
 namespace devils
 {
 
     /**
-     * Controls the test controller.
+     * Controls the autonomous for Blaze.
      */
-    class TestController : public ControllerList
+    class BlazeAutoController : public ControllerList
     {
     public:
-        TestController(
+        BlazeAutoController(
             BaseChassis &chassis,
             OdomSource &odometry)
             : pursuitController(chassis, odometry, &mainPath),
-              ControllerList({&pursuitController}, true)
+              ControllerList({&pursuitController}, false)
         {
+            pursuitController.setLookaheadDistance(6);
         }
 
         Pose *getStartingPose()
@@ -36,7 +37,7 @@ namespace devils
 
     private:
         // Path
-        GeneratedPath mainPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_mainPathData));
+        GeneratedPath mainPath = PathGenerator::generateSpline(PathFileReader::deserialize(g_blazePathData));
 
         // Controllers
         PursuitController pursuitController;

@@ -41,13 +41,17 @@ namespace devils
             double deltaRotation = Units::diffRad(atan2(deltaY, deltaX), currentPose.rotation);
             double deltaForward = cos(currentPose.rotation) * deltaX + sin(currentPose.rotation) * deltaY;
 
+            // Auto Reverse
+            if (autoReverse)
+                isReversed = deltaForward < 0;
+
             // Handle Reversed
             if (isReversed)
                 deltaRotation = Units::diffRad(deltaRotation, M_PI);
 
             // Calculate PID
-            double forward = translationPID.update(deltaForward);
-            double turn = rotationPID.update(deltaRotation);
+            double forward = translationPID.update(-deltaForward);
+            double turn = rotationPID.update(-deltaRotation);
 
             // Clamp Values
             if (isReversed)
@@ -70,6 +74,15 @@ namespace devils
         }
 
         /**
+         * Sets whether the robot should automatically reverse when driving backwards.
+         * @param autoReverse Whether the robot should automatically reverse.
+         */
+        void setAutoReverse(bool autoReverse)
+        {
+            this->autoReverse = autoReverse;
+        }
+
+        /**
          * Sets the target pose for the controller.
          */
         void setTargetPose(Pose &targetPose)
@@ -80,7 +93,7 @@ namespace devils
 
     private:
         PID translationPID = PID(0.18, 0, 0); // <-- Translation
-        PID rotationPID = PID(0.07, 0, 0);    // <-- Rotation
+        PID rotationPID = PID(0.05, 0, 0);    // <-- Rotation
 
         // Object Handles
         BaseChassis &chassis;
@@ -89,5 +102,6 @@ namespace devils
         // State
         Pose *targetPose;
         bool isReversed = false;
+        bool autoReverse = false;
     };
 }

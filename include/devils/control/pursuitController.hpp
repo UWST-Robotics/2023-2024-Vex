@@ -40,7 +40,6 @@ namespace devils
         {
             AutoController::reset();
             directController.reset();
-            robotPointIndex = 0;
             lookaheadPointIndex = 0;
             controlPointIndex = 0;
         }
@@ -58,44 +57,27 @@ namespace devils
             Pose currentPose = odometry.getPose();
 
             // Update Control Point Index
-            ControlPoint *controlPoint = &controlPoints->at(controlPointIndex);
-            int checkpointPathIndex = currentPath->controlPointIndices.at(controlPointIndex);
-
-            // Update Path Point Index
-            double closestDistance = INT_MAX;
-            for (int i = robotPointIndex; i < pathPoints->size(); i++)
-            {
-                Pose point = pathPoints->at(i);
-                double distance = point.distanceTo(currentPose);
-
-                // Check if closest
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    robotPointIndex = i;
-                }
-
-                if (i > checkpointPathIndex && !skipCheckpoints)
-                    break;
-            }
+            ControlPoint *prevControlPoint = &controlPoints->at(controlPointIndex);
+            int prevCheckpointPathIndex = currentPath->controlPointIndices.at(controlPointIndex);
+            int checkpointPathIndex = currentPath->controlPointIndices.at(controlPointIndex + 1);
 
             // Update Lookahead Point Index
             Pose *targetPose = nullptr;
             for (int i = lookaheadPointIndex; i < pathPoints->size(); i++)
             {
                 targetPose = &pathPoints->at(i);
-                if (targetPose->distanceTo(currentPose) > LOOKAHEAD_DISTANCE)
-                    break;
                 lookaheadPointIndex = i;
+                if (targetPose->distanceTo(currentPose) >= lookaheadDistance)
+                    break;
             }
 
             // Checkpoint
-            bool isLookaheadPastCheckpoint = lookaheadPointIndex >= checkpointPathIndex;
+            bool isLookaheadPastCheckpoint = lookaheadPointIndex > checkpointPathIndex || lookaheadPointIndex >= pathPoints->size() - 1;
             // bool isRotated = std::abs(Units::diffRad(currentPose.rotation, targetPose->rotation)) < ROTATIONAL_THRESHOLD;
             if (isLookaheadPastCheckpoint)
             {
                 // Increment Control Point
-                if (controlPointIndex < controlPoints->size() - 1)
+                if (controlPointIndex < controlPoints->size() - 2)
                 {
                     controlPointIndex++;
 
@@ -106,8 +88,12 @@ namespace devils
                 // Finish
                 else
                 {
-                    Logger::debug("Finished path");
+                    // Set State
                     currentState.isFinished = true;
+                    currentState.events = &controlPoints->back().events;
+                    currentState.debugText = "Finished Path " + std::to_string(currentState.events->size());
+
+                    // Stop Chassis
                     chassis.stop();
                     return;
                 }
@@ -115,11 +101,19 @@ namespace devils
 
             // Update State
             currentState.target = targetPose;
-            currentState.events = &controlPoint->events;
+            currentState.events = &prevControlPoint->events;
+            currentState.debugText = "I=" + std::to_string(lookaheadPointIndex) + ", R=" + std::to_string(prevControlPoint->isReversed);
+            Logger::debug(currentState.debugText);
+
+            // Auto Reverse
+            // bool closeToPrevCheckpoint = std::abs(lookaheadPointIndex - prevCheckpointPathIndex) < AUTO_REVERSE_INDICES;
+            // bool closeToNextCheckpoint = std::abs(lookaheadPointIndex - checkpointPathIndex) < AUTO_REVERSE_INDICES;
+            // directController.setAutoReverse(closeToPrevCheckpoint || closeToNextCheckpoint);
+            directController.setAutoReverse(true);
 
             // Drive To Point
             directController.setTargetPose(*targetPose);
-            directController.setReverse(controlPoint->isReversed);
+            directController.setReverse(prevControlPoint->isReversed);
             directController.update();
         }
 
@@ -138,9 +132,17 @@ namespace devils
             reset();
         }
 
+        /**
+         * Sets the lookahead distance for the controller.
+         * @param distance The lookahead distance to set, in inches.
+         */
+        void setLookaheadDistance(double distance)
+        {
+            lookaheadDistance = distance;
+        }
+
     private:
-        static constexpr double ROTATIONAL_THRESHOLD = M_PI / 16; // rads
-        static constexpr double LOOKAHEAD_DISTANCE = 8.0;         // in
+        static constexpr double DEFAULT_LOOKAHEAD_DISTANCE = 8.0; // in
 
         // Object Handles
         BaseChassis &chassis;
@@ -153,9 +155,9 @@ namespace devils
 
         // Controller State
         DirectController directController;
-        int robotPointIndex = 0;      // Closest path index to the robot
-        int lookaheadPointIndex = 0;  // Closest path index to the lookahead
-        int controlPointIndex = 0;    // Current control index of the event
-        bool skipCheckpoints = false; // Whether the controller can skip checkpoints
+        int lookaheadPointIndex = 0;                           // Closest path index to the lookahead
+        int controlPointIndex = 0;                             // Current control index of the event
+        bool skipCheckpoints = false;                          // Whether the controller can skip checkpoints
+        double lookaheadDistance = DEFAULT_LOOKAHEAD_DISTANCE; // in
     };
 }

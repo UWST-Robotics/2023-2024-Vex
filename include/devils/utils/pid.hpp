@@ -55,7 +55,7 @@ namespace devils
             lastActual = actual;
 
             // Debug
-            Logger::debug("P=" + std::to_string(p) + " I=" + std::to_string(i) + " D=" + std::to_string(d) + " O=" + std::to_string(output) + " A=" + std::to_string(actual) + " S=" + std::to_string(setpoint));
+            // Logger::debug("P=" + std::to_string(p) + " I=" + std::to_string(i) + " D=" + std::to_string(d) + " O=" + std::to_string(output) + " A=" + std::to_string(actual) + " S=" + std::to_string(setpoint));
 
             return output;
         }

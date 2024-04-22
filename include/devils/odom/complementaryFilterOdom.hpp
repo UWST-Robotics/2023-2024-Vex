@@ -11,7 +11,7 @@ namespace devils
     /**
      * Represents a set of odometry sources fused together using the complementary filter.
      */
-    class ComplementaryFilterOdom : public OdomSource
+    class ComplementaryFilterOdom : public OdomSource, public Runnable
     {
     public:
         /**
@@ -33,7 +33,7 @@ namespace devils
         /**
          * Updates the odometry with the latest data from the sources
          */
-        void update()
+        void update() override
         {
             // Get the current pose from each source
             Pose absolutePose = absoluteOdom->getPose();
@@ -54,11 +54,10 @@ namespace devils
                 currentPose.rotation = Units::normalizeRadians(relativePose.rotation + diffRad * absoluteWeight);
 
                 // Use IMU for rotation
-                //currentPose.rotation = relativePose.rotation;
-                
+                // currentPose.rotation = relativePose.rotation;
+
                 // Update Relative Odometry
                 relativeOdom->setPose(currentPose);
-
             }
             else
             {

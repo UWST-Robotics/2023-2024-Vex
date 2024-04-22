@@ -17,29 +17,52 @@ namespace devils
     /**
      * Represents an odometry system using a set of differential wheels
      */
-    class DifferentialWheelOdometry : public OdomSource
+    class DifferentialWheelOdometry : public OdomSource, public Runnable
     {
     public:
         /**
          * Creates a new tank wheel odometry system.
          * Position is calculated using the left and right encoder values.
+         * @param chassis The chassis to use for odometry.
          * @param wheelRadius The radius of the wheels in inches.
          * @param wheelBase The distance between the wheels in inches.
          */
-        DifferentialWheelOdometry(const double wheelRadius,
+        DifferentialWheelOdometry(TankChassis &chassis,
+                                  const double wheelRadius,
                                   const double wheelBase)
-            : wheelRadius(wheelRadius),
+            : chassis(&chassis),
+              wheelRadius(wheelRadius),
               wheelBase(wheelBase)
         {
             lastUpdateTimestamp = pros::millis();
         }
 
         /**
-         * Updates the odometry from the left and right rotational wheels.
+         * Creates a new odom wheel odometry system.
+         * Position is calculated using the left and right encoder values.
+         * @param leftSensor The left rotation sensor.
+         * @param rightSensor The right rotation sensor.
+         * @param wheelRadius The radius of the wheels in inches.
+         * @param wheelBase The distance between the wheels in inches.
+         */
+        DifferentialWheelOdometry(RotationSensor &leftSensor,
+                                  RotationSensor &rightSensor,
+                                  const double wheelRadius,
+                                  const double wheelBase)
+            : leftSensor(&leftSensor),
+              rightSensor(&rightSensor),
+              wheelRadius(wheelRadius),
+              wheelBase(wheelBase)
+        {
+            lastUpdateTimestamp = pros::millis();
+        }
+
+        /**
+         * Updates the odometry from the left and right rotational values.
          * @param leftRotations The left wheel rotations.
          * @param rightRotations The right wheel rotations.
          */
-        void update(double leftRotations, double rightRotations)
+        void _updateRotations(double leftRotations, double rightRotations)
         {
             // Get Delta Time
             uint32_t deltaT = lastUpdateTimestamp - pros::millis();
@@ -77,21 +100,29 @@ namespace devils
          * @param leftSensor The left rotation sensor.
          * @param rightSensor The right rotation sensor.
          */
-        void update(RotationSensor &leftSensor, RotationSensor &rightSensor)
+        void _updateOdomWheels(RotationSensor &leftSensor, RotationSensor &rightSensor)
         {
             double leftRotations = (leftSensor.getAngle() / (2 * M_PI)) / ticksPerRevolution;
             double rightRotations = (rightSensor.getAngle() / (2 * M_PI)) / ticksPerRevolution;
-            update(leftRotations, rightRotations);
+            _updateRotations(leftRotations, rightRotations);
         }
 
         /**
          * Updates the odometry from the left and right motor encoders of a tank chassis.
          */
-        void update(TankChassis &chassis)
+        void _updateChassis(TankChassis &chassis)
         {
             double leftPosition = chassis.getLeftMotors().getPosition() / ticksPerRevolution;
             double rightPosition = chassis.getRightMotors().getPosition() / ticksPerRevolution;
-            update(leftPosition, rightPosition);
+            _updateRotations(leftPosition, rightPosition);
+        }
+
+        void update() override
+        {
+            if (chassis != nullptr)
+                _updateChassis(*chassis);
+            else if (leftSensor != nullptr && rightSensor != nullptr)
+                _updateOdomWheels(*leftSensor, *rightSensor);
         }
 
         /**
@@ -138,7 +169,7 @@ namespace devils
          * Sets the number of ticks per revolution of the wheels.
          * Used to pass gear ratios to the odometry system.
          * @param ticksPerRevolution The number of encoder ticks per revolution of the wheels.
-        */
+         */
         void setTicksPerRevolution(double ticksPerRevolution)
         {
             this->ticksPerRevolution = ticksPerRevolution;
@@ -147,6 +178,10 @@ namespace devils
     private:
         const double wheelRadius;
         const double wheelBase;
+
+        TankChassis *chassis = nullptr;
+        RotationSensor *leftSensor = nullptr;
+        RotationSensor *rightSensor = nullptr;
 
         Pose currentPose = Pose();
         uint32_t lastUpdateTimestamp = 0;

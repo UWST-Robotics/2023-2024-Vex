@@ -11,7 +11,7 @@ namespace devils
     /**
      * Represents a Vex V5 GPS
      */
-    class GPS : public OdomSource
+    class GPS : public OdomSource, public Runnable
     {
     public:
         /**
@@ -26,13 +26,13 @@ namespace devils
         {
             if (errno != 0)
                 Logger::error(name + ": GPS port is invalid");
-            gps.set_data_rate(40);
+            gps.set_data_rate(20);
         }
 
         /**
          * Updates the odometry with the latest GPS data
          */
-        void update()
+        void update() override
         {
             double gpsX = gps.get_x_position();
             double gpsY = gps.get_y_position();
@@ -49,10 +49,14 @@ namespace devils
             gpsY = -Units::metersToIn(gpsY);
             gpsHeading = Units::normalizeRadians(Units::degToRad(gpsHeading) - GPS_ROTATION_OFFSET - rotationalOffset);
 
+            // Check Calibrating
+            if (isCalibrating())
+                return;
+
             // Check Within Bounds
             if (gpsX < -MAX_GPS_X || gpsX > MAX_GPS_X || gpsY < -MAX_GPS_Y || gpsY > MAX_GPS_Y)
             {
-                Logger::error(name + ": GPS out of bounds");
+                Logger::warn(name + ": GPS out of bounds");
                 return;
             }
 
@@ -111,7 +115,19 @@ namespace devils
                 Logger::error(name + ": GPS set offset failed");
         }
 
+        /**
+         * Checks if the GPS is calibrating. GPS takes a few seconds to lock on to the field strip.
+         * @return Whether the GPS is calibrating
+         */
+        bool isCalibrating()
+        {
+            if (calibrationStartTime < 0)
+                calibrationStartTime = pros::millis();
+            return (pros::millis() - calibrationStartTime) < CALIBRATION_TIME;
+        }
+
     private:
+        static constexpr int CALIBRATION_TIME = 7000;             // ms
         static constexpr double GPS_ROTATION_OFFSET = M_PI * 0.5; // PROS defaults to north as 0 degrees
         static constexpr double MAX_GPS_X = 72;
         static constexpr double MAX_GPS_Y = 72;
@@ -120,5 +136,6 @@ namespace devils
         pros::Gps gps;
         Pose currentPose = Pose(0, 0, 0);
         double rotationalOffset = 0;
+        int calibrationStartTime = -1;
     };
 }

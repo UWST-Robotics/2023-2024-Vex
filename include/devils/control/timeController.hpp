@@ -63,6 +63,28 @@ namespace devils
                 chassis.move(forward, turn, strafe);
         }
 
+        /**
+         * Sets the speeds for the controller.
+         * @param forward The forward value to set, from -1 to 1.
+         * @param turn The turn value to set, from -1 to 1.
+         * @param strafe The strafe value to set, from -1 to 1.
+         */
+        void setSpeeds(double forward, double turn, double strafe = 0)
+        {
+            this->forward = forward;
+            this->turn = turn;
+            this->strafe = strafe;
+        }
+
+        /**
+         * Sets the duration for the controller.
+         * @param duration The duration to run the controller for in milliseconds.
+         */
+        void setDuration(int duration)
+        {
+            this->duration = duration;
+        }
+
     private:
         // Input Values
         BaseChassis &chassis;

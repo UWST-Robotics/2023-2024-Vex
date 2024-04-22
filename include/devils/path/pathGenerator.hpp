@@ -35,6 +35,7 @@ namespace devils
                 for (double t = 0; t < 1; t += DT)
                     pathPoints.push_back(Lerp::linearPoints(p1, p2, t));
             }
+            controlPointIndices.push_back(pathPoints.size() - 1);
 
             // Return the generated path
             return GeneratedPath{
@@ -87,12 +88,14 @@ namespace devils
                 if (p2.isReversed)
                     isReversed = !isReversed;
             }
+            controlPointIndices.push_back(pathPoints.size() - 1);
 
             // Return the generated path
             return GeneratedPath{
                 DT,
                 controlPoints,
-                pathPoints};
+                pathPoints,
+                controlPointIndices};
         }
 
     private:

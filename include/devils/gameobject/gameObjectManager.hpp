@@ -8,6 +8,7 @@ namespace devils
 {
     /**
      * Manages the lifecycle of each game object
+     * \deprecated This class is not used in the final implementation
      */
     class GameObjectManager : public AutoRunnable
     {

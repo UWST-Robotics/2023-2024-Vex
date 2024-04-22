@@ -80,6 +80,7 @@ namespace devils
                 AutoState &currentControllerState = controller->getState();
                 currentState.target = currentControllerState.target;
                 currentState.events = currentControllerState.events;
+                currentState.debugText = currentControllerState.debugText;
             }
             else
             {

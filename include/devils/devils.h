@@ -13,6 +13,7 @@
 #include "control/findController.hpp"
 #include "control/directController.hpp"
 #include "control/timeController.hpp"
+#include "control/chaseController.hpp"
 #include "control/collectionController.hpp"
 #include "control/controllerList.hpp"
 
@@ -41,6 +42,8 @@
 #include "hardware/imu.hpp"
 #include "hardware/opticalSensor.hpp"
 #include "hardware/visionSensor.hpp"
+#include "hardware/scuffPneumatic.hpp"
+#include "hardware/scuffPneumaticGroup.hpp"
 
 // Odom
 #include "odom/odomSource.hpp"

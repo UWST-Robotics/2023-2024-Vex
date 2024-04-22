@@ -12,7 +12,7 @@ EVENT setSpeed 1.5
 POINT 65.181 30.053 4.847 6.197 4.718
 EVENT outtake 
 EVENT setSpeed 1.0
-EVENT bounce 5000
+EVENT bounce 3000
 EVENT pause 500
 EVENT alignToAngle 278
 REVERSE
