@@ -49,6 +49,8 @@ namespace devils
          */
         void setSpeeds(double forwardSpeed, double reverseSpeed)
         {
+            this->forwardSpeed = forwardSpeed;
+            this->reverseSpeed = reverseSpeed;
             forwardController.setSpeeds(forwardSpeed, 0);
             reverseController.setSpeeds(reverseSpeed, 0);
         }
@@ -60,6 +62,8 @@ namespace devils
          */
         void setDurations(int forwardDuration, int reverseDuration)
         {
+            this->forwardDuration = forwardDuration;
+            this->reverseDuration = reverseDuration;
             forwardController.setDuration(forwardDuration);
             reverseController.setDuration(reverseDuration);
         }

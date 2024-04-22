@@ -21,6 +21,7 @@ namespace devils
             : name(name),
               rotationSensor(port < 0 ? -port : port, port < 0)
         {
+            rotationSensor.set_position(0);
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": rotationSensor port is invalid");
         }

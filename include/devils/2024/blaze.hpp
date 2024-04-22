@@ -18,8 +18,8 @@ namespace devils
         Blaze()
         {
             // Fix Bounce Controller
-            bounceController.setSpeeds(0.4, -0.4);
-            bounceController.setDurations(100, 100);
+            bounceController.setSpeeds(1.0, -1.2);
+            bounceController.setDurations(700, 700);
 
             // Add Renderers
             statsRenderer->useOdomSource(&wheelOdom);
@@ -57,10 +57,12 @@ namespace devils
                 // Run Auto Controller
                 if (pauseTimer.getRunning())
                     chassis.stop();
-                else if (bounceTimer.getRunning())
-                    bounceController.update();
                 else
                     autoController.update();
+
+                // Run Bounce Controller
+                if (bounceTimer.getRunning())
+                    bounceController.update();
 
                 // Handle Auto Controller Events
                 PathEvents *events = autoController.getState().events;
