@@ -85,7 +85,7 @@ namespace devils
         }
 
     private:
-        static constexpr bool USE_BRAKE_MODE = true;
+        static constexpr bool USE_BRAKE_MODE = false;
 
         SmartMotorGroup leftMotors;
         SmartMotorGroup rightMotors;

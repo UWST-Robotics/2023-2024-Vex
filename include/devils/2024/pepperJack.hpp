@@ -165,7 +165,7 @@ namespace devils
                 bool rightWing = mainController.get_digital(DIGITAL_R1) || mainController.get_digital(DIGITAL_R2);
                 bool blockerUp = mainController.get_digital_new_press(DIGITAL_X);
                 bool blockerDown = mainController.get_digital(DIGITAL_B);
-                double intakeValue = -mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
+                double intakeValue = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
 
                 // Curve Joystick Inputs
                 // leftY = JoystickCurve::square(JoystickCurve::dlerp(0.1, 0.3, 1.0, leftY));
@@ -198,7 +198,7 @@ namespace devils
                 // Vision Sensor
 
                 // Delay to prevent the CPU from being overloaded
-                pros::delay(20);
+                pros::delay(10);
             }
         }
 

@@ -17,7 +17,6 @@
 #define PROS_USE_LITERALS     // Allows us to use 200_ms instead of pros::c::millisecond_t(200)
 
 // Add each robot definition here
-#include "devils/2024/autoTest.hpp"
 #include "devils/2024/pepperJack.hpp"
 #include "devils/2024/blaze.hpp"
 

@@ -155,12 +155,12 @@ namespace devils
         }
 
     private:
-        static constexpr double AT_SPEED_RANGE = 10;             // RPM
+        static constexpr double AT_SPEED_RANGE = 15;             // RPM
         static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 110; // rpm
         static constexpr double DEFAULT_DELTA = 0;               // rpm
 
-        PID flywheelLeftPID = PID(0.003, 0.0004, 0, 0.6);
-        PID flywheelRightPID = PID(0.003, 0.0004, 0, 0.6);
+        PID flywheelLeftPID = PID(0.003, 0.0003, 0, 1.0);
+        PID flywheelRightPID = PID(0.003, 0.0003, 0, 1.0);
 
         double flywheelSetpoint = DEFAULT_FLYWHEEL_SETPOINT;
         double deltaVelocity = DEFAULT_DELTA; // Difference between left and right motor speeds

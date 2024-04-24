@@ -23,6 +23,7 @@ namespace devils
             : pursuitController(chassis, odometry, &mainPath),
               ControllerList({&pursuitController}, false)
         {
+            pursuitController.setLookaheadDistance(6);
         }
 
         /**
