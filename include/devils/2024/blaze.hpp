@@ -158,6 +158,7 @@ namespace devils
             // Control
             bool runFlywheel = false;
             bool hasRumbled = false;
+            bool isHood = false;
             double flywheelVoltage = 0.5;
 
             // Loop
@@ -168,10 +169,10 @@ namespace devils
                 double leftY = mainController.get_analog(ANALOG_LEFT_Y) / 127.0;
                 double rightY = mainController.get_analog(ANALOG_RIGHT_Y) / 127.0;
                 double rightX = mainController.get_analog(ANALOG_RIGHT_X) / 127.0;
-                bool intakeButton = mainController.get_digital(DIGITAL_R2);
                 bool outtakeButton = mainController.get_digital(DIGITAL_L2);
-                bool raiseHoodButton = mainController.get_digital(DIGITAL_L1);
-                bool lowerHoodButton = mainController.get_digital(DIGITAL_R1);
+                bool toggleHoodButton = mainController.get_digital_new_press(DIGITAL_L1);
+                bool indexerButton = mainController.get_digital(DIGITAL_R1);
+                bool intakeButton = mainController.get_digital(DIGITAL_R2);
                 bool launchButton = mainController.get_digital_new_press(DIGITAL_A) || mainController.get_digital_new_press(DIGITAL_X);
                 bool upButon = mainController.get_digital_new_press(DIGITAL_UP);
                 bool downButton = mainController.get_digital_new_press(DIGITAL_DOWN);
@@ -186,7 +187,7 @@ namespace devils
                 // Drive the Robot
                 bool isAdamControl = autoPickerRenderer->getSelected() == "Adam";
                 if (isAdamControl)
-                    chassis.move(leftY, rightX + leftX); // Adam Controls
+                    chassis.move(leftY + rightY * 0.4, leftX + rightX * 0.4); // Adam Controls
                 else
                     chassis.move(rightY, leftX); // Sam Controls
 
@@ -226,7 +227,7 @@ namespace devils
                 }
 
                 // Outer Intake
-                if (intakeButton /* && outerIntake.getExtended()*/) // <-- Uncomment to only intake when extended
+                if (intakeButton)
                     outerIntake.intake();
                 else if (outtakeButton)
                     outerIntake.outtake();
@@ -234,7 +235,7 @@ namespace devils
                     outerIntake.stop();
 
                 // Inner Intake
-                if (intakeButton /* && launcherAtSpeed*/) // <-- Uncomment to only intake when launcher is at speed
+                if (indexerButton)
                     innerIntake.intake();
                 else if (outtakeButton)
                     innerIntake.outtake();
@@ -248,9 +249,11 @@ namespace devils
                     outerIntake.retract();
 
                 // Launcher Hood
-                if (lowerHoodButton)
+                if (toggleHoodButton)
+                    isHood = !isHood;
+                if (isHood)
                     launcherHood.extend();
-                else if (raiseHoodButton)
+                else
                     launcherHood.retract();
 
                 // Delay to prevent the CPU from being overloaded
@@ -269,28 +272,30 @@ namespace devils
 
     private:
         // V5 Ports
-        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {19, -20, 8, -9, -10};
-        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {11, -12, -3, 2, 1};
-        static constexpr std::initializer_list<int8_t> INNER_INTAKE_MOTOR_PORTS = {-6};
-        static constexpr std::initializer_list<int8_t> OUTER_INTAKE_MOTOR_PORTS = {15};
-        static constexpr uint8_t LEFT_FLYWHEEL_PORT = 4;
-        static constexpr uint8_t RIGHT_FLYWHEEL_PORT = 7;
-        static constexpr int8_t LEFT_ROTATION_SENSOR_PORT = -18;
-        static constexpr int8_t RIGHT_ROTATION_SENSOR_PORT = 13;
+        static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {1, 2, -3, 11, -12};
+        static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-8, 9, -10, 19, -20};
+        static constexpr std::initializer_list<int8_t> INNER_INTAKE_MOTOR_PORTS = {-4};
+        static constexpr std::initializer_list<int8_t> OUTER_INTAKE_MOTOR_PORTS = {5};
+        static constexpr uint8_t LEFT_FLYWHEEL_PORT = 13;
+        static constexpr uint8_t RIGHT_FLYWHEEL_PORT = 18;
+        static constexpr int8_t LEFT_ROTATION_SENSOR_PORT = -16;
+        static constexpr int8_t RIGHT_ROTATION_SENSOR_PORT = 15;
         static constexpr uint8_t IMU_SENSOR_PORT = 14;
 
         // Speeds
         static constexpr double CHASSIS_AUTO_FORWARD = 0.3; // % speed
-        static constexpr double CHASSIS_AUTO_TURN = 0.7;    // % speed
+        static constexpr double CHASSIS_AUTO_TURN = 1.2;    // % speed
         static constexpr double SLOMO_MULTIPLIER = 0.3;     // % speed
 
         // ADI Ports
-        static constexpr std::initializer_list<uint8_t> OUTER_INTAKE_PNEUMATIC_PORTS = {7, 8};
+        static constexpr std::initializer_list<uint8_t> OUTER_INTAKE_PNEUMATIC_PORTS = {5, 6};
         static constexpr uint8_t LAUNCHER_HOOD_PORT = 3;
 
         // Geometry
         static constexpr double WHEEL_RADIUS = 1.0; // in
         static constexpr double WHEEL_BASE = 4.0;   // in
+        // static constexpr double WHEEL_RADIUS = 1.75; // in
+        // static constexpr double WHEEL_BASE = 14.5;   // in
 
         // Subsystems
         TankChassis chassis = TankChassis("Blaze.Chassis", L_MOTOR_PORTS, R_MOTOR_PORTS);
@@ -306,6 +311,7 @@ namespace devils
 
         // Odometry
         DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(leftSensor, rightSensor, WHEEL_RADIUS, WHEEL_BASE);
+        // DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(chassis, WHEEL_RADIUS, WHEEL_BASE);
 
         // Controller
         BlazeAutoController autoController = BlazeAutoController(chassis, wheelOdom);
@@ -317,7 +323,7 @@ namespace devils
                                        new OdomRenderer(&wheelOdom),
                                        new ControlRenderer(&autoController, &wheelOdom),
                                        new PathRenderer(nullptr),
-                                       new AutoPickerRenderer({"Sam", "Adam", "Skills"}),
+                                       new AutoPickerRenderer({"Adam", "Sam", "Skills"}),
                                        new StatsRenderer()});
         StatsRenderer *statsRenderer = mainDisplay.getRenderer<StatsRenderer>();
         AutoPickerRenderer *autoPickerRenderer = mainDisplay.getRenderer<AutoPickerRenderer>();

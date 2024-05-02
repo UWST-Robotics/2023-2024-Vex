@@ -156,7 +156,7 @@ namespace devils
 
     private:
         static constexpr double AT_SPEED_RANGE = 15;             // RPM
-        static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 110; // rpm
+        static constexpr double DEFAULT_FLYWHEEL_SETPOINT = 120; // rpm
         static constexpr double DEFAULT_DELTA = 0;               // rpm
 
         PID flywheelLeftPID = PID(0.003, 0.0003, 0, 1.0);

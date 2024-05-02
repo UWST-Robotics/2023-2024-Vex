@@ -21,13 +21,11 @@ namespace devils
         /**
          * Creates a new transform odometry system.
          * @param odomSource The odometry source to transform.
-         * @param mirrorX Whether to mirror the X axis.
-         * @param mirrorY Whether to mirror the Y axis.
+         * @param rotationOffset Amount of rotational offset in degrees
          */
-        TransformOdom(OdomSource &odomSource, bool mirrorX = false, bool mirrorY = false)
+        TransformOdom(OdomSource &odomSource, double rotationOffset)
             : odomSource(odomSource),
-                mirrorX(mirrorX),
-                mirrorY(mirrorY)
+              rotationOffset(rotationOffset)
         {
         }
 
@@ -36,16 +34,15 @@ namespace devils
          */
         Pose &getPose() override
         {
-            Pose &pose = odomSource.getPose();
-            if (mirrorX) {
-                pose.x = -pose.x;
-                pose.rotation = Units::normalizeRadians(M_PI - pose.rotation);
-            }
-            if (mirrorY) {
-                pose.y = -pose.y;
-                pose.rotation = Units::normalizeRadians(-pose.rotation);
-            }
-            return pose;
+            Pose &gpsPose = odomSource.getPose();
+            double newX = std::cos(rotationOffset) * gpsPose.x + std::sin(rotationOffset) * gpsPose.y;
+            double newY = std::cos(rotationOffset) * gpsPose.y + std::sin(rotationOffset) * gpsPose.x;
+
+            currentPose.x = newX;
+            currentPose.y = newY;
+            currentPose.rotation = Units::normalizeRadians(gpsPose.rotation + rotationOffset);
+
+            return currentPose;
         }
 
         /**
@@ -55,35 +52,29 @@ namespace devils
         void setPose(Pose &pose) override
         {
             Pose newPose = pose;
-            if (mirrorX)
-                newPose.x = -newPose.x;
-            if (mirrorY)
-                newPose.y = -newPose.y;
-            odomSource.setPose(pose);
+            double newX = std::cos(-rotationOffset) * pose.x + std::sin(-rotationOffset) * pose.y;
+            double newY = std::cos(-rotationOffset) * pose.y + std::sin(-rotationOffset) * pose.x;
+
+            newPose.x = newX;
+            newPose.y = newY;
+            newPose.rotation = Units::normalizeRadians(pose.rotation - rotationOffset);
+
+            odomSource.setPose(newPose);
         }
 
         /**
-         * Sets whether to mirror the X axis.
-         * @param mirrorX Whether to mirror the X axis.
-        */
-        void setMirrorX(bool mirrorX)
+         * Sets the rotational offset
+         * @param rotationOffset - Rotational offset in radians
+         */
+        void setRotation(double rotationOffset)
         {
-            this->mirrorX = mirrorX;
-        }
-
-        /**
-         * Sets whether to mirror the Y axis.
-         * @param mirrorY Whether to mirror the Y axis.
-        */
-        void setMirrorY(bool mirrorY)
-        {
-            this->mirrorY = mirrorY;
+            this->rotationOffset = rotationOffset;
         }
 
     private:
+        Pose currentPose = Pose();
         OdomSource &odomSource;
 
-        bool mirrorX = false;
-        bool mirrorY = false;
+        double rotationOffset = 0;
     };
 }

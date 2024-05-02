@@ -69,9 +69,9 @@ namespace devils
         }
 
     private:
-        static constexpr double DEFAULT_FORWARD_SPEED = 2.0;  // %
-        static constexpr double DEFAULT_REVERSE_SPEED = -0.6; // %
-        static constexpr int DEFAULT_FORWARD_DURATION = 400;  // ms
+        static constexpr double DEFAULT_FORWARD_SPEED = 1.4;  // %
+        static constexpr double DEFAULT_REVERSE_SPEED = -0.8; // %
+        static constexpr int DEFAULT_FORWARD_DURATION = 600;  // ms
         static constexpr int DEFAULT_REVERSE_DURATION = 700;  // ms
 
         // Systems

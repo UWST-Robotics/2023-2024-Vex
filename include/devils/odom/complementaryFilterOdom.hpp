@@ -50,11 +50,11 @@ namespace devils
 
                 // Weight the absolute and relative rotations.
                 // Accounts for normalization in the rotation.
-                double diffRad = Units::diffRad(absolutePose.rotation, relativePose.rotation);
-                currentPose.rotation = Units::normalizeRadians(relativePose.rotation + diffRad * absoluteWeight);
+                // double diffRad = Units::diffRad(absolutePose.rotation, relativePose.rotation);
+                // currentPose.rotation = Units::normalizeRadians(relativePose.rotation + diffRad * absoluteWeight);
 
                 // Use IMU for rotation
-                // currentPose.rotation = relativePose.rotation;
+                currentPose.rotation = relativePose.rotation;
 
                 // Update Relative Odometry
                 relativeOdom->setPose(currentPose);

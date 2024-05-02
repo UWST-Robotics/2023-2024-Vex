@@ -26,7 +26,7 @@ namespace devils
 
             gps.runAsync();
             wheelOdom.runAsync();
-            fusedOdom.runAsync();
+            // fusedOdom.runAsync();
 
             // Display
             statsRenderer->useOdomSource(&fusedOdom);
@@ -42,11 +42,7 @@ namespace devils
             // Auto Picker
             std::string selectedAuto = autoPickerRenderer->getSelected();
 
-            bool flipGPS = selectedAuto == "Blue";
-            gpsOdom.setMirrorX(flipGPS);
-            gpsOdom.setMirrorY(flipGPS);
-
-            bool isSkills = selectedAuto == "Skills";
+            bool isSkills = selectedAuto == "Skill Issue";
             autoController.enableSkills(isSkills);
 
             // Reset Odom
@@ -58,6 +54,9 @@ namespace devils
             // Calibrate IMU
             imu.calibrate();
             imu.waitUntilCalibrated();
+
+            // Reset GPS
+            gps.reset();
 
             // Reset Auto Controller
             autoController.reset();
@@ -99,6 +98,16 @@ namespace devils
                     {
                         wings.retractRight();
                         wings.retractLeft();
+                    }
+
+                    // Lift
+                    else if (event.name == "raiseLift")
+                    {
+                        blocker.extend();
+                    }
+                    else if (event.name == "lowerLift")
+                    {
+                        blocker.retract();
                     }
                     // Intake
                     else if (event.name == "intake")
@@ -218,7 +227,7 @@ namespace devils
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {19, -20, 2, -1};
         static constexpr std::initializer_list<int8_t> INTAKE_MOTOR_PORTS = {-16};
         static constexpr uint8_t IMU_PORT = 4;
-        static constexpr uint8_t GPS_PORT = 6;
+        static constexpr uint8_t GPS_PORT = 8;
         static constexpr uint8_t STORAGE_SENSOR_PORT = 7;
         static constexpr uint8_t VISION_SENSOR_PORT = 15;
 
@@ -233,7 +242,7 @@ namespace devils
         static constexpr double WHEEL_BASE = 12.0;                            // in
         static constexpr double TICKS_PER_REVOLUTION = 300.0 * (48.0 / 36.0); // ticks
         static constexpr double CHASSIS_AUTO_FORWARD = 0.3;                   // % speed
-        static constexpr double CHASSIS_AUTO_TURN = 0.7;                      // % speed
+        static constexpr double CHASSIS_AUTO_TURN = 1.0;                      // % speed
 
         // GPS Offset
         static constexpr double GPS_OFFSET_X = 0.0;         // in
@@ -253,21 +262,21 @@ namespace devils
         // VisionSensor visionSensor = VisionSensor("PJ.VisionSensor", VISION_SENSOR_PORT);
 
         // Odometry
-        TransformOdom gpsOdom = TransformOdom(gps, false, false); // Transform GPS to match alliance side
+        TransformOdom gpsOdom = TransformOdom(gps, 0); // Transform GPS to match alliance side
         DifferentialWheelOdometry wheelOdom = DifferentialWheelOdometry(chassis, WHEEL_RADIUS, WHEEL_BASE);
-        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.005);
+        ComplementaryFilterOdom fusedOdom = ComplementaryFilterOdom(&gpsOdom, &wheelOdom, 0.003);
 
         // Auto Controller
-        PJAutoController autoController = PJAutoController(chassis, fusedOdom);
+        PJAutoController autoController = PJAutoController(chassis, wheelOdom);
         BounceController bounceController = BounceController(chassis);
 
         // Display
         Display mainDisplay = Display({new GridRenderer(),
                                        new FieldRenderer(),
-                                       new OdomRenderer(&fusedOdom),
-                                       new ControlRenderer(&autoController, &fusedOdom),
+                                       new OdomRenderer(&wheelOdom),
+                                       new ControlRenderer(&autoController, &wheelOdom),
                                        new PathRenderer(nullptr),
-                                       new AutoPickerRenderer({"Red", "Blue", "Skills"}),
+                                       new AutoPickerRenderer({"Normie", "Skill Issue"}),
                                        new StatsRenderer()});
         PathRenderer *pathRenderer = mainDisplay.getRenderer<PathRenderer>();
         AutoPickerRenderer *autoPickerRenderer = mainDisplay.getRenderer<AutoPickerRenderer>();

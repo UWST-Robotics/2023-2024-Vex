@@ -67,6 +67,14 @@ namespace devils
         }
 
         /**
+         * Restarts the calibration timer
+         */
+        void reset()
+        {
+            calibrationStartTime = -1;
+        }
+
+        /**
          * Gets the current pose of the robot since the last `GPS::update`
          * @return The current pose of the robot
          */
