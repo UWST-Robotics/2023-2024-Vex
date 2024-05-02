@@ -1,0 +1,25 @@
+PATH 1
+POINT -51.879 53.485 5.502 12.000 10.634
+EVENT alignToAngle 333
+EVENT intake 
+EVENT bounce 25000
+EVENT stopLauncher afterPause
+EVENT fire 
+EVENT lowerIntake 
+EVENT stopIntake afterPause
+POINT -20.152 18.848 4.718 12.000 5.458
+POINT -19.719 -17.089 4.697 11.340 11.814
+EVENT pause 500
+EVENT alignToAngle 90
+POINT -52.287 -53.533 3.882 6.871 6.898
+EVENT alignToAngle 27
+EVENT fire 
+EVENT bounce 30000
+EVENT intake 
+REVERSE
+POINT -32.778 -37.591 0.761 6.096 12.000
+EVENT alignToAngle 27
+EVENT fire 
+EVENT bounce 30000
+EVENT intake 
+ENDPATH
