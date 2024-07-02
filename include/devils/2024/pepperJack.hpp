@@ -221,7 +221,6 @@ namespace devils
             // wings.retractRight(); // Need extended for auto win point
         }
 
-    private:
         // V5 Ports
         static constexpr std::initializer_list<int8_t> L_MOTOR_PORTS = {-12, 11, -9, 10};
         static constexpr std::initializer_list<int8_t> R_MOTOR_PORTS = {19, -20, 2, -1};

@@ -3,6 +3,7 @@
 #include "../utils/logger.hpp"
 #include "../geometry/units.hpp"
 #include "../geometry/vector3.hpp"
+#include "../odom/odomSource.hpp"
 #include <string>
 
 namespace devils
@@ -10,7 +11,7 @@ namespace devils
     /**
      * Represents a V5 inertial measurement unit.
      */
-    class IMU
+    class IMU : public OdomSource
     {
     public:
         /**
@@ -26,6 +27,25 @@ namespace devils
                 imu.reset(true);
             if (errno != 0 && LOGGING_ENABLED)
                 Logger::error(name + ": imu port is invalid");
+        }
+
+        /**
+         * Converts heading to an `OdomSource` at (0, 0).
+         * @param heading The heading to convert to an `OdomSource`.
+         */
+        Pose &getPose() override
+        {
+            odomPose.rotation = getHeading();
+            return odomPose;
+        }
+
+        /**
+         * Sets the heading of the IMU from a given `Pose`.
+         * @param pose The pose to set the IMU to. Only uses `Pose.rotation`.
+         */
+        void setPose(Pose &pose) override
+        {
+            setHeading(pose.rotation);
         }
 
         /**
@@ -121,5 +141,6 @@ namespace devils
 
         std::string name;
         pros::IMU imu;
+        Pose odomPose;
     };
 }
